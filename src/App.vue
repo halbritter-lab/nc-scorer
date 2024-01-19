@@ -3,7 +3,7 @@
   <v-app>
     <v-app-bar app>
       <router-link to="/" class="white--text text-decoration-none">
-        <v-toolbar-title>My Gene App</v-toolbar-title>
+        <v-toolbar-title>NCScorer</v-toolbar-title>
       </router-link>
     </v-app-bar>
 
@@ -15,7 +15,7 @@
     <!-- Footer -->
     <v-footer app padless>
       <v-col class="text-center" cols="12">
-        My Gene App ©2024
+        NCScorer ©2024
       </v-col>
     </v-footer>
   </v-app>
