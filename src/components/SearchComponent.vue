@@ -3,13 +3,13 @@
 <template>
   <v-card>
     <v-card-text>
-      <v-text-field
-        label="Search for a gene"
+      <v-autocomplete
         v-model="searchQuery"
+        :items="symbols"
+        label="Search genes"
+        :loading="isLoading"
         @keyup.enter="search"
-        outlined
-        class="mb-4"
-      ></v-text-field>
+      ></v-autocomplete>
 
       <!-- Search Button -->
       <v-btn
@@ -24,23 +24,47 @@
 </template>
 
 <script>
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 
 export default {
   setup() {
-    const searchQuery = ref('')
-    const router = useRouter()
+    const searchQuery = ref('');
+    const router = useRouter();
+
+    const symbols = ref([]);
+    const isLoading = ref(false);
+    const error = ref(null);
+
+    const loadSymbols = async () => {
+        isLoading.value = true;
+        try {
+            const response = await fetch('/json/symbols_index.json');
+            if (!response.ok) {
+                throw new Error('Failed to fetch symbols');
+            }
+            symbols.value = await response.json();
+        } catch (err) {
+            error.value = err;
+        } finally {
+            isLoading.value = false;
+        }
+    };
+
+    onMounted(loadSymbols);
 
     function search() {
       if (searchQuery.value) {
-        router.push({ name: 'GeneInfo', params: { symbol: searchQuery.value } })
+        router.push({ path: `/symbols/${searchQuery.value}` });
       }
     }
 
     return {
       searchQuery,
-      search
+      search,
+      symbols,
+      isLoading,
+      error
     }
   }
 }
