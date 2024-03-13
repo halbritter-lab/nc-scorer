@@ -2,18 +2,21 @@
 
 <template>
   <v-container>
-    <v-table>
+    <v-table class="gene-info-table">
       <template v-slot:default>
-        <thead>
-          <tr>
-            <th class="text-left">Property</th>
-            <th class="text-left">Value</th>
-          </tr>
-        </thead>
         <tbody>
-          <tr v-for="(value, key) in geneData" :key="key">
-            <td>{{ key }}</td>
-            <td>{{ value }}</td>
+          <tr v-for="(item, key) in filteredGeneData" :key="key">
+            <td>{{ item.label }}</td>
+            <td>
+              <v-chip 
+                v-if="item.style === 'chip'" 
+                :class="{'italic-font': item.font === 'italic', 'bold-font': item.font === 'bold'}"
+                :color="item.color"
+              >
+                {{ item.value }}
+              </v-chip>
+              <span v-else>{{ item.value }}</span>
+            </td>
           </tr>
         </tbody>
       </template>
@@ -21,10 +24,12 @@
   </v-container>
 </template>
 
+
 <script>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router' // Import useRouter
-import axios from 'axios'
+import axios from 'axios';
+import { geneDetailsConfig } from '@/config/geneDetailsConfig.js';
 
 export default {
   props: {
@@ -33,6 +38,54 @@ export default {
   setup(props) {
     const geneData = ref({})
     const router = useRouter() // Create an instance of the router
+
+    const displayConfig = geneDetailsConfig;
+
+    // Function to get color based on value thresholds
+    const getColor = (value, config) => {
+      if (config.colorThresholds) {
+        if (typeof value === 'number') {
+          // Handle numeric thresholds
+          if (value < config.colorThresholds.low) return 'red';
+          if (value < config.colorThresholds.medium) return 'yellow';
+          if (value >= config.colorThresholds.high) return 'green';
+        } else if (typeof value === 'string') {
+          // Handle string-specific color assignments
+          if (value === config.colorThresholds.low) return 'red';
+          if (value === config.colorThresholds.medium) return 'yellow';
+          if (value === config.colorThresholds.high) return 'green';
+        }
+      }
+      return ''; // default color or a logic to handle other types
+    };
+
+    // Function to format value based on its type
+    const formatValue = (value, config) => {
+      if (config.format === 'number' && typeof value === 'number') {
+        return value.toFixed(config.round);
+      }
+      return value; // default formatting
+    };
+
+    // Computed property to filter geneData based on displayConfig visibility
+    const filteredGeneData = computed(() => {
+      const formattedData = {};
+      if (geneData.value) {
+        Object.entries(geneData.value).forEach(([key, value]) => {
+          const config = geneDetailsConfig[key];
+          if (config && config.visibility) {
+            formattedData[key] = {
+              label: config.label,
+              value: formatValue(value, config),
+              color: getColor(value, config),
+              style: config.style,
+              font: config.font,
+            };
+          }
+        });
+      }
+      return formattedData;
+    });
 
     onMounted(async () => {
       if (props.symbol) {
@@ -47,8 +100,28 @@ export default {
     })
 
     return {
-      geneData
+      geneData,
+      filteredGeneData,
+      displayConfig,
+      getColor,
+      formatValue
     }
   }
 }
 </script>
+
+
+<style scoped>
+.italic-font {
+  font-style: italic;
+}
+
+.bold-font {
+  font-weight: bold;
+}
+
+.gene-info-table {
+  max-width: 400px; /* Adjust this value as needed */
+  margin: auto; /* Centers the table if it's smaller than the container */
+}
+</style>
