@@ -12,9 +12,9 @@ export const geneDetailsConfig = {
     visibility: false
   },
   NCS: {
-    label: "Nephro Candidate Score",
+    label: "Nephro Candidate Gene Score",
     format: "number",
-    description: "Score based on the likelihood that the gene is linked to kidney disease.",
+    description: "Score indicating the likelihood that the gene is linked to kidney disease.",
     colorThresholds: {
       low: 0.2,
       medium: 0.5,
@@ -36,7 +36,7 @@ export const geneDetailsConfig = {
   geneset: {
     label: "Geneset",
     format: "text",
-    description: "The geneset to which this gene belongs.",
+    description: "The geneset to which this gene belongs to (e.g. training, testing or none).",
     colorThresholds: {
       low: "train",
       medium: "test",

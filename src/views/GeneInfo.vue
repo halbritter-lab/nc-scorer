@@ -6,7 +6,16 @@
       <template v-slot:default>
         <tbody>
           <tr v-for="(item, key) in filteredGeneData" :key="key">
-            <td>{{ item.label }}</td>
+            <td>
+              <span class="label-hover" :title="item.description">{{ item.label }}</span>
+              <v-tooltip
+                activator="parent"
+                location="start"
+              >
+                {{ item.description }}
+              </v-tooltip>
+            </td>
+            
             <td>
               <v-chip 
                 v-if="item.style === 'chip'" 
@@ -76,6 +85,7 @@ export default {
           if (config && config.visibility) {
             formattedData[key] = {
               label: config.label,
+              description: config.description,
               value: formatValue(value, config),
               color: getColor(value, config),
               style: config.style,
@@ -112,6 +122,10 @@ export default {
 
 
 <style scoped>
+.label-hover {
+  cursor: help;
+}
+
 .italic-font {
   font-style: italic;
 }
