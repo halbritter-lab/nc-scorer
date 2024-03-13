@@ -15,7 +15,7 @@
     <!-- Toolbar Title and Version Info -->
     <v-toolbar-title>
       <span class="clickable" @click="$router.push('/')">
-        NC-sorer
+        NC-Scorer
       </span>
       <br> <!-- Line break for version info -->
       <span class="version-info" @mouseenter="showCopyIcon = true" @mouseleave="showCopyIcon = false">
