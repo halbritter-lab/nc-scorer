@@ -1,3 +1,5 @@
+<!-- components/FooterBar.vue -->
+
 <template>
   <v-footer app padless class="elevation-3">
     <v-row justify="center" no-gutters>

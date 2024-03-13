@@ -1,4 +1,5 @@
 <!-- components/AppBar.vue -->
+
 <template>
   <v-app-bar app color="primary" dark>
     <!-- Logo Image -->
