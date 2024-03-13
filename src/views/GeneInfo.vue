@@ -37,7 +37,7 @@ export default {
     onMounted(async () => {
       if (props.symbol) {
         try {
-          const response = await axios.get(`json/symbols/${props.symbol}.json`)
+          const response = await axios.get(`../../json/symbols/${props.symbol}.json`)
           geneData.value = response.data
         } catch (error) {
           // Redirect to PageNotFound view if there is an error (e.g., file not found)
