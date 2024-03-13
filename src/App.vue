@@ -24,7 +24,7 @@
 <script>
 
 export default {
-  name: 'App',
+  name: 'NCScorer',
   components: {
   },
   setup() {
