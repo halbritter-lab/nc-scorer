@@ -1,7 +1,7 @@
 <!-- components/AppBar.vue -->
 
 <template>
-  <v-app-bar app color="primary" dark>
+  <v-app-bar app color="teal" dark>
     <!-- Logo Image -->
     <v-img
       src="img/logo.png"
