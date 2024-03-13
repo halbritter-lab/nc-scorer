@@ -1,7 +1,9 @@
 <!-- components/SearchComponent.vue -->
 
 <template>
-  <v-card>
+  <v-card
+    class="search-card"
+  >
     <v-card-text>
       <v-autocomplete
         v-model="searchQuery"
@@ -69,3 +71,11 @@ export default {
   }
 }
 </script>
+
+
+<style scoped>
+.search-card {
+  max-width: 900px; /* Adjust this value as needed */
+  margin: auto; /* Centers the input if it's smaller than the container */
+}
+</style>
