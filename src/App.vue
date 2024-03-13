@@ -1,10 +1,7 @@
 <template>
   <v-app>
-    <v-app-bar app>
-      <router-link to="/" class="white--text text-decoration-none">
-        <v-toolbar-title>NCScorer</v-toolbar-title>
-      </router-link>
-    </v-app-bar>
+    <!-- Include the AppBar component -->
+    <AppBar/>
 
     <!-- Application content -->
     <v-main>
@@ -17,11 +14,13 @@
 </template>
 
 <script>
-import FooterBar from './components/FooterBar.vue'; // Make sure the path is correct
+import AppBar from './components/AppBar.vue';
+import FooterBar from './components/FooterBar.vue';
 
 export default {
   name: 'NCScorer',
   components: {
+    AppBar,
     FooterBar,
   },
   setup() {

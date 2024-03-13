@@ -1,0 +1,10 @@
+{
+  "items": [
+    {
+      "text": "FAQ",
+      "icon": "mdi-help-circle",
+      "to": "/faq",
+      "visibility": "all"
+    }
+  ]
+}
