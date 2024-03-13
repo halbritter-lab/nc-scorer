@@ -3,8 +3,8 @@
   <v-app-bar app color="primary" dark>
     <!-- Logo Image -->
     <v-img
-      src="logo.png"
-      class="mr-3 app-logo"
+      src="img/logo.png"
+      class="mx-3 app-logo"
       contain
       max-height="48"
       max-width="48"
