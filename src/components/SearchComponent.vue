@@ -39,7 +39,7 @@ export default {
     const loadSymbols = async () => {
         isLoading.value = true;
         try {
-            const response = await fetch('/json/symbols_index.json');
+            const response = await fetch('json/symbols_index.json');
             if (!response.ok) {
                 throw new Error('Failed to fetch symbols');
             }
