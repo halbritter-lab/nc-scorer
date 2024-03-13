@@ -1,0 +1,19 @@
+{
+    "links": [
+      {
+        "icon": "mdi-github",
+        "href": "  https://github.com/halbritter-lab/nc-scorer",
+        "text": "GitHub"
+      },
+      {
+        "icon": "mdi-file-document-outline",
+        "href": "https://github.com/halbritter-lab/nc-scorer/wiki",
+        "text": "Documentation"
+      },
+      {
+        "icon": "mdi-certificate",
+        "href": "https://github.com/halbritter-lab/nc-scorer/blob/main/LICENSE",
+        "text": "License"
+      }
+    ]
+  }

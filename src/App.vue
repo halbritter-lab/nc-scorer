@@ -1,4 +1,3 @@
-<!-- App.vue -->
 <template>
   <v-app>
     <v-app-bar app>
@@ -12,20 +11,18 @@
       <router-view></router-view>
     </v-main>
 
-    <!-- Footer -->
-    <v-footer app padless>
-      <v-col class="text-center" cols="12">
-        NCScorer ©2024
-      </v-col>
-    </v-footer>
+    <!-- Include the FooterBar component -->
+    <FooterBar/>
   </v-app>
 </template>
 
 <script>
+import FooterBar from './components/FooterBar.vue'; // Make sure the path is correct
 
 export default {
   name: 'NCScorer',
   components: {
+    FooterBar,
   },
   setup() {
     // Composition API setup can go here
