@@ -1,0 +1,5 @@
+# NC-Scorer
+
+## Overview
+
+NCScorer is a tool developed to standardize and automate the assessment of candidate variants in Exome Sequencing (ES) for patients with Chronic Kidney Disease of unknown etiology (CKDu). The tool leverages a scoring system called the Nephro Candidate Score (NCS) to prioritize candidate variants for further investigation, accelerating the discovery of new genetic associations in CKD.
