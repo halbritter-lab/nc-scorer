@@ -11,7 +11,7 @@ export const geneDetailsConfig = {
     description: "The unique identifier for the gene from the HGNC database.",
     visibility: false
   },
-  NCS: {
+  NGS: {
     label: "Nephro Candidate Gene Score",
     format: "number",
     description: "Score indicating the likelihood that the gene is linked to kidney disease.",
@@ -33,16 +33,35 @@ export const geneDetailsConfig = {
     style: "chip",
     font: "italic"
   },
-  geneset: {
+  gene_set: {
     label: "Geneset",
     format: "text",
     description: "The geneset to which this gene belongs to (e.g. training, testing or none).",
     colorThresholds: {
       low: "train",
       medium: "test",
-      high: "None"
+      high: "none"
     },
     visibility: true,
     style: "chip"
-  }
+  },
+  evidence_count: {
+    label: "Evidence Count",
+    format: "number",
+    description: "The number of evidence items associated with this gene.",
+    colorThresholds: {
+      low: 2,
+      high: 4
+    },
+    round: 0,
+    visibility: true,
+    style: "chip",
+    font: "bold"
+  },
+  meta: {
+    label: "Meta",
+    format: "object",
+    description: "Meta information about the object, including the date and algorithm.",
+    visibility: false
+  },
 };
