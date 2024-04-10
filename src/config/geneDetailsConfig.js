@@ -5,13 +5,13 @@ export const geneDetailsConfigVersion = '0.1.0';
 
 // Define the gene details configuration
 export const geneDetailsConfig = {
-  hgnc_id_int: {
+  hgncIdInt: {
     label: "HGNC ID",
     format: "number",
     description: "The unique identifier for the gene from the HGNC database.",
     visibility: false
   },
-  NGS: {
+  ngs: {
     label: "Nephro Candidate Gene Score",
     format: "number",
     description: "Score indicating the likelihood that the gene is linked to kidney disease.",
@@ -33,7 +33,7 @@ export const geneDetailsConfig = {
     style: "chip",
     font: "italic"
   },
-  gene_set: {
+  geneSet: {
     label: "Geneset",
     format: "text",
     description: "The geneset to which this gene belongs to (e.g. training, testing or none).",
@@ -45,7 +45,7 @@ export const geneDetailsConfig = {
     visibility: true,
     style: "chip"
   },
-  evidence_count: {
+  evidenceCount: {
     label: "Evidence Count",
     format: "number",
     description: "The number of evidence items associated with this gene.",
