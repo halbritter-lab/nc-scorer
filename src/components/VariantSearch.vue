@@ -1,22 +1,34 @@
 <!-- src/components/VariantSearch.vue -->
 <template>
-  <v-container>
+  <v-container class="pa-4">
     <v-card class="variant-search-card">
-      <v-card-title>Search for a Variant</v-card-title>
       <v-card-text>
         <v-text-field
           v-model="variantInput"
           label="Enter Variant (VCF or HGVS)"
           outlined
+          @keyup.enter="searchVariant"
         ></v-text-field>
-        <v-btn color="primary" @click="searchVariant">
+        <v-btn color="primary" @click="searchVariant" class="mx-auto d-block">
           Search
         </v-btn>
       </v-card-text>
       <v-card-actions>
-        <div>
-          <p><em>Example (VCF):</em> "1-55051215-G-GA"</p>
-          <p><em>Example (HGVS):</em> "ENST00000302118:c.524-1063_524-1062insA"</p>
+        <div class="example-text">
+          <p>
+            <router-link
+              :to="{ name: 'VariantView', params: { variantInput: '1-55051215-G-GA' } }"
+            >
+              Example (VCF): "1-55051215-G-GA"
+            </router-link>
+          </p>
+          <p>
+            <router-link
+              :to="{ name: 'VariantView', params: { variantInput: 'ENST00000302118:c.524-1063_524-1062insA' } }"
+            >
+              Example (HGVS): "ENST00000302118:c.524-1063_524-1062insA"
+            </router-link>
+          </p>
         </div>
       </v-card-actions>
       <v-alert v-if="error" type="error" dismissible>
@@ -43,7 +55,7 @@ export default {
         return;
       }
       error.value = null;
-      // Navigate to the VariantView page using the variantInput as a route parameter.
+      // Navigate to the VariantView page with the input as a route parameter.
       router.push({ name: 'VariantView', params: { variantInput: variantInput.value } });
     };
 
@@ -58,7 +70,13 @@ export default {
 
 <style scoped>
 .variant-search-card {
-  max-width: 600px;
+  max-width: 900px;
   margin: auto;
+  padding: 16px;
+}
+.example-text {
+  margin-top: 16px;
+  font-size: 0.9rem;
+  color: #666;
 }
 </style>
