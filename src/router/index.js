@@ -1,11 +1,12 @@
-// router/index.js
-
+// src/router/index.js
 import { createRouter, createWebHistory } from 'vue-router';
 
 const GeneSearch = () => import('@/views/GeneSearch.vue');
 const GeneInfo = () => import('@/views/GeneInfo.vue');
 const FAQ = () => import('@/views/FAQ.vue');
 const PageNotFound = () => import('@/views/PageNotFound.vue');
+// Import our new VariantView page
+const VariantView = () => import('@/views/VariantView.vue');
 
 const routes = [
   {
@@ -17,7 +18,7 @@ const routes = [
     path: '/symbols/:symbol',
     name: 'GeneInfo',
     component: GeneInfo,
-    props: true, // Allows the component to receive the `symbol` as a prop
+    props: true,
   },
   {
     path: '/faq',
@@ -25,7 +26,12 @@ const routes = [
     component: FAQ,
   },
   {
-    // Catch-all route for 404 Not Found
+    path: '/variant/:variantInput',
+    name: 'VariantView',
+    component: VariantView,
+    props: true,
+  },
+  {
     path: '/:catchAll(.*)',
     name: 'PageNotFound',
     component: PageNotFound,
