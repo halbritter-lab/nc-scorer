@@ -1,5 +1,4 @@
-<!-- components/SearchComponent.vue -->
-
+<!-- src/components/SearchComponent.vue -->
 <template>
   <v-card class="search-card">
     <v-card-text>
@@ -27,6 +26,7 @@
 <script>
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import { fetchSymbolsIndex } from '@/api/geneApi.js'; // Use the new API module
 
 export default {
   name: 'SearchComponent',
@@ -40,13 +40,7 @@ export default {
     const loadSymbols = async () => {
       isLoading.value = true;
       try {
-        const response = await fetch(
-          'https://raw.githubusercontent.com/halbritter-lab/nephro_candidate_score/refs/heads/main/gene_score/predictions/results/json/symbols_index.json'
-        );
-        if (!response.ok) {
-          throw new Error('Failed to fetch symbols');
-        }
-        symbols.value = await response.json();
+        symbols.value = await fetchSymbolsIndex();
       } catch (err) {
         error.value = err;
       } finally {

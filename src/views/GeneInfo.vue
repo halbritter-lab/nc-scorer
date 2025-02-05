@@ -1,5 +1,4 @@
-<!-- views/GeneInfo.vue -->
-
+<!-- src/views/GeneInfo.vue -->
 <template>
   <v-container>
     <v-table class="gene-info-table">
@@ -17,10 +16,7 @@
             <td>
               <v-chip
                 v-if="item.style === 'chip'"
-                :class="{
-                  'italic-font': item.font === 'italic',
-                  'bold-font': item.font === 'bold'
-                }"
+                :class="{'italic-font': item.font === 'italic', 'bold-font': item.font === 'bold'}"
                 :color="item.color"
               >
                 {{ item.value }}
@@ -37,9 +33,9 @@
 <script>
 import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
-import axios from 'axios';
 import { geneDetailsConfig } from '@/config/geneDetailsConfig.js';
-import { getColor, formatValue } from '@/utils/format.js'; // Ensure these are defined in src/utils/format.js
+import { getColor, formatValue } from '@/utils/format.js';
+import { fetchGeneDetails } from '@/api/geneApi.js'; // Use the new API module
 
 export default {
   name: 'GeneInfo',
@@ -53,7 +49,7 @@ export default {
     const geneData = ref({});
     const router = useRouter();
 
-    // Computed property to filter and format gene data based on configuration
+    // Compute the formatted gene data based on configuration.
     const filteredGeneData = computed(() => {
       const formattedData = {};
       if (geneData.value) {
@@ -77,10 +73,7 @@ export default {
     onMounted(async () => {
       if (props.symbol) {
         try {
-          const response = await axios.get(
-            `https://raw.githubusercontent.com/halbritter-lab/nephro_candidate_score/refs/heads/main/gene_score/predictions/results/json/symbols/${props.symbol}.json`
-          );
-          geneData.value = response.data;
+          geneData.value = await fetchGeneDetails(props.symbol);
         } catch (error) {
           // Redirect to the PageNotFound view if there is an error (e.g., file not found)
           router.push({ path: '/404' });

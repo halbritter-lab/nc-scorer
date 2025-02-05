@@ -1,0 +1,5 @@
+{
+    "symbolsIndexUrl": "https://raw.githubusercontent.com/halbritter-lab/nephro_candidate_score/refs/heads/main/gene_score/predictions/results/json/symbols_index.json",
+    "geneDetailsBaseUrl": "https://raw.githubusercontent.com/halbritter-lab/nephro_candidate_score/refs/heads/main/gene_score/predictions/results/json/symbols/"
+  }
+  
