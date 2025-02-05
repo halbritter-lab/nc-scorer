@@ -41,7 +41,7 @@ export default {
     const loadSymbols = async () => {
         isLoading.value = true;
         try {
-            const response = await fetch('json/symbols_index.json');
+            const response = await fetch('https://raw.githubusercontent.com/halbritter-lab/nephro_candidate_score/refs/heads/main/gene_score/predictions/results/json/symbols_index.json');
             if (!response.ok) {
                 throw new Error('Failed to fetch symbols');
             }
