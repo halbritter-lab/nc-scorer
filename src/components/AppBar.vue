@@ -1,5 +1,4 @@
 <!-- components/AppBar.vue -->
-
 <template>
   <v-app-bar app color="teal" dark>
     <!-- Logo Image -->
@@ -9,18 +8,25 @@
       contain
       max-height="48"
       max-width="48"
-      @click="$router.push('/')"
+      @click="navigateHome"
     ></v-img>
 
     <!-- Toolbar Title and Version Info -->
     <v-toolbar-title>
-      <span class="clickable" @click="$router.push('/')">
+      <span class="clickable" @click="navigateHome">
         NC-Scorer
       </span>
-      <br> <!-- Line break for version info -->
-      <span class="version-info" @mouseenter="showCopyIcon = true" @mouseleave="showCopyIcon = false">
+      <br>
+      <!-- Line break for version info -->
+      <span
+        class="version-info"
+        @mouseenter="showCopyIcon = true"
+        @mouseleave="showCopyIcon = false"
+      >
         Version: {{ version }} - Commit: {{ lastCommitHash }}
-        <v-icon v-if="showCopyIcon" @click="copyCitation">mdi-content-copy</v-icon>
+        <v-icon v-if="showCopyIcon" @click="copyCitation">
+          mdi-content-copy
+        </v-icon>
       </span>
     </v-toolbar-title>
 
@@ -34,7 +40,11 @@
           </v-btn>
         </template>
         <v-list>
-          <v-list-item v-for="childItem in item.children" :key="childItem.text" :to="childItem.to">
+          <v-list-item
+            v-for="childItem in item.children"
+            :key="childItem.text"
+            :to="childItem.to"
+          >
             <v-list-item-title>
               <v-icon v-if="childItem.icon">
                 {{ childItem.icon }}
@@ -56,106 +66,74 @@
         {{ darkTheme ? 'mdi-weather-night' : 'mdi-white-balance-sunny' }}
       </v-icon>
     </v-btn>
-
   </v-app-bar>
 
   <!-- Snackbar for feedback -->
-  <v-snackbar
-    v-model="snackbarVisible"
-    :timeout="snackbarTimeout"
-    :color="snackbarColor"
-  >
+  <v-snackbar v-model="snackbarVisible" :timeout="snackbarTimeout" :color="snackbarColor">
     {{ snackbarMessage }}
   </v-snackbar>
-
 </template>
 
 <script>
 import { ref, onMounted, computed } from 'vue';
-import { useTheme } from 'vuetify';
+import { useRouter } from 'vue-router';
 import packageInfo from '../../package.json';
 import appConfig from '../config/appConfig.json';
 import menuConfig from '../config/menuConfig.json';
+import { fetchLastCommit } from '@/api/github.js'; // Adjust the path as needed
+import useThemeToggle from '@/composables/useThemeToggle.js';
 
 export default {
   name: 'AppBar',
-
-  /**
-   * Component setup function.
-   * @returns {Object} The reactive properties and methods for the component.
-   */
   setup() {
-    const theme = useTheme(); // Reactive property for dark theme state
-    const darkTheme = ref(theme.global.current.value.dark);
-    const version = packageInfo.version; // Extract the version from the package.json
-    const lastCommitHash = ref('loading...'); // Reference for the last commit hash
-    const fetchError = ref(false); // Reference for the last commit hash
+    const router = useRouter();
+    // Use the theme toggle composable
+    const { darkTheme, toggleTheme } = useThemeToggle();
+    const version = packageInfo.version;
+    const lastCommitHash = ref('loading...');
+    const fetchError = ref(false);
 
-    // Data properties for snackbar
+    // Snackbar data properties
     const snackbarVisible = ref(false);
     const snackbarMessage = ref('');
     const snackbarTimeout = 6000;
     const snackbarColor = ref('success');
     const showCopyIcon = ref(false);
 
-    // Method to copy citation to clipboard
+    // Navigation helper method
+    const navigateHome = () => {
+      router.push('/');
+    };
+
+    // Method to copy citation to the clipboard
     const copyCitation = () => {
       const citation = `NC-scorer, Version: ${version} - Commit: ${lastCommitHash.value}, an open-source platform designed for the curation and management of genetic information. Code available at https://github.com/halbritter-lab/nc-scorer (accessed ${new Date().toISOString().split('T')[0]}).`;
-      navigator.clipboard.writeText(citation)
+      navigator.clipboard
+        .writeText(citation)
         .then(() => {
-          snackbarMessage.value = `Citation copied to clipboard!`;
+          snackbarMessage.value = 'Citation copied to clipboard!';
           snackbarVisible.value = true;
         })
         .catch((error) => {
           console.error('Error copying citation:', error);
           snackbarMessage.value = 'Error copying citation!';
           snackbarVisible.value = true;
-      })
+        });
     };
 
-    /**
-     * Toggles the application theme between light and dark.
-     */
-    const toggleTheme = () => {
-      const isDark = !theme.global.current.value.dark;
-      theme.global.name.value = isDark ? 'dark' : 'light';
-      localStorage.setItem('darkTheme', isDark.toString());
-      darkTheme.value = isDark; // Update the darkTheme state
-    };
-
-    // Function to fetch last commit hash
-    const fetchLastCommit = async () => {
+    // On mount: fetch last commit hash using the github.js module
+    onMounted(async () => {
       try {
-        const repoName = appConfig.repoName; // Fetching repo name from config file
-        const response = await fetch(`https://api.github.com/repos/${repoName}/commits?per_page=1`);
-        if (!response.ok) throw new Error('Network response was not ok.');
-
-        const commits = await response.json();
-        if (commits.length) {
-          lastCommitHash.value = commits[0].sha.substring(0, 7);
-        }
+        lastCommitHash.value = await fetchLastCommit(appConfig.repoName);
       } catch (error) {
         console.error('Error fetching last commit:', error);
         fetchError.value = true;
         lastCommitHash.value = 'offline';
       }
-    };
-
-    // Apply saved theme preference
-    onMounted(async () => {
-      await fetchLastCommit();
-      const savedTheme = localStorage.getItem('darkTheme');
-      if (savedTheme !== null) {
-        theme.global.name.value = savedTheme === 'true' ? 'dark' : 'light';
-        darkTheme.value = savedTheme === 'true';
-      }
     });
 
-
-    // Computed property for menu items based on login status and roles
-    const menuItems = computed(() => {
-      return menuConfig.items
-    });
+    // Computed property for menu items
+    const menuItems = computed(() => menuConfig.items);
 
     return {
       darkTheme,
@@ -168,84 +146,71 @@ export default {
       snackbarTimeout,
       snackbarColor,
       copyCitation,
-      showCopyIcon
+      showCopyIcon,
+      navigateHome,
     };
   },
 };
 </script>
 
 <style scoped>
-/**
- * Keyframes for fadeIn animation.
- * Gradually increases the opacity of an element from 0 to 1.
- */
+/* Keyframes for fadeIn animation */
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
-/**
- * Keyframes for pulse animation.
- * Creates a pulsating effect by scaling the element from its original size to 10% larger.
- */
+/* Keyframes for pulse animation */
 @keyframes pulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.1); }
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
 }
 
-/**
- * Styles for the application logo.
- * Sets a maximum width, adds right margin, and applies the fadeIn animation.
- */
+/* Styles for the application logo */
 .app-logo {
-  max-width: 92px; /* Fixed maximum width for consistency */
-  margin-right: 10px; /* Spacing between logo and title */
-  animation: fadeIn 2s ease-out forwards; /* Applies the fadeIn animation */
+  max-width: 92px;
+  margin-right: 10px;
+  animation: fadeIn 2s ease-out forwards;
 }
 
-/**
- * Hover effect for the application logo.
- * Adds a pulse animation and changes the cursor to pointer on hover.
- */
+/* Hover effect for the application logo */
 .app-logo:hover {
-  animation: pulse 2s infinite; /* Continuous pulse animation on hover */
-  cursor: pointer; /* Indicates the logo is clickable */
+  animation: pulse 2s infinite;
+  cursor: pointer;
 }
 
-/**
- * Hover effect for clickable elements in the toolbar.
- * Reduces opacity and adds a smooth transition effect on hover.
- */
+/* Hover effect for clickable elements in the toolbar */
 .clickable:hover {
-  opacity: 0.8; /* Slightly reduces opacity to indicate interactivity */
-  transition: opacity 0.3s ease; /* Smooth transition for the opacity change */
-  cursor: pointer; /* Indicates the element is clickable */
+  opacity: 0.8;
+  transition: opacity 0.3s ease;
+  cursor: pointer;
 }
 
-/**
- * Styles for the version info.
- * Adds right padding and decreases the top margin to bring it closer to the app name.
- */
+/* Styles for the version info */
 .version-info {
-  display: block; /* Ensures the version info is on a new line */
+  display: block;
   margin-left: auto;
   padding-right: 16px;
   color: rgba(255, 255, 255, 0.7);
   font-size: 0.8rem;
-  margin-top: -10px; /* Decrease the top margin to bring it closer to the app name */
+  margin-top: -10px;
 }
 
-/**
- * Show the copy icon when hovering over the version info.
- */
+/* Show the copy icon when hovering over the version info */
 .version-info:hover v-icon {
   display: block;
 }
 
-/**
- * Styles for the copy icon.
- * Initially, set it to be hidden.
- */
+/* Styles for the copy icon */
 .version-info v-icon {
   display: none;
 }

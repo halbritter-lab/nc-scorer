@@ -7,19 +7,20 @@
         <tbody>
           <tr v-for="(item, key) in filteredGeneData" :key="key">
             <td>
-              <span class="label-hover" :title="item.description">{{ item.label }}</span>
-              <v-tooltip
-                activator="parent"
-                location="start"
-              >
+              <span class="label-hover" :title="item.description">
+                {{ item.label }}
+              </span>
+              <v-tooltip activator="parent" location="start">
                 {{ item.description }}
               </v-tooltip>
             </td>
-            
             <td>
-              <v-chip 
-                v-if="item.style === 'chip'" 
-                :class="{'italic-font': item.font === 'italic', 'bold-font': item.font === 'bold'}"
+              <v-chip
+                v-if="item.style === 'chip'"
+                :class="{
+                  'italic-font': item.font === 'italic',
+                  'bold-font': item.font === 'bold'
+                }"
                 :color="item.color"
               >
                 {{ item.value }}
@@ -33,50 +34,26 @@
   </v-container>
 </template>
 
-
 <script>
 import { ref, onMounted, computed } from 'vue';
-import { useRouter } from 'vue-router' // Import useRouter
+import { useRouter } from 'vue-router';
 import axios from 'axios';
 import { geneDetailsConfig } from '@/config/geneDetailsConfig.js';
+import { getColor, formatValue } from '@/utils/format.js'; // Ensure these are defined in src/utils/format.js
 
 export default {
+  name: 'GeneInfo',
   props: {
-    symbol: String
+    symbol: {
+      type: String,
+      required: true,
+    },
   },
   setup(props) {
-    const geneData = ref({})
-    const router = useRouter() // Create an instance of the router
+    const geneData = ref({});
+    const router = useRouter();
 
-    const displayConfig = geneDetailsConfig;
-
-    // Function to get color based on value thresholds
-    const getColor = (value, config) => {
-      if (config.colorThresholds) {
-        if (typeof value === 'number') {
-          // Handle numeric thresholds
-          if (value < config.colorThresholds.low) return 'red';
-          if (value < config.colorThresholds.medium) return 'yellow';
-          if (value >= config.colorThresholds.high) return 'green';
-        } else if (typeof value === 'string') {
-          // Handle string-specific color assignments
-          if (value === config.colorThresholds.low) return 'red';
-          if (value === config.colorThresholds.medium) return 'yellow';
-          if (value === config.colorThresholds.high) return 'green';
-        }
-      }
-      return ''; // default color or a logic to handle other types
-    };
-
-    // Function to format value based on its type
-    const formatValue = (value, config) => {
-      if (config.format === 'number' && typeof value === 'number') {
-        return value.toFixed(config.round);
-      }
-      return value; // default formatting
-    };
-
-    // Computed property to filter geneData based on displayConfig visibility
+    // Computed property to filter and format gene data based on configuration
     const filteredGeneData = computed(() => {
       const formattedData = {};
       if (geneData.value) {
@@ -100,26 +77,24 @@ export default {
     onMounted(async () => {
       if (props.symbol) {
         try {
-          const response = await axios.get(`https://raw.githubusercontent.com/halbritter-lab/nephro_candidate_score/refs/heads/main/gene_score/predictions/results/json/symbols/${props.symbol}.json`)
-          geneData.value = response.data
+          const response = await axios.get(
+            `https://raw.githubusercontent.com/halbritter-lab/nephro_candidate_score/refs/heads/main/gene_score/predictions/results/json/symbols/${props.symbol}.json`
+          );
+          geneData.value = response.data;
         } catch (error) {
-          // Redirect to PageNotFound view if there is an error (e.g., file not found)
+          // Redirect to the PageNotFound view if there is an error (e.g., file not found)
           router.push({ path: '/404' });
         }
       }
-    })
+    });
 
     return {
       geneData,
       filteredGeneData,
-      displayConfig,
-      getColor,
-      formatValue
-    }
-  }
-}
+    };
+  },
+};
 </script>
-
 
 <style scoped>
 .label-hover {

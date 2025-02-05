@@ -1,9 +1,7 @@
 <!-- components/SearchComponent.vue -->
 
 <template>
-  <v-card
-    class="search-card"
-  >
+  <v-card class="search-card">
     <v-card-text>
       <v-autocomplete
         v-model="searchQuery"
@@ -13,12 +11,13 @@
         @keyup.enter="search"
       ></v-autocomplete>
 
+      <!-- Display an error alert if symbols fail to load -->
+      <v-alert v-if="error" type="error" dismissible>
+        {{ error.message }}
+      </v-alert>
+
       <!-- Search Button -->
-      <v-btn
-        color="primary"
-        @click="search"
-        class="mx-auto d-block"
-      >
+      <v-btn color="primary" @click="search" class="mx-auto d-block">
         Search
       </v-btn>
     </v-card-text>
@@ -30,48 +29,49 @@ import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 
 export default {
+  name: 'SearchComponent',
   setup() {
     const searchQuery = ref('');
     const router = useRouter();
-
     const symbols = ref([]);
     const isLoading = ref(false);
     const error = ref(null);
 
     const loadSymbols = async () => {
-        isLoading.value = true;
-        try {
-            const response = await fetch('https://raw.githubusercontent.com/halbritter-lab/nephro_candidate_score/refs/heads/main/gene_score/predictions/results/json/symbols_index.json');
-            if (!response.ok) {
-                throw new Error('Failed to fetch symbols');
-            }
-            symbols.value = await response.json();
-        } catch (err) {
-            error.value = err;
-        } finally {
-            isLoading.value = false;
+      isLoading.value = true;
+      try {
+        const response = await fetch(
+          'https://raw.githubusercontent.com/halbritter-lab/nephro_candidate_score/refs/heads/main/gene_score/predictions/results/json/symbols_index.json'
+        );
+        if (!response.ok) {
+          throw new Error('Failed to fetch symbols');
         }
+        symbols.value = await response.json();
+      } catch (err) {
+        error.value = err;
+      } finally {
+        isLoading.value = false;
+      }
     };
 
     onMounted(loadSymbols);
 
-    function search() {
+    const search = () => {
       if (searchQuery.value) {
         router.push({ path: `/symbols/${searchQuery.value}` });
       }
-    }
+    };
 
     return {
       searchQuery,
       search,
       symbols,
       isLoading,
-      error
-    }
-  }
-}
+      error,
+    };
+  },
+};
 </script>
-
 
 <style scoped>
 .search-card {
