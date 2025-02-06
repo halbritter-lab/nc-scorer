@@ -6,7 +6,6 @@ const GeneView = () => import('@/views/GeneView.vue');
 const FAQ = () => import('@/views/FAQ.vue');
 const PageNotFound = () => import('@/views/PageNotFound.vue');
 const VariantView = () => import('@/views/VariantView.vue');
-// Import our new ScoringView page.
 const ScoringView = () => import('@/views/ScoringView.vue');
 
 const routes = [
@@ -33,7 +32,8 @@ const routes = [
     props: true,
   },
   {
-    path: '/scoring/:variantInput',
+    // The ScoringView route now accepts additional optional parameters.
+    path: '/scoring/:variantInput/:inheritance?/:segregation?',
     name: 'ScoringView',
     component: ScoringView,
     props: true,

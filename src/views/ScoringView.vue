@@ -10,7 +10,7 @@
       <v-col cols="12" md="6" v-if="geneSymbol">
         <GeneCard :symbol="geneSymbol" />
       </v-col>
-      <!-- Optional fallback message while waiting for geneSymbol -->
+      <!-- Fallback message while waiting for gene data -->
       <v-col cols="12" md="6" v-else>
         <v-alert type="info">
           Waiting for gene data...
@@ -28,9 +28,14 @@ import GeneCard from '@/components/GeneCard.vue';
 
 /**
  * ScoringView integrates both the VariantCard and the GeneCard.
- * It passes the variant input (from the route parameter) to VariantCard,
- * then retrieves the exposed annotationSummary from VariantCard and uses its
- * gene_symbol value as the input for GeneCard.
+ * It accepts three parameters via the URL:
+ * - variantInput: the variant (VCF or HGVS) to be analyzed,
+ * - inheritance: the inheritance pattern (default "Inherited dominant"),
+ * - segregation: the segregation probability (default "1").
+ *
+ * The component passes the variantInput to VariantCard and then retrieves the
+ * exposed annotationSummary (which includes gene_symbol) from VariantCard to pass
+ * to GeneCard.
  */
 export default {
   name: 'ScoringView',
@@ -40,13 +45,16 @@ export default {
   },
   setup() {
     const route = useRoute();
-    // Get the variant input from route parameters.
+    // Retrieve parameters from the URL; use defaults if necessary.
     const variantInput = route.params.variantInput;
+    const inheritance = route.params.inheritance || 'Inherited dominant';
+    const segregation = route.params.segregation || '1';
+
     // Create a ref to access the VariantCard component instance.
     const variantCardRef = ref(null);
 
-    // Compute the gene symbol from the exposed annotationSummary.
-    // If gene_symbol is an array, use the first element; otherwise, use the string value.
+    // Compute the gene symbol from the exposed annotationSummary of VariantCard.
+    // If gene_symbol is an array, use the first element.
     const geneSymbol = computed(() => {
       if (variantCardRef.value && variantCardRef.value.annotationSummary) {
         const gs = variantCardRef.value.annotationSummary.gene_symbol;
@@ -57,6 +65,8 @@ export default {
 
     return {
       variantInput,
+      inheritance,
+      segregation,
       variantCardRef,
       geneSymbol,
     };
