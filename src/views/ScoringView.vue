@@ -2,19 +2,54 @@
 <template>
   <v-container>
     <v-row>
-      <!-- Left Column: Variant Card -->
+      <!-- Left Column: Gene Card (top) and Inheritance Parameters Card (bottom) -->
+      <v-col cols="12" md="6">
+        <!-- Gene Card -->
+        <v-card class="mb-4" v-if="geneSymbol && geneSymbol.trim() !== ''">
+          <GeneCard :symbol="geneSymbol" />
+        </v-card>
+        <v-card class="mb-4" v-else>
+          <v-alert type="info">
+            Waiting for gene data...
+          </v-alert>
+        </v-card>
+        <!-- Inheritance Parameters Card -->
+        <v-card class="scoring-params-card">
+          <v-card-title>Inheritance</v-card-title>
+          <v-card-text>
+            <v-table class="summary-table">
+              <tbody>
+                <tr>
+                  <td class="info-col">
+                    <strong>Inheritance Pattern:</strong>
+                    <v-tooltip activator="parent" location="start">
+                      The mode of inheritance used in scoring.
+                    </v-tooltip>
+                  </td>
+                  <td class="value-col">
+                    <span>{{ inheritance }}</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="info-col">
+                    <strong>Segregation Probability:</strong>
+                    <v-tooltip activator="parent" location="start">
+                      The probability of segregation (value between 0 and 1).
+                    </v-tooltip>
+                  </td>
+                  <td class="value-col">
+                    <span>{{ segregation }}</span>
+                  </td>
+                </tr>
+              </tbody>
+            </v-table>
+          </v-card-text>
+        </v-card>
+      </v-col>
+
+      <!-- Right Column: Variant Card -->
       <v-col cols="12" md="6">
         <VariantCard ref="variantCardRef" :variantInput="variantInput" />
-      </v-col>
-      <!-- Right Column: Gene Card (only render when geneSymbol is available) -->
-      <v-col cols="12" md="6" v-if="geneSymbol">
-        <GeneCard :symbol="geneSymbol" />
-      </v-col>
-      <!-- Fallback message while waiting for gene data -->
-      <v-col cols="12" md="6" v-else>
-        <v-alert type="info">
-          Waiting for gene data...
-        </v-alert>
       </v-col>
     </v-row>
   </v-container>
@@ -27,15 +62,15 @@ import VariantCard from '@/components/VariantCard.vue';
 import GeneCard from '@/components/GeneCard.vue';
 
 /**
- * ScoringView integrates both the VariantCard and the GeneCard.
+ * ScoringView integrates the VariantCard, GeneCard, and an Inheritance Parameters card.
  * It accepts three parameters via the URL:
  * - variantInput: the variant (VCF or HGVS) to be analyzed,
  * - inheritance: the inheritance pattern (default "Inherited dominant"),
  * - segregation: the segregation probability (default "1").
  *
- * The component passes the variantInput to VariantCard and then retrieves the
- * exposed annotationSummary (which includes gene_symbol) from VariantCard to pass
- * to GeneCard.
+ * The component passes variantInput to VariantCard and then retrieves the exposed
+ * annotationSummary (which includes gene_symbol) from VariantCard to pass to GeneCard.
+ * Additionally, it displays the inheritance parameters in a dedicated card.
  */
 export default {
   name: 'ScoringView',
@@ -45,12 +80,12 @@ export default {
   },
   setup() {
     const route = useRoute();
-    // Retrieve parameters from the URL; use defaults if necessary.
+    // Retrieve URL parameters; provide defaults for inheritance and segregation.
     const variantInput = route.params.variantInput;
     const inheritance = route.params.inheritance || 'Inherited dominant';
     const segregation = route.params.segregation || '1';
 
-    // Create a ref to access the VariantCard component instance.
+    // Create a ref to access the VariantCard instance.
     const variantCardRef = ref(null);
 
     // Compute the gene symbol from the exposed annotationSummary of VariantCard.
@@ -75,5 +110,23 @@ export default {
 </script>
 
 <style scoped>
-/* Add any additional styling if needed */
+.scoring-params-card {
+  max-width: 600px;
+  margin-bottom: 16px;
+  padding: 16px;
+}
+.summary-table {
+  width: 100%;
+}
+.info-col {
+  width: 40%;
+  vertical-align: top;
+}
+.value-col {
+  width: 60%;
+  vertical-align: top;
+}
+.mb-4 {
+  margin-bottom: 16px;
+}
 </style>
