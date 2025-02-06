@@ -5,7 +5,7 @@
     <v-card-text>
       <v-table class="summary-table">
         <tbody>
-          <!-- Inheritance Score Row (now first) -->
+          <!-- Inheritance Score Row (first row) -->
           <tr>
             <td class="info-col">
               <strong>Inheritance Score:</strong>
@@ -53,18 +53,17 @@
 import { computed } from 'vue';
 
 /**
- * Computes the final genetic variant score given:
- *   - A base inheritance pattern score
- *   - A segregation p-value (probability of random co-segregation)
+ * Computes the final genetic variant score based on a base inheritance score and a segregation p-value.
  *
  * The function uses a negative-log transformation of the p-value to boost
- * the base score toward 1.0 for very low p-values (strong segregation).
+ * the base score toward 1.0 for very low p-values (i.e. strong segregation evidence).
  *
- * @param {number} baseScore - Base inheritance pattern score (0 <= baseScore <= 1)
- * @param {number} [pValue=1] - Segregation p-value (0 <= pValue <= 1). Default is 1 (no added evidence).
+ * @param {number} baseScore - Base inheritance pattern score (must be between 0 and 1).
+ * @param {number} [pValue=1] - Segregation p-value (must be between 0 and 1). Defaults to 1 (i.e. no added evidence).
  * @param {number} [gamma=0.001] - Threshold p-value for maximal evidence.
- * @param {number} [epsilon=1e-10] - Small floor to avoid log(0).
- * @returns {number} - Final score, scaled between baseScore and 1.0.
+ * @param {number} [epsilon=1e-10] - Small floor to avoid logarithm of zero.
+ * @returns {number} - Final inheritance score, scaled between baseScore and 1.0.
+ * @throws {Error} - If baseScore or pValue are out of the [0,1] range.
  */
 function computeVariantScore(baseScore, pValue = 1, gamma = 0.001, epsilon = 1e-10) {
   if (baseScore < 0 || baseScore > 1) {
@@ -100,8 +99,8 @@ export default {
     // Convert the segregation prop to a number.
     const segregationProb = computed(() => Number(props.segregation));
 
-    // Base scores mapping for inheritance patterns.
-    // (This mapping could later be moved to a separate config file.)
+    // Base score mapping for inheritance patterns.
+    // (This mapping can later be moved to a separate configuration file.)
     const baseScores = {
       Denovo: 0.95,
       'Inherited dominant': 0.7,
@@ -111,7 +110,7 @@ export default {
       Unknown: 0.1,
     };
 
-    // Lookup the base score for the provided inheritance pattern.
+    // Determine the base score for the current inheritance pattern.
     const baseScore = computed(() =>
       baseScores[props.inheritance] !== undefined ? baseScores[props.inheritance] : 0.1
     );
@@ -124,7 +123,7 @@ export default {
     // Format the final score to three decimal places.
     const finalScoreFormatted = computed(() => finalScore.value.toFixed(3));
 
-    // Expose the computed scores to the parent component.
+    // Expose the computed scores so that parent components can use them.
     expose({
       finalScore,
       finalScoreFormatted,
