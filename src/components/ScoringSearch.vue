@@ -29,6 +29,9 @@
               v-model="segregation"
               label="3. Segregation Probability"
               type="number"
+              min="0"
+              max="1"
+              step="0.01"
               outlined
               :disabled="!showSegregationInput"
             ></v-text-field>

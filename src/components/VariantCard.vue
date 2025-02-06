@@ -115,9 +115,8 @@
           </v-card-text>
         </v-card>
 
-        <!-- Transcript Consequences Section (unchanged) -->
+        <!-- Transcript Consequences Section -->
         <v-card class="mb-4" v-if="transcriptIds.length">
-          <v-card-title>Transcript Consequences</v-card-title>
           <v-card-text>
             <v-select
               v-model="selectedTranscriptId"
