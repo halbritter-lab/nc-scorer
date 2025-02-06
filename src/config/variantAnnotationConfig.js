@@ -7,13 +7,13 @@ export const variantAnnotationConfig = {
     label: "Transcript ID",
     format: "text",
     description: "Transcript Identifier",
-    visibility: true,
+    visibility: false,
   },
   gene_id: {
     label: "Gene ID",
     format: "text",
     description: "Ensembl Gene Identifier",
-    visibility: true,
+    visibility: false,
   },
   hgnc_id: {
     label: "HGNC ID",
@@ -39,7 +39,7 @@ export const variantAnnotationConfig = {
     label: "Source",
     format: "text",
     description: "Data source",
-    visibility: true,
+    visibility: false,
   },
   biotype: {
     label: "Biotype",
@@ -51,19 +51,19 @@ export const variantAnnotationConfig = {
     label: "Given Reference",
     format: "text",
     description: "Reference allele provided",
-    visibility: true,
+    visibility: false,
   },
   gene_symbol_source: {
     label: "Gene Symbol Source",
     format: "text",
     description: "Source for gene symbol",
-    visibility: true,
+    visibility: false,
   },
   variant_allele: {
     label: "Variant Allele",
     format: "text",
     description: "Alternate allele",
-    visibility: true,
+    visibility: false,
   },
   cadd_phred: {
     label: "CADD Phred Score",
