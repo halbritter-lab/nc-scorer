@@ -137,7 +137,6 @@ export default {
     onMounted(async () => {
       try {
         result.value = await queryVariant(variantValue);
-        console.log('Variant result:', result.value);
         // If transcript consequences exist, default to the first transcript ID.
         if (transcriptIds.value.length > 0) {
           selectedTranscriptId.value = transcriptIds.value[0];
