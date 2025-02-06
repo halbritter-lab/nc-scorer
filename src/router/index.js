@@ -5,8 +5,9 @@ const SearchPage = () => import('@/views/SearchPage.vue');
 const GeneView = () => import('@/views/GeneView.vue');
 const FAQ = () => import('@/views/FAQ.vue');
 const PageNotFound = () => import('@/views/PageNotFound.vue');
-// Import our new VariantView page
 const VariantView = () => import('@/views/VariantView.vue');
+// Import our new ScoringView page.
+const ScoringView = () => import('@/views/ScoringView.vue');
 
 const routes = [
   {
@@ -29,6 +30,12 @@ const routes = [
     path: '/variant/:variantInput',
     name: 'VariantView',
     component: VariantView,
+    props: true,
+  },
+  {
+    path: '/scoring/:variantInput',
+    name: 'ScoringView',
+    component: ScoringView,
     props: true,
   },
   {
