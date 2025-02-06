@@ -1,7 +1,7 @@
 <!-- src/views/VariantView.vue -->
 <template>
   <v-container>
-    <v-card>
+    <v-card class="variant-card">
       <v-card-title>
         Transcript Annotation Details for "{{ variantValue }}"
       </v-card-title>
@@ -28,7 +28,8 @@
                 <v-table class="annotation-table">
                   <tbody>
                     <tr v-for="entry in visibleAnnotationConfig" :key="entry[0]">
-                      <td>
+                      <td class="info-col">
+                        <!-- Label with hover tooltip (as in Gene view) -->
                         <span class="label-hover" :title="entry[1].description">
                           {{ entry[1].label }}
                         </span>
@@ -36,12 +37,12 @@
                           {{ entry[1].description }}
                         </v-tooltip>
                       </td>
-                      <td>
-                        <!-- Check if the config's format is "array" -->
+                      <td class="value-col">
+                        <!-- Render array values as chips -->
                         <template v-if="entry[1].format === 'array'">
                           <v-chip
-                            v-for="(item, index) in selectedTranscript[entry[0]]"
-                            :key="index"
+                            v-for="(item, idx) in selectedTranscript[entry[0]]"
+                            :key="idx"
                             class="mr-1"
                             small
                           >
@@ -166,11 +167,24 @@ export default {
 </script>
 
 <style scoped>
+.variant-card {
+  max-width: 600px;
+  margin: auto;
+  padding: 16px;
+}
 .mb-4 {
   margin-bottom: 16px;
 }
 .annotation-table {
   width: 100%;
+}
+.info-col {
+  width: 40%;
+  vertical-align: top;
+}
+.value-col {
+  width: 60%;
+  vertical-align: top;
 }
 .label-hover {
   cursor: help;
