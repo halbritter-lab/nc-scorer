@@ -5,28 +5,7 @@
     <v-card-text>
       <v-table class="summary-table">
         <tbody>
-          <tr>
-            <td class="info-col">
-              <strong>Inheritance Pattern:</strong>
-              <v-tooltip activator="parent" location="start">
-                The mode of inheritance used in scoring.
-              </v-tooltip>
-            </td>
-            <td class="value-col">
-              <span>{{ inheritance }}</span>
-            </td>
-          </tr>
-          <tr>
-            <td class="info-col">
-              <strong>Segregation Probability:</strong>
-              <v-tooltip activator="parent" location="start">
-                The probability of segregation (value between 0 and 1).
-              </v-tooltip>
-            </td>
-            <td class="value-col">
-              <span>{{ segregation }}</span>
-            </td>
-          </tr>
+          <!-- Inheritance Score Row (now first) -->
           <tr>
             <td class="info-col">
               <strong>Inheritance Score:</strong>
@@ -38,6 +17,30 @@
               <v-chip color="primary" small>
                 {{ finalScoreFormatted }}
               </v-chip>
+            </td>
+          </tr>
+          <!-- Inheritance Pattern Row -->
+          <tr>
+            <td class="info-col">
+              <strong>Inheritance Pattern:</strong>
+              <v-tooltip activator="parent" location="start">
+                The mode of inheritance used in scoring.
+              </v-tooltip>
+            </td>
+            <td class="value-col">
+              <span>{{ inheritance }}</span>
+            </td>
+          </tr>
+          <!-- Segregation Probability Row -->
+          <tr>
+            <td class="info-col">
+              <strong>Segregation Probability:</strong>
+              <v-tooltip activator="parent" location="start">
+                The probability of segregation (value between 0 and 1).
+              </v-tooltip>
+            </td>
+            <td class="value-col">
+              <span>{{ segregation }}</span>
             </td>
           </tr>
         </tbody>
@@ -93,12 +96,12 @@ export default {
       required: true,
     },
   },
-  setup(props) {
-    // Convert segregation to a number.
+  setup(props, { expose }) {
+    // Convert the segregation prop to a number.
     const segregationProb = computed(() => Number(props.segregation));
 
     // Base scores mapping for inheritance patterns.
-    // (This can be externalized to a config file later.)
+    // (This mapping could later be moved to a separate config file.)
     const baseScores = {
       Denovo: 0.95,
       'Inherited dominant': 0.7,
@@ -108,18 +111,24 @@ export default {
       Unknown: 0.1,
     };
 
-    // Lookup the base score for the current inheritance pattern.
-    const baseScore = computed(() => {
-      return baseScores[props.inheritance] !== undefined ? baseScores[props.inheritance] : 0.1;
-    });
+    // Lookup the base score for the provided inheritance pattern.
+    const baseScore = computed(() =>
+      baseScores[props.inheritance] !== undefined ? baseScores[props.inheritance] : 0.1
+    );
 
-    // Compute the final inheritance score using the computeVariantScore function.
-    const finalScore = computed(() => {
-      return computeVariantScore(baseScore.value, segregationProb.value);
-    });
+    // Compute the final inheritance score.
+    const finalScore = computed(() =>
+      computeVariantScore(baseScore.value, segregationProb.value)
+    );
 
     // Format the final score to three decimal places.
     const finalScoreFormatted = computed(() => finalScore.value.toFixed(3));
+
+    // Expose the computed scores to the parent component.
+    expose({
+      finalScore,
+      finalScoreFormatted,
+    });
 
     return {
       finalScore,
