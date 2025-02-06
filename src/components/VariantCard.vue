@@ -13,70 +13,109 @@
         <!-- Score Section -->
         <v-card class="mb-4 score-section" v-if="hasScore">
           <v-card-text>
-            <div
-              class="summary-item"
-              v-for="([scoreKey, config]) in visibleScoreConfig"
-              :key="scoreKey"
-            >
-              <strong>{{ config.label }}:</strong>
-              <v-chip
-                v-if="config.style === 'chip'"
-                :class="{'italic-font': config.font === 'italic', 'bold-font': config.font === 'bold'}"
-                :color="getColor(scoreSummary[scoreKey], config)"
-                small
-              >
-                {{ formatValue(scoreSummary[scoreKey], config) }}
-              </v-chip>
-              <span v-else>
-                {{ formatValue(scoreSummary[scoreKey], config) }}
-              </span>
-            </div>
+            <v-table class="summary-table">
+              <tbody>
+                <tr v-for="([scoreKey, config]) in visibleScoreConfig" :key="scoreKey">
+                  <td class="info-col">
+                    <strong>{{ config.label }}:</strong>
+                    <v-tooltip activator="parent" location="start">
+                      {{ config.description }}
+                    </v-tooltip>
+                  </td>
+                  <td class="value-col">
+                    <v-chip
+                      v-if="config.style === 'chip'"
+                      :class="{'italic-font': config.font === 'italic', 'bold-font': config.font === 'bold'}"
+                      :color="getColor(scoreSummary[scoreKey], config)"
+                      small
+                    >
+                      {{ formatOrDefault(scoreSummary[scoreKey], config) }}
+                    </v-chip>
+                    <span v-else>
+                      {{ formatOrDefault(scoreSummary[scoreKey], config) }}
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </v-table>
           </v-card-text>
         </v-card>
 
-        <!-- Summary Section -->
+        <!-- Overall Summary Section -->
         <v-card class="mb-4 summary-section">
           <v-card-text>
-            <div class="summary-item">
-              <strong>Most Severe Consequence:</strong>
-              <span>{{ annotationSummary.most_severe_consequence }}</span>
-            </div>
-            <div class="summary-item" v-if="annotationSummary.gene_symbol">
-              <strong>Gene Symbol:</strong>
-              <span>{{ annotationSummary.gene_symbol }}</span>
-            </div>
-            <div class="summary-item" v-if="annotationSummary.hgnc_id">
-              <strong>HGNC ID:</strong>
-              <span>{{ annotationSummary.hgnc_id }}</span>
-            </div>
+            <v-table class="summary-table">
+              <tbody>
+                <tr>
+                  <td class="info-col">
+                    <strong>Most Severe Consequence:</strong>
+                    <v-tooltip activator="parent" location="start">
+                      The top predicted impact for this variant.
+                    </v-tooltip>
+                  </td>
+                  <td class="value-col">
+                    <span>{{ annotationSummary.most_severe_consequence || 'NA' }}</span>
+                  </td>
+                </tr>
+                <tr v-if="annotationSummary.gene_symbol">
+                  <td class="info-col">
+                    <strong>Gene Symbol:</strong>
+                    <v-tooltip activator="parent" location="start">
+                      Official gene symbol.
+                    </v-tooltip>
+                  </td>
+                  <td class="value-col">
+                    <span>{{ annotationSummary.gene_symbol }}</span>
+                  </td>
+                </tr>
+                <tr v-if="annotationSummary.hgnc_id">
+                  <td class="info-col">
+                    <strong>HGNC ID:</strong>
+                    <v-tooltip activator="parent" location="start">
+                      HGNC Identifier.
+                    </v-tooltip>
+                  </td>
+                  <td class="value-col">
+                    <span>{{ annotationSummary.hgnc_id }}</span>
+                  </td>
+                </tr>
+              </tbody>
+            </v-table>
           </v-card-text>
         </v-card>
 
-        <!-- Frequency Section (from colocated_variants) -->
+        <!-- Frequency Section -->
         <v-card class="mb-4" v-if="frequencyExtracted">
           <v-card-text>
-            <div
-              class="summary-item"
-              v-for="([freqKey, config]) in visibleFrequencyConfig"
-              :key="freqKey"
-            >
-              <strong>{{ config.label }}:</strong>
-              <v-chip
-                v-if="config.style === 'chip'"
-                :class="{'italic-font': config.font === 'italic', 'bold-font': config.font === 'bold'}"
-                :color="getColor(frequencyExtracted[freqKey], config)"
-                small
-              >
-                {{ formatValue(frequencyExtracted[freqKey], config) }}
-              </v-chip>
-              <span v-else>
-                {{ formatValue(frequencyExtracted[freqKey], config) }}
-              </span>
-            </div>
+            <v-table class="summary-table">
+              <tbody>
+                <tr v-for="([freqKey, config]) in visibleFrequencyConfig" :key="freqKey">
+                  <td class="info-col">
+                    <strong>{{ config.label }}:</strong>
+                    <v-tooltip activator="parent" location="start">
+                      {{ config.description }}
+                    </v-tooltip>
+                  </td>
+                  <td class="value-col">
+                    <v-chip
+                      v-if="config.style === 'chip'"
+                      :class="{'italic-font': config.font === 'italic', 'bold-font': config.font === 'bold'}"
+                      :color="getColor(frequencyExtracted[freqKey], config)"
+                      small
+                    >
+                      {{ formatOrDefault(frequencyExtracted[freqKey], config) }}
+                    </v-chip>
+                    <span v-else>
+                      {{ formatOrDefault(frequencyExtracted[freqKey], config) }}
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </v-table>
           </v-card-text>
         </v-card>
 
-        <!-- Transcript Consequences Section -->
+        <!-- Transcript Consequences Section (unchanged) -->
         <v-card class="mb-4" v-if="transcriptIds.length">
           <v-card-title>Transcript Consequences</v-card-title>
           <v-card-text>
@@ -128,7 +167,7 @@
           </v-card-text>
         </v-card>
 
-        <!-- Final Score Section -->
+        <!-- Final Score Section (unchanged) -->
         <v-card v-if="result && result.finalScore !== undefined" class="mt-4">
           <v-card-title>Final Score</v-card-title>
           <v-card-text>{{ result.finalScore }}</v-card-text>
@@ -228,6 +267,7 @@ export default {
       if (frequencyData.value && typeof frequencyData.value === 'object') {
         const keys = Object.keys(frequencyData.value);
         if (keys.length > 0) {
+          // If a value is not defined, we default to "NA" later via formatOrDefault.
           return frequencyData.value[keys[0]];
         }
       }
@@ -266,6 +306,15 @@ export default {
     // Determine if a score exists.
     const hasScore = computed(() => Object.keys(scoreSummary.value).length > 0);
 
+    // Helper: Format value or return a default ("NA") if value is null/undefined or empty.
+    const formatOrDefault = (value, config) => {
+      const formatted = formatValue(value, config);
+      // Note: Do not override zero (0) if it is a valid value.
+      return (formatted === null || formatted === undefined || formatted === '')
+        ? 'NA'
+        : formatted;
+    };
+
     onMounted(async () => {
       try {
         result.value = await queryVariant(props.variantInput);
@@ -288,6 +337,7 @@ export default {
       visibleAnnotationConfig,
       getColor,
       formatValue,
+      formatOrDefault,
       result,
       annotationSummary,
       frequencyExtracted,
@@ -305,6 +355,9 @@ export default {
   max-width: 600px;
   margin: auto;
   padding: 16px;
+}
+.summary-table {
+  width: 100%;
 }
 .annotation-table {
   width: 100%;
