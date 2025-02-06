@@ -1,6 +1,7 @@
+<!-- src/components/InheritanceCard.vue -->
 <template>
-  <v-card class="scoring-params-card">
-    <v-card-title>Inheritance</v-card-title>
+  <v-card class="inheritance-card">
+    <v-card-title>Inheritance Parameters</v-card-title>
     <v-card-text>
       <v-table class="summary-table">
         <tbody>
@@ -26,6 +27,19 @@
               <span>{{ segregation }}</span>
             </td>
           </tr>
+          <tr>
+            <td class="info-col">
+              <strong>Inheritance Score:</strong>
+              <v-tooltip activator="parent" location="start">
+                Combined score based on the inheritance pattern and segregation probability.
+              </v-tooltip>
+            </td>
+            <td class="value-col">
+              <v-chip color="primary" small>
+                {{ finalScoreFormatted }}
+              </v-chip>
+            </td>
+          </tr>
         </tbody>
       </v-table>
     </v-card-text>
@@ -33,13 +47,39 @@
 </template>
 
 <script>
+import { computed } from 'vue';
+
 /**
- * InheritanceCard displays the inheritance pattern and segregation probability.
+ * Computes the final genetic variant score given:
+ *   - A base inheritance pattern score
+ *   - A segregation p-value (probability of random co-segregation)
  *
- * @component
- * @prop {String} inheritance - The selected inheritance pattern.
- * @prop {String} segregation - The selected segregation probability.
+ * The function uses a negative-log transformation of the p-value to boost
+ * the base score toward 1.0 for very low p-values (strong segregation).
+ *
+ * @param {number} baseScore - Base inheritance pattern score (0 <= baseScore <= 1)
+ * @param {number} [pValue=1] - Segregation p-value (0 <= pValue <= 1). Default is 1 (no added evidence).
+ * @param {number} [gamma=0.001] - Threshold p-value for maximal evidence.
+ * @param {number} [epsilon=1e-10] - Small floor to avoid log(0).
+ * @returns {number} - Final score, scaled between baseScore and 1.0.
  */
+function computeVariantScore(baseScore, pValue = 1, gamma = 0.001, epsilon = 1e-10) {
+  if (baseScore < 0 || baseScore > 1) {
+    throw new Error('baseScore must be between 0 and 1');
+  }
+  if (pValue < 0 || pValue > 1) {
+    throw new Error('pValue must be between 0 and 1');
+  }
+  const adjustedP = Math.max(pValue, epsilon);
+  const numerator = -Math.log(adjustedP);
+  const denominator = -Math.log(gamma);
+  let rawFactor = numerator / denominator;
+  if (rawFactor > 1) {
+    rawFactor = 1;
+  }
+  return baseScore + (1 - baseScore) * rawFactor;
+}
+
 export default {
   name: 'InheritanceCard',
   props: {
@@ -48,17 +88,51 @@ export default {
       required: true,
     },
     segregation: {
-      type: String,
+      // Accept both String and Number so that URL parameters are handled gracefully.
+      type: [String, Number],
       required: true,
     },
+  },
+  setup(props) {
+    // Convert segregation to a number.
+    const segregationProb = computed(() => Number(props.segregation));
+
+    // Base scores mapping for inheritance patterns.
+    // (This can be externalized to a config file later.)
+    const baseScores = {
+      Denovo: 0.95,
+      'Inherited dominant': 0.7,
+      'Homozygous recessive': 0.8,
+      'X-linked': 0.6,
+      'Compound heterozygous': 0.65,
+      Unknown: 0.1,
+    };
+
+    // Lookup the base score for the current inheritance pattern.
+    const baseScore = computed(() => {
+      return baseScores[props.inheritance] !== undefined ? baseScores[props.inheritance] : 0.1;
+    });
+
+    // Compute the final inheritance score using the computeVariantScore function.
+    const finalScore = computed(() => {
+      return computeVariantScore(baseScore.value, segregationProb.value);
+    });
+
+    // Format the final score to three decimal places.
+    const finalScoreFormatted = computed(() => finalScore.value.toFixed(3));
+
+    return {
+      finalScore,
+      finalScoreFormatted,
+    };
   },
 };
 </script>
 
 <style scoped>
-.scoring-params-card {
+.inheritance-card {
   max-width: 600px;
-  margin-bottom: 16px;
+  margin: auto;
   padding: 16px;
 }
 .summary-table {
