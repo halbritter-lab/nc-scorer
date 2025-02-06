@@ -3,7 +3,7 @@
   <v-container>
     <v-card>
       <v-card-title>
-        Variant Details for "{{ variantValue }}"
+        Transcript Annotation Details for "{{ variantValue }}"
       </v-card-title>
       <v-card-text>
         <div v-if="loading">
@@ -15,7 +15,7 @@
           </v-alert>
         </div>
         <div v-else>
-          <!-- Display Transcript Consequences -->
+          <!-- Transcript Consequences Section -->
           <v-card class="mb-4" v-if="transcriptIds.length">
             <v-card-title>Transcript Consequences</v-card-title>
             <v-card-text>
@@ -25,7 +25,32 @@
                 label="Select Transcript ID"
               ></v-select>
               <div v-if="selectedTranscript">
-                <pre>{{ JSON.stringify(selectedTranscript, null, 2) }}</pre>
+                <v-table class="annotation-table">
+                  <tbody>
+                    <tr v-for="entry in visibleAnnotationConfig" :key="entry[0]">
+                      <td>
+                        <span class="label-hover" :title="entry[1].description">
+                          {{ entry[1].label }}
+                        </span>
+                        <v-tooltip activator="parent" location="start">
+                          {{ entry[1].description }}
+                        </v-tooltip>
+                      </td>
+                      <td>
+                        <v-chip
+                          v-if="entry[1].style === 'chip'"
+                          :class="{'italic-font': entry[1].font === 'italic', 'bold-font': entry[1].font === 'bold'}"
+                          :color="getColor(selectedTranscript[entry[0]], entry[1])"
+                        >
+                          {{ formatValue(selectedTranscript[entry[0]], entry[1]) }}
+                        </v-chip>
+                        <span v-else>
+                          {{ formatValue(selectedTranscript[entry[0]], entry[1]) }}
+                        </span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </v-table>
               </div>
             </v-card-text>
           </v-card>
@@ -45,6 +70,8 @@
 import { ref, onMounted, computed } from 'vue';
 import { useRoute } from 'vue-router';
 import { queryVariant } from '@/api/variantApi.js';
+import { variantAnnotationConfig } from '@/config/variantAnnotationConfig.js';
+import { getColor, formatValue } from '@/utils/format.js';
 
 export default {
   name: 'VariantView',
@@ -56,13 +83,13 @@ export default {
   },
   setup(props) {
     const route = useRoute();
-    // Use the prop or route parameter for the variant value
+    // Use the prop or route parameter for the variant value.
     const variantValue = props.variantInput || route.params.variantInput;
     const result = ref(null);
     const loading = ref(true);
     const error = ref(null);
 
-    // Compute transcript consequences from the first annotation data object
+    // Compute transcript consequences from the first annotation data object.
     const transcriptOptions = computed(() => {
       if (
         result.value &&
@@ -75,24 +102,25 @@ export default {
       return [];
     });
 
-    // Compute a list of transcript IDs from the transcript consequences
-    const transcriptIds = computed(() => {
-      return transcriptOptions.value.map(tc => tc.transcript_id);
-    });
-
-    // The selected transcript ID (default will be set after loading data)
+    // Compute a list of transcript IDs from the transcript consequences.
+    const transcriptIds = computed(() => transcriptOptions.value.map(tc => tc.transcript_id));
     const selectedTranscriptId = ref(null);
+    const selectedTranscript = computed(() =>
+      transcriptOptions.value.find(tc => tc.transcript_id === selectedTranscriptId.value)
+    );
 
-    // Compute the selected transcript consequence object
-    const selectedTranscript = computed(() => {
-      return transcriptOptions.value.find(tc => tc.transcript_id === selectedTranscriptId.value);
+    // Compute a filtered array of [propKey, config] entries from the variant annotation config.
+    const visibleAnnotationConfig = computed(() => {
+      return Object.entries(variantAnnotationConfig).filter(
+        ([, config]) => config.visibility
+      );
     });
 
     onMounted(async () => {
       try {
         result.value = await queryVariant(variantValue);
         console.log('Variant result:', result.value);
-        // If transcript consequences exist, default to the first transcript ID
+        // If transcript consequences exist, default to the first transcript ID.
         if (transcriptIds.value.length > 0) {
           selectedTranscriptId.value = transcriptIds.value[0];
         }
@@ -111,6 +139,9 @@ export default {
       transcriptIds,
       selectedTranscriptId,
       selectedTranscript,
+      visibleAnnotationConfig,
+      getColor,
+      formatValue,
     };
   },
 };
@@ -119,5 +150,17 @@ export default {
 <style scoped>
 .mb-4 {
   margin-bottom: 16px;
+}
+.annotation-table {
+  width: 100%;
+}
+.label-hover {
+  cursor: help;
+}
+.italic-font {
+  font-style: italic;
+}
+.bold-font {
+  font-weight: bold;
 }
 </style>
