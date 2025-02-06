@@ -193,7 +193,7 @@ export default {
       required: true,
     },
   },
-  setup(props) {
+  setup(props, { expose }) {
     const result = ref(null);
     const loading = ref(true);
     const error = ref(null);
@@ -262,12 +262,11 @@ export default {
       return null;
     });
 
-    // Extract the first nested object value from frequencies (regardless of its key)
+    // Extract the first nested object value from frequencies (regardless of its key).
     const frequencyExtracted = computed(() => {
       if (frequencyData.value && typeof frequencyData.value === 'object') {
         const keys = Object.keys(frequencyData.value);
         if (keys.length > 0) {
-          // If a value is not defined, we default to "NA" later via formatOrDefault.
           return frequencyData.value[keys[0]];
         }
       }
@@ -309,7 +308,6 @@ export default {
     // Helper: Format value or return a default ("NA") if value is null/undefined or empty.
     const formatOrDefault = (value, config) => {
       const formatted = formatValue(value, config);
-      // Note: Do not override zero (0) if it is a valid value.
       return (formatted === null || formatted === undefined || formatted === '')
         ? 'NA'
         : formatted;
@@ -326,6 +324,12 @@ export default {
       } finally {
         loading.value = false;
       }
+    });
+
+    // Expose scoreSummary and annotationSummary to the parent component.
+    expose({
+      scoreSummary,
+      annotationSummary,
     });
 
     return {

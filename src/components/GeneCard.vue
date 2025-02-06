@@ -55,7 +55,7 @@ export default {
       required: true,
     },
   },
-  setup(props) {
+  setup(props, { expose }) {
     const geneData = ref({});
     const loading = ref(true);
     const error = ref(null);
@@ -89,6 +89,11 @@ export default {
       } finally {
         loading.value = false;
       }
+    });
+
+    // Expose filteredGeneData so parent components can access it.
+    expose({
+      filteredGeneData,
     });
 
     return {
