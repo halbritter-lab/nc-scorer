@@ -10,51 +10,125 @@
         <v-alert type="error" dismissible>{{ error }}</v-alert>
       </div>
       <div v-else>
-        <v-select
-          v-model="selectedTranscriptId"
-          :items="transcriptIds"
-          label="Select Transcript ID"
-        ></v-select>
-        <div v-if="selectedTranscript">
-          <v-table class="annotation-table">
-            <tbody>
-              <tr v-for="entry in visibleAnnotationConfig" :key="entry[0]">
-                <td class="info-col">
-                  <span class="label-hover" :title="entry[1].description">
-                    {{ entry[1].label }}
-                  </span>
-                  <v-tooltip activator="parent" location="start">
-                    {{ entry[1].description }}
-                  </v-tooltip>
-                </td>
-                <td class="value-col">
-                  <template v-if="entry[1].format === 'array'">
-                    <v-chip
-                      v-for="(item, idx) in selectedTranscript[entry[0]]"
-                      :key="idx"
-                      class="mr-1"
-                      small
-                    >
-                      {{ item }}
-                    </v-chip>
-                  </template>
-                  <template v-else>
-                    <v-chip
-                      v-if="entry[1].style === 'chip'"
-                      :class="{'italic-font': entry[1].font === 'italic', 'bold-font': entry[1].font === 'bold'}"
-                      :color="getColor(selectedTranscript[entry[0]], entry[1])"
-                    >
-                      {{ formatValue(selectedTranscript[entry[0]], entry[1]) }}
-                    </v-chip>
-                    <span v-else>
-                      {{ formatValue(selectedTranscript[entry[0]], entry[1]) }}
-                    </span>
-                  </template>
-                </td>
-              </tr>
-            </tbody>
-          </v-table>
-        </div>
+        <!-- Score Section -->
+        <v-card class="mb-4 score-section" v-if="hasScore">
+          <v-card-text>
+            <div
+              class="summary-item"
+              v-for="([scoreKey, config]) in visibleScoreConfig"
+              :key="scoreKey"
+            >
+              <strong>{{ config.label }}:</strong>
+              <v-chip
+                v-if="config.style === 'chip'"
+                :class="{'italic-font': config.font === 'italic', 'bold-font': config.font === 'bold'}"
+                :color="getColor(scoreSummary[scoreKey], config)"
+                small
+              >
+                {{ formatValue(scoreSummary[scoreKey], config) }}
+              </v-chip>
+              <span v-else>
+                {{ formatValue(scoreSummary[scoreKey], config) }}
+              </span>
+            </div>
+          </v-card-text>
+        </v-card>
+
+        <!-- Summary Section -->
+        <v-card class="mb-4 summary-section">
+          <v-card-text>
+            <div class="summary-item">
+              <strong>Most Severe Consequence:</strong>
+              <span>{{ annotationSummary.most_severe_consequence }}</span>
+            </div>
+            <div class="summary-item" v-if="annotationSummary.gene_symbol">
+              <strong>Gene Symbol:</strong>
+              <span>{{ annotationSummary.gene_symbol }}</span>
+            </div>
+            <div class="summary-item" v-if="annotationSummary.hgnc_id">
+              <strong>HGNC ID:</strong>
+              <span>{{ annotationSummary.hgnc_id }}</span>
+            </div>
+          </v-card-text>
+        </v-card>
+
+        <!-- Frequency Section (from colocated_variants) -->
+        <v-card class="mb-4" v-if="frequencyExtracted">
+          <v-card-text>
+            <div
+              class="summary-item"
+              v-for="([freqKey, config]) in visibleFrequencyConfig"
+              :key="freqKey"
+            >
+              <strong>{{ config.label }}:</strong>
+              <v-chip
+                v-if="config.style === 'chip'"
+                :class="{'italic-font': config.font === 'italic', 'bold-font': config.font === 'bold'}"
+                :color="getColor(frequencyExtracted[freqKey], config)"
+                small
+              >
+                {{ formatValue(frequencyExtracted[freqKey], config) }}
+              </v-chip>
+              <span v-else>
+                {{ formatValue(frequencyExtracted[freqKey], config) }}
+              </span>
+            </div>
+          </v-card-text>
+        </v-card>
+
+        <!-- Transcript Consequences Section -->
+        <v-card class="mb-4" v-if="transcriptIds.length">
+          <v-card-title>Transcript Consequences</v-card-title>
+          <v-card-text>
+            <v-select
+              v-model="selectedTranscriptId"
+              :items="transcriptIds"
+              label="Select Transcript ID"
+            ></v-select>
+            <div v-if="selectedTranscript">
+              <v-table class="annotation-table">
+                <tbody>
+                  <tr v-for="entry in visibleAnnotationConfig" :key="entry[0]">
+                    <td class="info-col">
+                      <span class="label-hover" :title="entry[1].description">
+                        {{ entry[1].label }}
+                      </span>
+                      <v-tooltip activator="parent" location="start">
+                        {{ entry[1].description }}
+                      </v-tooltip>
+                    </td>
+                    <td class="value-col">
+                      <template v-if="entry[1].format === 'array'">
+                        <v-chip
+                          v-for="(item, idx) in selectedTranscript[entry[0]]"
+                          :key="idx"
+                          class="mr-1"
+                          small
+                        >
+                          {{ item }}
+                        </v-chip>
+                      </template>
+                      <template v-else>
+                        <v-chip
+                          v-if="entry[1].style === 'chip'"
+                          :class="{'italic-font': entry[1].font === 'italic', 'bold-font': entry[1].font === 'bold'}"
+                          :color="getColor(selectedTranscript[entry[0]], entry[1])"
+                        >
+                          {{ formatValue(selectedTranscript[entry[0]], entry[1]) }}
+                        </v-chip>
+                        <span v-else>
+                          {{ formatValue(selectedTranscript[entry[0]], entry[1]) }}
+                        </span>
+                      </template>
+                    </td>
+                  </tr>
+                </tbody>
+              </v-table>
+            </div>
+          </v-card-text>
+        </v-card>
+
+        <!-- Final Score Section -->
         <v-card v-if="result && result.finalScore !== undefined" class="mt-4">
           <v-card-title>Final Score</v-card-title>
           <v-card-text>{{ result.finalScore }}</v-card-text>
@@ -68,6 +142,8 @@
 import { ref, onMounted, computed } from 'vue';
 import { queryVariant } from '@/api/variantApi.js';
 import { variantAnnotationConfig } from '@/config/variantAnnotationConfig.js';
+import { variantFrequencyConfig } from '@/config/variantFrequencyConfig.js';
+import { variantScoreConfig } from '@/config/variantScoreConfig.js';
 import { getColor, formatValue } from '@/utils/format.js';
 
 export default {
@@ -105,12 +181,90 @@ export default {
       transcriptOptions.value.find(tc => tc.transcript_id === selectedTranscriptId.value)
     );
 
-    // Compute a filtered array of [propKey, config] entries from the variant annotation config.
+    // Compute a filtered array of [propKey, config] entries for annotation details.
     const visibleAnnotationConfig = computed(() => {
       return Object.entries(variantAnnotationConfig).filter(
         ([, config]) => config.visibility
       );
     });
+
+    // Compute summary data from the first annotation object.
+    const annotationSummary = computed(() => {
+      if (
+        result.value &&
+        result.value.annotationData &&
+        result.value.annotationData.length > 0
+      ) {
+        const anno = result.value.annotationData[0];
+        return {
+          most_severe_consequence: anno.most_severe_consequence,
+          gene_symbol: Array.isArray(anno.gene_symbol)
+            ? anno.gene_symbol.join(', ')
+            : anno.gene_symbol,
+          hgnc_id: Array.isArray(anno.hgnc_id)
+            ? anno.hgnc_id.join(', ')
+            : anno.hgnc_id,
+        };
+      }
+      return {};
+    });
+
+    // Compute frequency data from the first colocated variant.
+    const frequencyData = computed(() => {
+      if (
+        result.value &&
+        result.value.annotationData &&
+        result.value.annotationData[0].colocated_variants &&
+        result.value.annotationData[0].colocated_variants.length > 0 &&
+        result.value.annotationData[0].colocated_variants[0].frequencies
+      ) {
+        return result.value.annotationData[0].colocated_variants[0].frequencies;
+      }
+      return null;
+    });
+
+    // Extract the first nested object value from frequencies (regardless of its key)
+    const frequencyExtracted = computed(() => {
+      if (frequencyData.value && typeof frequencyData.value === 'object') {
+        const keys = Object.keys(frequencyData.value);
+        if (keys.length > 0) {
+          return frequencyData.value[keys[0]];
+        }
+      }
+      return null;
+    });
+
+    // Compute visible frequency config entries.
+    const visibleFrequencyConfig = computed(() => {
+      return Object.entries(variantFrequencyConfig).filter(
+        ([, config]) => config.visibility
+      );
+    });
+
+    // Compute score summary from the first annotation object.
+    const scoreSummary = computed(() => {
+      if (
+        result.value &&
+        result.value.annotationData &&
+        result.value.annotationData.length > 0 &&
+        result.value.annotationData[0].nephro_variant_score_gnomadg_missing !== undefined
+      ) {
+        return {
+          nephro_variant_score: result.value.annotationData[0].nephro_variant_score_gnomadg_missing,
+        };
+      }
+      return {};
+    });
+
+    // Compute visible score config entries.
+    const visibleScoreConfig = computed(() => {
+      return Object.entries(variantScoreConfig).filter(
+        ([, config]) => config.visibility
+      );
+    });
+
+    // Determine if a score exists.
+    const hasScore = computed(() => Object.keys(scoreSummary.value).length > 0);
 
     onMounted(async () => {
       try {
@@ -135,6 +289,12 @@ export default {
       getColor,
       formatValue,
       result,
+      annotationSummary,
+      frequencyExtracted,
+      visibleFrequencyConfig,
+      scoreSummary,
+      visibleScoreConfig,
+      hasScore,
     };
   },
 };
@@ -168,5 +328,13 @@ export default {
 }
 .mt-4 {
   margin-top: 16px;
+}
+.summary-section {
+  margin-bottom: 16px;
+  padding: 8px;
+  border-radius: 4px;
+}
+.summary-item {
+  margin-bottom: 4px;
 }
 </style>

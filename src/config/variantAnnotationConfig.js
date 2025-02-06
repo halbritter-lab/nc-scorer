@@ -19,7 +19,7 @@ export const variantAnnotationConfig = {
     label: "HGNC ID",
     format: "text",
     description: "HGNC Identifier",
-    visibility: true,
+    visibility: false,
   },
   gene_symbol: {
     label: "Gene Symbol",
@@ -45,7 +45,7 @@ export const variantAnnotationConfig = {
     label: "Biotype",
     format: "text",
     description: "Transcript biotype",
-    visibility: true,
+    visibility: false,
   },
   given_ref: {
     label: "Given Reference",
