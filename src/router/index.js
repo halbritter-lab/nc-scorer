@@ -1,8 +1,8 @@
 // src/router/index.js
 import { createRouter, createWebHistory } from 'vue-router';
 
-const GeneSearch = () => import('@/views/GeneSearch.vue');
-const GeneInfo = () => import('@/views/GeneInfo.vue');
+const SearchPage = () => import('@/views/SearchPage.vue');
+const GeneView = () => import('@/views/GeneView.vue');
 const FAQ = () => import('@/views/FAQ.vue');
 const PageNotFound = () => import('@/views/PageNotFound.vue');
 // Import our new VariantView page
@@ -11,13 +11,13 @@ const VariantView = () => import('@/views/VariantView.vue');
 const routes = [
   {
     path: '/',
-    name: 'GeneSearch',
-    component: GeneSearch,
+    name: 'SearchPage',
+    component: SearchPage,
   },
   {
     path: '/symbols/:symbol',
-    name: 'GeneInfo',
-    component: GeneInfo,
+    name: 'GeneView',
+    component: GeneView,
     props: true,
   },
   {

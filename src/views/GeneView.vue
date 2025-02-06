@@ -1,4 +1,4 @@
-<!-- src/views/GeneInfo.vue -->
+<!-- src/views/GeneView.vue -->
 <template>
   <v-container>
     <v-table class="gene-info-table">
@@ -38,7 +38,7 @@ import { getColor, formatValue } from '@/utils/format.js';
 import { fetchGeneDetails } from '@/api/geneApi.js'; // Use the new API module
 
 export default {
-  name: 'GeneInfo',
+  name: 'GeneView',
   props: {
     symbol: {
       type: String,

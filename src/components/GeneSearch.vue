@@ -1,4 +1,4 @@
-<!-- src/components/SearchComponent.vue -->
+<!-- src/components/GeneSearch.vue -->
 <template>
   <v-card class="search-card">
     <v-card-text>
@@ -29,7 +29,7 @@ import { useRouter } from 'vue-router';
 import { fetchSymbolsIndex } from '@/api/geneApi.js'; // Use the new API module
 
 export default {
-  name: 'SearchComponent',
+  name: 'GeneSearch',
   setup() {
     const searchQuery = ref('');
     const router = useRouter();

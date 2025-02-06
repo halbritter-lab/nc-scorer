@@ -1,20 +1,20 @@
-<!-- src/views/GeneSearch.vue -->
+<!-- src/views/SearchPage.vue -->
 <template>
   <v-container>
     <!-- Variant Search placed above Gene Search -->
     <variant-search></variant-search>
-    <search-component></search-component>
+    <gene-search></gene-search>
   </v-container>
 </template>
 
 <script>
-import SearchComponent from '../components/SearchComponent.vue';
+import GeneSearch from '../components/GeneSearch.vue';
 import VariantSearch from '../components/VariantSearch.vue';
 
 export default {
-  name: 'GeneSearch',
+  name: 'SearchPage',
   components: {
-    SearchComponent,
+    GeneSearch,
     VariantSearch,
   },
 };
