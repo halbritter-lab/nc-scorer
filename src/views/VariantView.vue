@@ -37,16 +37,32 @@
                         </v-tooltip>
                       </td>
                       <td>
-                        <v-chip
-                          v-if="entry[1].style === 'chip'"
-                          :class="{'italic-font': entry[1].font === 'italic', 'bold-font': entry[1].font === 'bold'}"
-                          :color="getColor(selectedTranscript[entry[0]], entry[1])"
-                        >
-                          {{ formatValue(selectedTranscript[entry[0]], entry[1]) }}
-                        </v-chip>
-                        <span v-else>
-                          {{ formatValue(selectedTranscript[entry[0]], entry[1]) }}
-                        </span>
+                        <!-- Check if the config's format is "array" -->
+                        <template v-if="entry[1].format === 'array'">
+                          <v-chip
+                            v-for="(item, index) in selectedTranscript[entry[0]]"
+                            :key="index"
+                            class="mr-1"
+                            small
+                          >
+                            {{ item }}
+                          </v-chip>
+                        </template>
+                        <template v-else>
+                          <v-chip
+                            v-if="entry[1].style === 'chip'"
+                            :class="{
+                              'italic-font': entry[1].font === 'italic',
+                              'bold-font': entry[1].font === 'bold'
+                            }"
+                            :color="getColor(selectedTranscript[entry[0]], entry[1])"
+                          >
+                            {{ formatValue(selectedTranscript[entry[0]], entry[1]) }}
+                          </v-chip>
+                          <span v-else>
+                            {{ formatValue(selectedTranscript[entry[0]], entry[1]) }}
+                          </span>
+                        </template>
                       </td>
                     </tr>
                   </tbody>
@@ -103,7 +119,9 @@ export default {
     });
 
     // Compute a list of transcript IDs from the transcript consequences.
-    const transcriptIds = computed(() => transcriptOptions.value.map(tc => tc.transcript_id));
+    const transcriptIds = computed(() =>
+      transcriptOptions.value.map(tc => tc.transcript_id)
+    );
     const selectedTranscriptId = ref(null);
     const selectedTranscript = computed(() =>
       transcriptOptions.value.find(tc => tc.transcript_id === selectedTranscriptId.value)
