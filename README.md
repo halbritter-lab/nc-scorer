@@ -6,6 +6,10 @@ NCScorer is a tool developed to standardize and automate the assessment of candi
 
 This application is part of a broader research initiative that aims to apply the NCS to large CKD cohorts, such as the GCKD, to identify novel CKD-related genes and understand the genetic underpinnings of this complex disease.
 
+### Version 0.2.0 Update
+
+The application has been migrated from Vue CLI to Vite for improved development experience and build performance. This migration brings faster hot module replacement, better dependency optimization, and improved ESM support.
+
 ## Installation
 
 To set up the NCScorer for development or deployment, follow these steps:
@@ -13,29 +17,45 @@ To set up the NCScorer for development or deployment, follow these steps:
 1. Ensure that you have [Node.js](https://nodejs.org/) and [npm](https://www.npmjs.com/) installed on your machine.
 
 2. Clone the repository:
+
    ```sh
    git clone https://github.com/halbritter-lab/nc-scorer.git
    cd nc-scorer
    ```
 
 3. Install the dependencies:
+
    ```sh
    npm install
    ```
 
 4. To run the application locally:
+
    ```sh
-   npm run serve
+   npm run dev
+   ```
+
+   To expose the application on your network (for accessing from other devices):
+
+   ```sh
+   npm run dev -- --host
    ```
 
 5. To build the application for production:
+
    ```sh
    npm run build
    ```
 
+6. To preview the production build locally:
+
+   ```sh
+   npm run preview
+   ```
+
 ## Usage
 
-After starting the application, navigate to `http://localhost:8080` (or the configured port) in your web browser to begin using NCScorer. The interface allows users to search and score genetic variants based on predefined criteria.
+After starting the application, navigate to `http://localhost:5173` (or the URL shown in your terminal) in your web browser to begin using NCScorer. The interface allows users to search and score genetic variants based on predefined criteria.
 
 ## Contributing
 

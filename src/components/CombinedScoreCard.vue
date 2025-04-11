@@ -5,16 +5,14 @@
       <v-chip color="primary" class="score-chip" large>
         {{ combinedScoreFormatted }}
       </v-chip>
-      <v-tooltip bottom>
-        <template v-slot:activator="{ on, attrs }">
-          <span v-bind="attrs" v-on="on" class="score-tooltip">
-            (Gene×4 + Variant×4 + Inheritance×2) / 10
-          </span>
-        </template>
+      <v-tooltip location="bottom" activator="parent">
         <span>
           Final score is computed as the weighted sum of the three scores, with maximum 10.
         </span>
       </v-tooltip>
+      <span class="score-tooltip">
+        (Gene×4 + Variant×4 + Inheritance×2) / 10
+      </span>
     </v-card-text>
   </v-card>
 </template>
