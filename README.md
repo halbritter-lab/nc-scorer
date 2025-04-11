@@ -68,3 +68,13 @@ To ensure a welcoming and supportive environment for all contributors, please re
 ## License
 
 NCScorer is made available under the [MIT License](LICENSE). See the LICENSE file for more information.
+
+## Wiki Documentation
+
+This repository's [GitHub Wiki](https://github.com/halbritter-lab/nc-scorer/wiki) is automatically generated from the Markdown files located in the `/docs/wiki` directory.
+
+To update the wiki:
+
+  1. Edit the relevant `.md` files within the `/docs/wiki` directory in the `main` branch.
+  2. Commit and push your changes to the `main` branch.
+  3. The `Publish Wiki` GitHub Action workflow (`.github/workflows/publish-wiki.yml`) will automatically run and synchronize the changes to the live GitHub Wiki.
