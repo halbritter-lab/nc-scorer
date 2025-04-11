@@ -1,5 +1,24 @@
 // src/api/variantApi.js
+// Import variant-linker with proper compatibility for Vite
 import variantLinker from 'variant-linker';
+
+// Ensure module is available globally for proper initialization
+window.variantLinker = variantLinker;
+
+// Configure variant-linker to use our proxy only in development mode
+if (variantLinker.config && typeof variantLinker.config.setBaseUrl === 'function') {
+  // Check if we're in development mode
+  const isDevelopment = import.meta.env.DEV;
+  
+  if (isDevelopment) {
+    // In development: use the proxy to avoid CORS issues
+    variantLinker.config.setBaseUrl('ensembl');
+  } else {
+    // In production: use the default Ensembl API directly
+    // This will work on GitHub Pages if they allow CORS from github.io domains
+    variantLinker.config.setBaseUrl('https://rest.ensembl.org');
+  }
+}
 import variableAssignmentConfig from '@/config/scoring/nephro_variant_score_gnomadg_missing/variable_assignment_config.json';
 import formulaConfig from '@/config/scoring/nephro_variant_score_gnomadg_missing/formula_config.json';
 
