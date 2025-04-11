@@ -1,6 +1,23 @@
 <!-- src/views/SearchPage.vue -->
 <template>
   <v-container>
+    <v-row>
+      <v-col cols="12">
+        <v-alert
+          border="start"
+          variant="tonal"
+          color="info"
+          class="mb-4"
+        >
+          <h1 class="text-h6">Welcome to NC-Scorer</h1>
+          <p class="mt-2">
+            This tool helps standardize and automate the assessment of candidate variants found via high throughput sequencing (e.g., exome or genome Sequencing) for patients with Chronic Kidney Disease of unknown etiology (CKDu).
+            It uses the Nephro Candidate Score (NCS) to prioritize variants for further investigation.
+            Use the tabs below to search for genes, variants, or directly calculate a score.
+          </p>
+        </v-alert>
+      </v-col>
+    </v-row>
     <v-card>
       <v-tabs v-model="activeTab" fixed-tabs>
         <v-tab value="scoring">Scoring Search</v-tab>
