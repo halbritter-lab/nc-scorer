@@ -11,7 +11,7 @@
     "@mdi/font": "^7.4.47",
     "axios": "^1.6.5",
     "core-js": "^3.8.3",
-    "variant-linker": "^0.15.0",
+    "variant-linker": "^1.0.0",
     "vue": "^3.2.13",
     "vue-router": "^4.2.5",
     "vuetify": "^3.7.11"
