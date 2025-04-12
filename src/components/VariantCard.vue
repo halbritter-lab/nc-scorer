@@ -38,7 +38,13 @@
         ></v-skeleton-loader>
       </div>
       <div v-else-if="error">
-        <v-alert type="error" dismissible>{{ error }}</v-alert>
+        <v-alert type="error" dismissible>
+          <template v-if="isMaxRetriesError">
+            Failed to load variant data after multiple attempts. There might be a temporary issue
+            with external services (e.g., Ensembl/VEP). Please try again later.
+          </template>
+          <template v-else>{{ error }}</template>
+        </v-alert>
       </div>
       <div v-else>
         <!-- Score Section -->
@@ -220,6 +226,7 @@ export default {
     const result = ref(null);
     const loading = ref(true);
     const error = ref(null);
+    const isMaxRetriesError = ref(false);
 
     // Get shared retry state from parent or create a new one
     const { retryStates } = inject('retryState', useRetryState());
@@ -359,7 +366,15 @@ export default {
         }
       } catch (err) {
         retryStates.variant.inProgress = false;
-        error.value = err.message || 'Error fetching variant data.';
+        // Check if we've exhausted retry attempts
+        if (retryStates.variant.attempts >= 4) { // Using default maxRetries value from retryWithBackoff
+          isMaxRetriesError.value = true;
+          error.value = 'Maximum retry attempts reached';
+          // Notify via global state that we've reached max retries
+        } else {
+          isMaxRetriesError.value = false;
+          error.value = err.message || 'Error fetching variant data.';
+        }
       } finally {
         loading.value = false;
       }
@@ -397,6 +412,7 @@ export default {
       retryStates,
       prioritizedGeneSymbol, // Expose the prioritized gene symbol
       scoreInterpretationConfig, // Make available to the template
+      isMaxRetriesError,
     };
   },
 };

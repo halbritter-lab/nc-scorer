@@ -16,11 +16,7 @@
       </v-badge>
 
       <!-- Spinning icon when retry is in progress -->
-      <v-tooltip
-        v-if="retryStates.gene.inProgress"
-        location="top"
-        text="Retrying API request..."
-      >
+      <v-tooltip v-if="retryStates.gene.inProgress" location="top" text="Retrying API request...">
         <template v-slot:activator="{ props }">
           <v-icon v-bind="props" size="small" color="warning" class="ml-2 retry-spinner">
             mdi-refresh
@@ -38,7 +34,13 @@
         ></v-skeleton-loader>
       </div>
       <div v-else-if="error">
-        <v-alert type="error" dismissible>{{ error }}</v-alert>
+        <v-alert type="error" dismissible>
+          <template v-if="isMaxRetriesError">
+            Failed to load gene data after multiple attempts. There might be a temporary issue with
+            external services (e.g., Ensembl/VEP). Please try again later.
+          </template>
+          <template v-else>{{ error }}</template>
+        </v-alert>
       </div>
       <div v-else>
         <v-table class="gene-info-table">
@@ -88,6 +90,7 @@ export default {
     const geneData = ref({});
     const loading = ref(true);
     const error = ref(null);
+    const isMaxRetriesError = ref(false);
 
     // Get shared retry state from parent or create a new one
     const { retryStates } = inject('retryState', useRetryState());
@@ -139,7 +142,15 @@ export default {
         });
       } catch (err) {
         retryStates.gene.inProgress = false;
-        error.value = err.message || 'Error fetching gene data.';
+        // Check if we've exhausted retry attempts
+        if (retryStates.gene.attempts >= 4) { // Using default maxRetries value from retryWithBackoff
+          isMaxRetriesError.value = true;
+          error.value = 'Maximum retry attempts reached';
+          // Notify via global state that we've reached max retries
+        } else {
+          isMaxRetriesError.value = false;
+          error.value = err.message || 'Error fetching gene data.';
+        }
       } finally {
         loading.value = false;
       }
@@ -162,6 +173,7 @@ export default {
       filteredGeneData,
       retryStates,
       scoreInterpretationConfig,
+      isMaxRetriesError,
     };
   },
 };
