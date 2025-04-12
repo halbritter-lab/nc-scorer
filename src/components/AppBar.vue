@@ -56,10 +56,15 @@
               </v-list-item>
             </v-list>
           </v-menu>
-          <v-btn :to="item.to" text v-else class="mx-1">
-            <v-icon left v-if="item.icon">{{ item.icon }}</v-icon>
-            {{ item.text }}
-          </v-btn>
+          <v-tooltip location="bottom" v-else>
+            <template v-slot:activator="{ props }">
+              <v-btn :to="item.to" text v-bind="props" class="mx-1">
+                <v-icon left v-if="item.icon">{{ item.icon }}</v-icon>
+                {{ item.text }}
+              </v-btn>
+            </template>
+            <span>{{ item.tooltip || item.text }}</span>
+          </v-tooltip>
         </template>
 
         <!-- Cache Toggle Button -->
@@ -80,11 +85,21 @@
         </v-tooltip>
 
         <!-- Theme Toggle Button -->
-        <v-btn icon @click="toggleTheme" class="ml-2">
-          <v-icon>
-            {{ darkTheme ? 'mdi-weather-night' : 'mdi-white-balance-sunny' }}
-          </v-icon>
-        </v-btn>
+        <v-tooltip location="bottom">
+          <template v-slot:activator="{ props }">
+            <v-btn
+              icon
+              v-bind="props"
+              @click="toggleTheme"
+              class="ml-2"
+            >
+              <v-icon>
+                {{ darkTheme ? 'mdi-weather-night' : 'mdi-white-balance-sunny' }}
+              </v-icon>
+            </v-btn>
+          </template>
+          <span>Toggle {{ darkTheme ? 'Light' : 'Dark' }} Theme</span>
+        </v-tooltip>
       </div>
     </div>
 

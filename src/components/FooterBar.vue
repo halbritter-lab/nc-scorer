@@ -4,9 +4,14 @@
   <v-footer app padless class="elevation-3">
     <v-row justify="center" no-gutters>
       <v-col cols="auto" v-for="link in footerLinks" :key="link.text">
-        <v-btn icon :href="link.href" target="_blank" text>
-          <v-icon>{{ link.icon }}</v-icon>
-        </v-btn>
+        <v-tooltip location="top">
+          <template v-slot:activator="{ props }">
+            <v-btn icon :href="link.href" target="_blank" text v-bind="props">
+              <v-icon>{{ link.icon }}</v-icon>
+            </v-btn>
+          </template>
+          <span>{{ link.text }}</span>
+        </v-tooltip>
       </v-col>
     </v-row>
   </v-footer>
