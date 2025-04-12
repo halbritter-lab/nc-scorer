@@ -1,1 +1,0 @@
-import{_ as n,D as t,a0 as o,a}from"./index-DT6hmqQY.js";const s={name:"ContentContainer"},r={class:"content-container"};function c(e,_,d,i,p,f){return a(),t("div",r,[o(e.$slots,"default",{},void 0)])}const m=n(s,[["render",c],["__scopeId","data-v-a73b3f80"]]);export{m as C};
