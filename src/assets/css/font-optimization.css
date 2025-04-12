@@ -1,0 +1,16 @@
+/* Font display optimization - applied globally */
+
+/* Modify the font-display property for all text to ensure content is visible during webfont loading */
+* {
+  font-display: swap !important;
+}
+
+/* Apply font-display: swap to all font faces */
+* {
+  font-display: swap !important;
+}
+
+/* Optimization for Material Design Icons */
+.mdi {
+  font-display: swap !important;
+}

@@ -1,0 +1,16 @@
+// src/styles/vuetify-settings.scss
+
+// Optimized font loading strategy to prevent FOIT (Flash of Invisible Text)
+$font-display: swap;
+
+// Custom vuetify variables can be added here
+// This file is referenced in the vite.config.js
+
+// Material Design Icons font settings
+// Ensure text remains visible during webfont loading
+@import '@mdi/font/css/materialdesignicons.css';
+
+// Apply font-display: swap to material design icons
+.mdi {
+  font-display: swap !important;
+}

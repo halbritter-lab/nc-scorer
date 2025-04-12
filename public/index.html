@@ -6,6 +6,17 @@
     <meta name="viewport" content="width=device-width,initial-scale=1.0">
     <meta name="description" content="NC-Scorer: A tool for scoring and prioritizing genetic variants associated with Chronic Kidney Disease using the Nephro Candidate Score.">
     <link rel="icon" href="<%= BASE_URL %>favicon.ico">
+    
+    <!-- Performance optimization: DNS-Prefetch, Preconnect and Resource Hints -->
+    <link rel="dns-prefetch" href="https://rest.ensembl.org">
+    <link rel="preconnect" href="https://rest.ensembl.org" crossorigin>
+    
+    <!-- Preload critical assets -->
+    <link rel="preload" href="<%= BASE_URL %>img/logo.webp" as="image" type="image/webp">
+    <link rel="preload" href="<%= BASE_URL %>img/logo-96.png" as="image" type="image/png">
+    
+    <!-- Font display optimization for Material Design Icons -->
+    <link rel="preload" as="font" crossorigin type="font/woff2" href="https://cdn.jsdelivr.net/npm/@mdi/font@latest/fonts/materialdesignicons-webfont.woff2">
     <title><%= htmlWebpackPlugin.options.title %></title>
     <!-- Schema.org structured data for enhanced SEO -->
     <script type="application/ld+json">

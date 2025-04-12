@@ -10,7 +10,7 @@
       <v-tooltip location="bottom">
         <template v-slot:activator="{ props }">
           <v-img
-            :src="logoPath"
+            :src="logoPathWebp"
             class="app-logo mr-3"
             contain
             max-height="48"
@@ -18,7 +18,21 @@
             @click="navigateHome"
             v-bind="props"
             alt="NC-Scorer Logo"
-          ></v-img>
+            width="48"
+            height="48"
+            :srcset="logoSrcset"
+            loading="eager"
+          >
+            <template v-slot:placeholder>
+              <v-img
+                :src="logoPathPng"
+                class="app-logo-fallback"
+                width="48"
+                height="48"
+                alt="NC-Scorer Logo"
+              ></v-img>
+            </template>
+          </v-img>
         </template>
         <span>Find the nephro candidate gene in the beanstack</span>
       </v-tooltip>
@@ -217,12 +231,20 @@ export default {
     // Computed property for menu items
     const menuItems = computed(() => menuConfig.items);
 
-    // Compute logo path with absolute URL to prevent issues during navigation
-    const logoPath = computed(() => {
+    // Compute optimized logo paths with absolute URLs
+    const getAssetPath = (filename) => {
       // Use import.meta.env.BASE_URL for Vite, or fallback to process.env
       const baseUrl = import.meta.env.BASE_URL || process.env.BASE_URL || '/';
       // Ensure the path always starts with the base URL
-      return `${baseUrl}img/logo.png`.replace(/\/\//g, '/');
+      return `${baseUrl}img/${filename}`.replace(/\/\//g, '/');
+    };
+    
+    const logoPathWebp = computed(() => getAssetPath('logo.webp'));
+    const logoPathPng = computed(() => getAssetPath('logo-96.png'));
+    
+    // Create srcset for responsive images
+    const logoSrcset = computed(() => {
+      return `${logoPathWebp.value} 1x, ${logoPathWebp.value} 2x`;
     });
 
     return {
@@ -240,7 +262,9 @@ export default {
       copyCitation,
       showCopyIcon,
       navigateHome,
-      logoPath,
+      logoPathWebp,
+      logoPathPng,
+      logoSrcset,
       startTour,
     };
   },
@@ -271,9 +295,16 @@ export default {
 
 /* Styles for the application logo */
 .app-logo {
-  max-width: 92px;
+  max-width: 48px;
+  max-height: 48px;
   margin-right: 10px;
   animation: fadeIn 2s ease-out forwards;
+}
+
+/* Fallback logo styles */
+.app-logo-fallback {
+  max-width: 48px;
+  max-height: 48px;
 }
 
 /* Hover effect for the application logo */
