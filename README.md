@@ -68,11 +68,13 @@ This project uses ESLint and Prettier to enforce consistent code style and quali
 ### Linting Commands
 
 - Run linting check with automatic fixes:
+
   ```sh
   npm run lint
   ```
 
 - Alternative command for targeted linting and fixing:
+
   ```sh
   npm run lint:fix
   ```
@@ -111,6 +113,49 @@ When working with API calls, use the `retryWithBackoff` utility from `src/utils/
 ## Code of Conduct
 
 To ensure a welcoming and supportive environment for all contributors, please review and adhere to our [Code of Conduct](CODE_OF_CONDUCT.md).
+
+## Performance Optimization
+
+The application includes several tools to optimize performance and monitor resource usage:
+
+### Image Optimization
+
+The `optimize-images.js` script automatically optimizes images for web usage:
+
+```sh
+node scripts/optimize-images.js
+```
+
+**What it does:**
+
+- Compresses PNG images with optimal settings
+- Creates WebP versions for modern browsers
+- Generates detailed size reduction metrics
+- Use this script when adding or updating images to the project
+
+### Bundle Analysis
+
+The `analyze-bundle.js` script provides insights into bundle composition and size:
+
+```sh
+node scripts/analyze-bundle.js
+```
+
+**What it does:**
+
+- Runs a production build
+- Creates a visual representation of your bundle (opens in browser)
+- Shows detailed breakdown of JavaScript and CSS sizes
+- Use this before releases or when adding new dependencies
+
+### Performance Features
+
+The application implements several performance optimizations:
+
+- **Code Splitting**: Route-level lazy loading
+- **Resource Hints**: Preconnect and DNS prefetch for external APIs
+- **Font Optimization**: Uses `font-display: swap` to prevent FOIT
+- **Caching Strategy**: Content hashes for optimal browser caching
 
 ## License
 
