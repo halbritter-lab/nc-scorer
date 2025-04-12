@@ -93,13 +93,22 @@
         <!-- Theme Toggle Button -->
         <v-tooltip location="bottom">
           <template v-slot:activator="{ props }">
-            <v-btn icon v-bind="props" @click="toggleTheme" class="ml-2">
+            <v-btn icon v-bind="props" @click="toggleTheme" class="ml-2 theme-toggle">
               <v-icon>
                 {{ darkTheme ? 'mdi-weather-night' : 'mdi-white-balance-sunny' }}
               </v-icon>
             </v-btn>
           </template>
           <span>Toggle {{ darkTheme ? 'Light' : 'Dark' }} Theme</span>
+        </v-tooltip>
+        <!-- Tour Button -->
+        <v-tooltip location="bottom">
+          <template v-slot:activator="{ props }">
+            <v-btn icon v-bind="props" @click="startTour" class="ml-2 tour-button">
+              <v-icon>mdi-compass</v-icon>
+            </v-btn>
+          </template>
+          <span>Start Tour</span>
         </v-tooltip>
       </div>
     </div>
@@ -123,14 +132,16 @@ import menuConfig from '../config/menuConfig.json';
 import { fetchLastCommit } from '@/api/github.js'; // Adjust the path as needed
 import useThemeToggle from '@/composables/useThemeToggle.js';
 import { useCacheSettings } from '@/composables/useCacheSettings.js';
+import useTour from '@/composables/useTour.js';
 
 export default {
   name: 'AppBar',
   setup() {
     const router = useRouter();
-    // Use the theme toggle and cache settings composables
+    // Use the theme toggle, cache settings, and tour composables
     const { darkTheme, toggleTheme } = useThemeToggle();
     const { cacheEnabled, toggleCacheEnabled } = useCacheSettings();
+    const { startTour } = useTour();
     const version = packageInfo.version;
     const lastCommitHash = ref('loading...');
     const fetchError = ref(false);
@@ -201,6 +212,7 @@ export default {
       showCopyIcon,
       navigateHome,
       logoPath,
+      startTour,
     };
   },
 };

@@ -12,6 +12,10 @@ import * as directives from 'vuetify/directives';
 // Material Design Icons
 import '@mdi/font/css/materialdesignicons.css';
 
+// Import Shepherd Tour Styles
+import 'shepherd.js/dist/css/shepherd.css';
+import '@/assets/css/shepherd-custom.css';
+
 // Import the theme configuration
 import themeConfig from '@/config/themeConfig.json';
 

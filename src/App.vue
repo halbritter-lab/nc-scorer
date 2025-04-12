@@ -10,7 +10,7 @@
 
     <!-- Include the FooterBar component -->
     <FooterBar />
-    
+
     <!-- Global notification system -->
     <GlobalNotification />
   </v-app>
@@ -20,6 +20,8 @@
 import AppBar from './components/AppBar.vue';
 import FooterBar from './components/FooterBar.vue';
 import GlobalNotification from './components/GlobalNotification.vue';
+import useTour from '@/composables/useTour.js';
+import { onMounted } from 'vue';
 
 export default {
   name: 'NCScorer',
@@ -29,7 +31,22 @@ export default {
     GlobalNotification,
   },
   setup() {
-    // Composition API setup can go here
+    const { startTour, isFirstVisit } = useTour();
+
+    // Auto-start the tour for first-time visitors after a short delay
+    // to ensure the UI has fully loaded
+    onMounted(() => {
+      if (isFirstVisit()) {
+        // Delay tour start to ensure all components are mounted
+        setTimeout(() => {
+          startTour();
+        }, 1500);
+      }
+    });
+
+    return {
+      // No need to expose these properties as they're only used internally
+    };
   },
 };
 </script>

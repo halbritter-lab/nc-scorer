@@ -1,0 +1,101 @@
+/* src/assets/css/shepherd-custom.css */
+/* Custom styles for Shepherd.js tour */
+
+.shepherd-theme-custom {
+  font-family: 'Roboto', sans-serif;
+  max-width: 400px;
+  border-radius: 4px;
+  box-shadow: 0 3px 5px -1px rgba(0,0,0,0.2), 0 6px 10px 0 rgba(0,0,0,0.14), 0 1px 18px 0 rgba(0,0,0,0.12) !important;
+}
+
+/* Custom header styling */
+.shepherd-theme-custom h3 {
+  color: var(--v-primary-base, #1976d2);
+  margin-bottom: 10px;
+  font-weight: 500;
+  font-size: 1.25rem;
+}
+
+/* Custom content styling */
+.shepherd-theme-custom p {
+  margin: 0 0 8px;
+  line-height: 1.5;
+}
+
+.shepherd-theme-custom ul {
+  padding-left: 16px;
+  margin-bottom: 8px;
+}
+
+.shepherd-theme-custom code {
+  background-color: rgba(0, 0, 0, 0.05);
+  padding: 2px 4px;
+  border-radius: 3px;
+}
+
+/* Custom button styling */
+.shepherd-theme-custom .shepherd-button {
+  margin: 0 3px;
+  border-radius: 4px;
+  padding: 8px 16px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  transition: all 0.25s ease-in-out;
+}
+
+.shepherd-theme-custom .shepherd-button:last-child {
+  background-color: var(--v-primary-base, #1976d2);
+  color: white;
+}
+
+.shepherd-theme-custom .shepherd-button:not(:last-child) {
+  background-color: transparent;
+  color: var(--v-primary-base, #1976d2);
+}
+
+.shepherd-theme-custom .shepherd-button:hover {
+  opacity: 0.85;
+}
+
+/* Custom cancel button (X) styling */
+.shepherd-theme-custom .shepherd-cancel-icon {
+  color: rgba(0, 0, 0, 0.54);
+  font-size: 1.25rem;
+  transition: color 0.2s ease;
+}
+
+.shepherd-theme-custom .shepherd-cancel-icon:hover {
+  color: rgba(0, 0, 0, 0.87);
+}
+
+/* Custom arrow styling */
+.shepherd-theme-custom .shepherd-arrow {
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.2));
+}
+
+/* Adapt to dark theme */
+.v-theme--dark .shepherd-theme-custom {
+  background-color: #424242;
+  color: #fff;
+}
+
+.v-theme--dark .shepherd-theme-custom h3 {
+  color: var(--v-primary-lighten-2, #64b5f6);
+}
+
+.v-theme--dark .shepherd-theme-custom .shepherd-button:not(:last-child) {
+  color: var(--v-primary-lighten-2, #64b5f6);
+}
+
+.v-theme--dark .shepherd-theme-custom code {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.v-theme--dark .shepherd-theme-custom .shepherd-cancel-icon {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.v-theme--dark .shepherd-theme-custom .shepherd-cancel-icon:hover {
+  color: rgba(255, 255, 255, 0.95);
+}
