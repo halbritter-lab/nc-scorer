@@ -17,6 +17,7 @@
             max-width="48"
             @click="navigateHome"
             v-bind="props"
+            alt="NC-Scorer Logo"
           ></v-img>
         </template>
         <span>Find the nephro candidate gene in the beanstack</span>
@@ -26,7 +27,15 @@
       <v-toolbar-title class="mr-6">
         <v-tooltip location="bottom">
           <template v-slot:activator="{ props }">
-            <span class="clickable" v-bind="props" @click="navigateHome"> NC-Scorer </span>
+            <span
+              class="clickable"
+              v-bind="props"
+              @click="navigateHome"
+              role="button"
+              aria-label="Go to Home Page"
+            >
+              NC-Scorer
+            </span>
           </template>
           <span>Go to Home</span>
         </v-tooltip>
@@ -38,7 +47,9 @@
           @mouseleave="showCopyIcon = false"
         >
           Version: {{ version }} - Commit: {{ lastCommitHash }}
-          <v-icon v-if="showCopyIcon" @click="copyCitation"> mdi-content-copy </v-icon>
+          <v-icon v-if="showCopyIcon" @click="copyCitation" aria-label="Copy Citation">
+            mdi-content-copy
+          </v-icon>
         </span>
       </v-toolbar-title>
 
@@ -81,7 +92,13 @@
         <!-- Cache Toggle Button -->
         <v-tooltip location="bottom">
           <template v-slot:activator="{ props }">
-            <v-btn icon v-bind="props" @click="toggleCacheEnabled" class="ml-2">
+            <v-btn
+              icon
+              v-bind="props"
+              @click="toggleCacheEnabled"
+              class="ml-2"
+              aria-label="Toggle API Cache"
+            >
               <v-icon>
                 {{ cacheEnabled ? 'mdi-database-check' : 'mdi-database-off' }}
               </v-icon>
@@ -93,7 +110,13 @@
         <!-- Theme Toggle Button -->
         <v-tooltip location="bottom">
           <template v-slot:activator="{ props }">
-            <v-btn icon v-bind="props" @click="toggleTheme" class="ml-2 theme-toggle">
+            <v-btn
+              icon
+              v-bind="props"
+              @click="toggleTheme"
+              class="ml-2 theme-toggle"
+              aria-label="Toggle Theme"
+            >
               <v-icon>
                 {{ darkTheme ? 'mdi-weather-night' : 'mdi-white-balance-sunny' }}
               </v-icon>
@@ -104,7 +127,13 @@
         <!-- Tour Button -->
         <v-tooltip location="bottom">
           <template v-slot:activator="{ props }">
-            <v-btn icon v-bind="props" @click="startTour" class="ml-2 tour-button">
+            <v-btn
+              icon
+              v-bind="props"
+              @click="startTour"
+              class="ml-2 tour-button"
+              aria-label="Start Interactive Tour"
+            >
               <v-icon>mdi-compass</v-icon>
             </v-btn>
           </template>

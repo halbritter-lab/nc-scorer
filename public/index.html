@@ -1,11 +1,36 @@
 <!DOCTYPE html>
-<html lang="">
+<html lang="en">
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <meta name="description" content="NC-Scorer: A tool for scoring and prioritizing genetic variants associated with Chronic Kidney Disease using the Nephro Candidate Score.">
     <link rel="icon" href="<%= BASE_URL %>favicon.ico">
     <title><%= htmlWebpackPlugin.options.title %></title>
+    <!-- Schema.org structured data for enhanced SEO -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "NC-Scorer",
+      "url": "https://halbritter-lab.github.io/nc-scorer/",
+      "description": "A tool for scoring and prioritizing genetic variants associated with Chronic Kidney Disease using the Nephro Candidate Score.",
+      "applicationCategory": "ScientificApplication",
+      "applicationSubCategory": "GeneticTool",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "Halbritter Lab",
+        "url": "https://www.meduniwien.ac.at/web/en/forschung/researcher-profiles/researcher-profiles/detail/jan-halbritter/"
+      },
+      "operatingSystem": "Any",
+      "browserRequirements": "Requires JavaScript. Compatible with modern web browsers."
+    }
+    </script>
   </head>
   <body>
     <noscript>

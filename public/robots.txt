@@ -1,0 +1,10 @@
+# robots.txt for NC-Scorer
+# Allow crawling of all content by default
+User-agent: *
+Allow: /
+
+# Sitemap reference for search engines
+Sitemap: https://halbritter-lab.github.io/nc-scorer/sitemap.xml
+
+# Crawl-delay to rate limit requests (in seconds)
+Crawl-delay: 10
