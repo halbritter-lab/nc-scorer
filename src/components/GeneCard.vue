@@ -23,33 +23,21 @@
       </div>
       <div v-else>
         <v-table class="gene-info-table">
-          <template v-slot:default>
-            <tbody>
-              <tr v-for="(item, key) in filteredGeneData" :key="key">
-                <td>
-                  <span class="label-hover" :title="item.description">
-                    {{ item.label }}
-                  </span>
-                  <v-tooltip activator="parent" location="start">
-                    {{ item.description }}
-                  </v-tooltip>
-                </td>
-                <td>
-                  <v-chip
-                    v-if="item.style === 'chip'"
-                    :class="{
-                      'italic-font': item.font === 'italic',
-                      'bold-font': item.font === 'bold',
-                    }"
-                    :color="item.color"
-                  >
-                    {{ item.value }}
-                  </v-chip>
-                  <span v-else>{{ item.value }}</span>
-                </td>
-              </tr>
-            </tbody>
-          </template>
+          <tbody>
+            <DataDisplayRow
+              v-for="(item, key) in filteredGeneData"
+              :key="key"
+              :config="{
+                label: item.label,
+                description: item.description,
+                style: item.style,
+                font: item.font,
+                colorThresholds: item.colorThresholds,
+              }"
+              :value="item.value"
+              :defaultValue="'NA'"
+            />
+          </tbody>
         </v-table>
       </div>
     </v-card-text>
@@ -57,21 +45,25 @@
 </template>
 
 <script>
-import { ref, onMounted, computed, inject } from 'vue';
+import { ref, onMounted, computed, inject, watchEffect } from 'vue';
 import { fetchGeneDetails } from '@/api/geneApi.js';
 import { geneDetailsConfig } from '@/config/geneDetailsConfig.js';
 import { getColor, formatValue } from '@/utils/format.js';
 import useRetryState from '@/composables/useRetryState.js';
+import DataDisplayRow from '@/components/DataDisplayRow.vue';
 
 export default {
   name: 'GeneCard',
+  components: {
+    DataDisplayRow,
+  },
   props: {
     symbol: {
       type: String,
       required: true,
     },
   },
-  setup(props, { expose }) {
+  setup(props, { emit }) {
     const geneData = ref({});
     const loading = ref(true);
     const error = ref(null);
@@ -128,9 +120,15 @@ export default {
       }
     });
 
-    // Expose filteredGeneData so parent components can access it.
-    expose({
-      filteredGeneData,
+    // Watch for changes in the gene data and emit them to parent component
+    watchEffect(() => {
+      if (!loading.value && !error.value && geneData.value && geneData.value.ngs) {
+        emit('gene-score-updated', {
+          score: geneData.value.ngs,
+          symbol: props.symbol,
+          formattedData: filteredGeneData.value,
+        });
+      }
     });
 
     return {

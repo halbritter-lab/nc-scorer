@@ -43,15 +43,15 @@
       <v-col cols="12" md="6" class="pr-md-2">
         <!-- Inheritance Card (now first to reduce layout shifts) -->
         <InheritanceCard
-          ref="inheritanceCardRef"
           :inheritance="inheritance"
           :segregation="segregation"
           class="mb-4"
+          @inheritance-score-updated="handleInheritanceScoreUpdate"
         />
 
         <!-- Gene Card (now second since it loads data asynchronously) -->
         <v-card class="mb-4" v-if="geneSymbol && geneSymbol.trim() !== ''">
-          <GeneCard ref="geneCardRef" :symbol="geneSymbol" />
+          <GeneCard :symbol="geneSymbol" @gene-score-updated="handleGeneScoreUpdate" />
         </v-card>
         <v-card class="mb-4" v-else>
           <v-alert type="info"> Waiting for gene data... </v-alert>
@@ -60,14 +60,17 @@
 
       <!-- Variant Card(s) -->
       <v-col cols="12" md="6" class="pl-md-2">
-        <VariantCard ref="variantCardRef" :variantInput="variantInput" />
+        <VariantCard
+          :variantInput="variantInput"
+          @variant-score-updated="handleVariantScoreUpdate"
+        />
 
         <!-- Second Variant Card (only for compound heterozygous variants) -->
         <VariantCard
           v-if="isCompoundHet && variantInput2"
-          ref="variantCard2Ref"
           :variantInput="variantInput2"
           class="mt-4"
+          @variant-score-updated="handleSecondVariantScoreUpdate"
         />
       </v-col>
     </v-row>
@@ -75,7 +78,7 @@
 </template>
 
 <script>
-import { ref, computed, provide } from 'vue';
+import { computed, provide, reactive } from 'vue';
 import { useRoute } from 'vue-router';
 import VariantCard from '@/components/VariantCard.vue';
 import GeneCard from '@/components/GeneCard.vue';
@@ -109,80 +112,91 @@ export default {
     const segregation = route.params.segregation || '1';
     const variantInput2 = route.params.variantInput2 || '';
 
-    // Create refs to access child component instances.
-    const variantCardRef = ref(null);
-    const variantCard2Ref = ref(null);
-    const geneCardRef = ref(null);
-    const inheritanceCardRef = ref(null);
+    // Create reactive state to store component data
+    const scoreState = reactive({
+      geneScore: 0,
+      geneSymbol: '',
+      variantScore: 0,
+      inheritanceScore: 0,
+      // Store additional data that might be needed
+      variantData: null,
+      secondVariantData: null,
+      geneData: null,
+      inheritanceData: null,
+    });
 
     // Check if current inheritance pattern is compound heterozygous
     const isCompoundHet = computed(() => {
       return requiresSecondVariant.includes(inheritance);
     });
 
-    // Compute geneSymbol from VariantCard’s exposed annotationSummary.
+    // Get gene symbol from the reactive state
     const geneSymbol = computed(() => {
-      if (variantCardRef.value && variantCardRef.value.annotationSummary) {
-        const gs = variantCardRef.value.annotationSummary.gene_symbol;
+      if (scoreState.variantData && scoreState.variantData.geneSummary) {
+        const gs = scoreState.variantData.geneSummary.gene_symbol;
         return Array.isArray(gs) ? gs[0] : gs;
       }
       return '';
     });
 
-    // Compute geneScore from GeneCard’s exposed filteredGeneData.
-    // We assume that the gene score is stored under the key "ngs".
-    const geneScore = computed(() => {
-      if (
-        geneCardRef.value &&
-        geneCardRef.value.filteredGeneData &&
-        geneCardRef.value.filteredGeneData.ngs
-      ) {
-        return Number(geneCardRef.value.filteredGeneData.ngs.value) || 0;
-      }
-      return 0;
-    });
+    // Use the reactive state value directly for gene score
+    const geneScore = computed(() => scoreState.geneScore || 0);
 
-    // Compute variantScore from VariantCard’s exposed scoreSummary.
-    const variantScore = computed(() => {
-      if (
-        variantCardRef.value &&
-        variantCardRef.value.scoreSummary &&
-        variantCardRef.value.scoreSummary.nephro_variant_score !== undefined
-      ) {
-        return Number(variantCardRef.value.scoreSummary.nephro_variant_score) || 0;
-      }
-      return 0;
-    });
+    // Use the reactive state value directly for variant score
+    const variantScore = computed(() => scoreState.variantScore || 0);
 
-    // Compute inheritanceScore from InheritanceCard’s exposed finalScore.
-    const inheritanceScore = computed(() => {
-      if (inheritanceCardRef.value && inheritanceCardRef.value.finalScore !== undefined) {
-        return Number(inheritanceCardRef.value.finalScore) || 0;
-      }
-      return 0;
-    });
+    // Use the reactive state value directly for inheritance score
+    const inheritanceScore = computed(() => scoreState.inheritanceScore || 0);
 
     // Only consider the combined score available if all three component scores are greater than 0.
     const combinedScoreAvailable = computed(() => {
       return geneScore.value > 0 && variantScore.value > 0 && inheritanceScore.value > 0;
     });
 
+    // Event handlers for component events
+    function handleVariantScoreUpdate(data) {
+      scoreState.variantScore = Number(data.score) || 0;
+      scoreState.variantData = data;
+
+      // If we have gene data, update it in our state
+      if (data.geneSummary && data.geneSummary.gene_symbol) {
+        scoreState.geneSymbol = Array.isArray(data.geneSummary.gene_symbol)
+          ? data.geneSummary.gene_symbol[0]
+          : data.geneSummary.gene_symbol;
+      }
+    }
+
+    function handleSecondVariantScoreUpdate(data) {
+      // Store the second variant data but don't override the main variant score
+      scoreState.secondVariantData = data;
+    }
+
+    function handleGeneScoreUpdate(data) {
+      scoreState.geneScore = Number(data.score) || 0;
+      scoreState.geneData = data;
+    }
+
+    function handleInheritanceScoreUpdate(data) {
+      scoreState.inheritanceScore = Number(data.score) || 0;
+      scoreState.inheritanceData = data;
+    }
+
     return {
       variantInput,
       variantInput2,
       inheritance,
       segregation,
-      variantCardRef,
-      variantCard2Ref,
-      geneCardRef,
-      inheritanceCardRef,
       geneSymbol,
       geneScore,
       variantScore,
       inheritanceScore,
       combinedScoreAvailable,
       isCompoundHet,
-      retrySnackbar, // Expose retry snackbar to the template
+      retrySnackbar,
+      handleVariantScoreUpdate,
+      handleSecondVariantScoreUpdate,
+      handleGeneScoreUpdate,
+      handleInheritanceScoreUpdate,
     };
   },
 };

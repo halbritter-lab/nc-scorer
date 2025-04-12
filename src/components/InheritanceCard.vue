@@ -5,44 +5,38 @@
     <v-card-text>
       <v-table class="summary-table">
         <tbody>
-          <!-- Inheritance Score Row (first row) -->
-          <tr>
-            <td class="info-col">
-              <strong>Inheritance Score:</strong>
-              <v-tooltip activator="parent" location="start">
-                Combined score based on the inheritance pattern and segregation probability.
-              </v-tooltip>
-            </td>
-            <td class="value-col">
-              <v-chip color="primary" small>
-                {{ finalScoreFormatted }}
-              </v-chip>
-            </td>
-          </tr>
+          <!-- Inheritance Score Row -->
+          <DataDisplayRow
+            :config="{
+              label: 'Inheritance Score',
+              description:
+                'Combined score based on the inheritance pattern and segregation probability.',
+              style: 'chip',
+              font: 'bold',
+              defaultColor: 'primary',
+            }"
+            :value="finalScore"
+          />
+
           <!-- Inheritance Pattern Row -->
-          <tr>
-            <td class="info-col">
-              <strong>Inheritance Pattern:</strong>
-              <v-tooltip activator="parent" location="start">
-                The mode of inheritance used in scoring.
-              </v-tooltip>
-            </td>
-            <td class="value-col">
-              <span>{{ inheritance }}</span>
-            </td>
-          </tr>
+          <DataDisplayRow
+            :config="{
+              label: 'Inheritance Pattern',
+              description: 'The mode of inheritance used in scoring.',
+            }"
+            :value="inheritance"
+          />
+
           <!-- Segregation Probability Row -->
-          <tr>
-            <td class="info-col">
-              <strong>Segregation Probability:</strong>
-              <v-tooltip activator="parent" location="start">
-                The probability of segregation (value between 0 and 1).
-              </v-tooltip>
-            </td>
-            <td class="value-col">
-              <span>{{ segregation }}</span>
-            </td>
-          </tr>
+          <DataDisplayRow
+            :config="{
+              label: 'Segregation Probability',
+              description: 'The probability of segregation (value between 0 and 1).',
+              format: 'number',
+              round: 3,
+            }"
+            :value="segregationProb"
+          />
         </tbody>
       </v-table>
     </v-card-text>
@@ -50,8 +44,9 @@
 </template>
 
 <script>
-import { computed } from 'vue';
+import { computed, watchEffect } from 'vue';
 import { baseScores, scoringParameters } from '@/config/inheritanceConfig';
+import DataDisplayRow from '@/components/DataDisplayRow.vue';
 
 /**
  * Computes the final genetic variant score based on a base inheritance score and a segregation p-value.
@@ -85,6 +80,9 @@ function computeVariantScore(baseScore, pValue = 1, gamma = 0.001, epsilon = 1e-
 
 export default {
   name: 'InheritanceCard',
+  components: {
+    DataDisplayRow,
+  },
   props: {
     inheritance: {
       type: String,
@@ -96,7 +94,7 @@ export default {
       required: true,
     },
   },
-  setup(props, { expose }) {
+  setup(props, { emit }) {
     // Convert the segregation prop to a number.
     const segregationProb = computed(() => Number(props.segregation));
 
@@ -121,10 +119,16 @@ export default {
     // Format the final score to three decimal places.
     const finalScoreFormatted = computed(() => finalScore.value.toFixed(3));
 
-    // Expose the computed scores so that parent components can use them.
-    expose({
-      finalScore,
-      finalScoreFormatted,
+    // Emit the score when it changes
+    // Use watchEffect to trigger on component creation and whenever the score changes
+    watchEffect(() => {
+      emit('inheritance-score-updated', {
+        score: finalScore.value,
+        formatted: finalScoreFormatted.value,
+        baseScore: baseScore.value,
+        pattern: props.inheritance,
+        segregation: segregationProb.value,
+      });
     });
 
     return {

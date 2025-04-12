@@ -27,30 +27,13 @@
           <v-card-text>
             <v-table class="summary-table">
               <tbody>
-                <tr v-for="[scoreKey, config] in visibleScoreConfig" :key="scoreKey">
-                  <td class="info-col">
-                    <strong>{{ config.label }}:</strong>
-                    <v-tooltip activator="parent" location="start">
-                      {{ config.description }}
-                    </v-tooltip>
-                  </td>
-                  <td class="value-col">
-                    <v-chip
-                      v-if="config.style === 'chip'"
-                      :class="{
-                        'italic-font': config.font === 'italic',
-                        'bold-font': config.font === 'bold',
-                      }"
-                      :color="getColor(scoreSummary[scoreKey], config)"
-                      small
-                    >
-                      {{ formatOrDefault(scoreSummary[scoreKey], config) }}
-                    </v-chip>
-                    <span v-else>
-                      {{ formatOrDefault(scoreSummary[scoreKey], config) }}
-                    </span>
-                  </td>
-                </tr>
+                <DataDisplayRow
+                  v-for="[scoreKey, config] in visibleScoreConfig"
+                  :key="scoreKey"
+                  :config="config"
+                  :value="scoreSummary[scoreKey]"
+                  :defaultValue="'NA'"
+                />
               </tbody>
             </v-table>
           </v-card-text>
@@ -61,37 +44,34 @@
           <v-card-text>
             <v-table class="summary-table">
               <tbody>
-                <tr>
-                  <td class="info-col">
-                    <strong>Most Severe Consequence:</strong>
-                    <v-tooltip activator="parent" location="start">
-                      The top predicted impact for this variant.
-                    </v-tooltip>
-                  </td>
-                  <td class="value-col">
-                    <span>{{ annotationSummary.most_severe_consequence || 'NA' }}</span>
-                  </td>
-                </tr>
-                <tr v-if="annotationSummary.gene_symbol">
-                  <td class="info-col">
-                    <strong>Gene Symbol:</strong>
-                    <v-tooltip activator="parent" location="start">
-                      Official gene symbol.
-                    </v-tooltip>
-                  </td>
-                  <td class="value-col">
-                    <span>{{ annotationSummary.gene_symbol }}</span>
-                  </td>
-                </tr>
-                <tr v-if="annotationSummary.hgnc_id">
-                  <td class="info-col">
-                    <strong>HGNC ID:</strong>
-                    <v-tooltip activator="parent" location="start"> HGNC Identifier. </v-tooltip>
-                  </td>
-                  <td class="value-col">
-                    <span>{{ annotationSummary.hgnc_id }}</span>
-                  </td>
-                </tr>
+                <DataDisplayRow
+                  :config="{
+                    label: 'Most Severe Consequence',
+                    description: 'The top predicted impact for this variant.',
+                  }"
+                  :value="annotationSummary.most_severe_consequence"
+                  :defaultValue="'NA'"
+                />
+
+                <DataDisplayRow
+                  v-if="annotationSummary.gene_symbol"
+                  :config="{
+                    label: 'Gene Symbol',
+                    description: 'Official gene symbol.',
+                    style: 'chip',
+                    font: 'italic',
+                  }"
+                  :value="annotationSummary.gene_symbol"
+                />
+
+                <DataDisplayRow
+                  v-if="annotationSummary.hgnc_id"
+                  :config="{
+                    label: 'HGNC ID',
+                    description: 'HGNC Identifier.',
+                  }"
+                  :value="annotationSummary.hgnc_id"
+                />
               </tbody>
             </v-table>
           </v-card-text>
@@ -102,30 +82,13 @@
           <v-card-text>
             <v-table class="summary-table">
               <tbody>
-                <tr v-for="[freqKey, config] in visibleFrequencyConfig" :key="freqKey">
-                  <td class="info-col">
-                    <strong>{{ config.label }}:</strong>
-                    <v-tooltip activator="parent" location="start">
-                      {{ config.description }}
-                    </v-tooltip>
-                  </td>
-                  <td class="value-col">
-                    <v-chip
-                      v-if="config.style === 'chip'"
-                      :class="{
-                        'italic-font': config.font === 'italic',
-                        'bold-font': config.font === 'bold',
-                      }"
-                      :color="getColor(frequencyExtracted[freqKey], config)"
-                      small
-                    >
-                      {{ formatOrDefault(frequencyExtracted[freqKey], config) }}
-                    </v-chip>
-                    <span v-else>
-                      {{ formatOrDefault(frequencyExtracted[freqKey], config) }}
-                    </span>
-                  </td>
-                </tr>
+                <DataDisplayRow
+                  v-for="[freqKey, config] in visibleFrequencyConfig"
+                  :key="freqKey"
+                  :config="config"
+                  :value="frequencyExtracted[freqKey]"
+                  :defaultValue="'NA'"
+                />
               </tbody>
             </v-table>
           </v-card-text>
@@ -196,7 +159,8 @@
 </template>
 
 <script>
-import { ref, onMounted, computed, inject } from 'vue';
+import { ref, onMounted, computed, inject, watchEffect } from 'vue';
+import DataDisplayRow from '@/components/DataDisplayRow.vue';
 import { queryVariant } from '@/api/variantApi.js';
 import { variantAnnotationConfig } from '@/config/variantAnnotationConfig.js';
 import { variantFrequencyConfig } from '@/config/variantFrequencyConfig.js';
@@ -206,13 +170,16 @@ import useRetryState from '@/composables/useRetryState.js';
 
 export default {
   name: 'VariantCard',
+  components: {
+    DataDisplayRow,
+  },
   props: {
     variantInput: {
       type: String,
       required: true,
     },
   },
-  setup(props, { expose }) {
+  setup(props, { emit }) {
     const result = ref(null);
     const loading = ref(true);
     const error = ref(null);
@@ -351,10 +318,15 @@ export default {
       }
     });
 
-    // Expose scoreSummary and annotationSummary to the parent component.
-    expose({
-      scoreSummary,
-      annotationSummary,
+    // Emit variant data changes to parent component
+    watchEffect(() => {
+      if (!loading.value && !error.value && Object.keys(scoreSummary.value).length > 0) {
+        emit('variant-score-updated', {
+          score: scoreSummary.value.nephro_variant_score || 0,
+          variant: props.variantInput,
+          geneSummary: annotationSummary.value,
+        });
+      }
     });
 
     return {
