@@ -6,19 +6,30 @@
 
     <!-- App Logo, Title and Navigation Group (Centered) -->
     <div class="d-flex align-center centered-content">
-      <!-- Logo Image -->
-      <v-img
-        :src="logoPath"
-        class="app-logo mr-3"
-        contain
-        max-height="48"
-        max-width="48"
-        @click="navigateHome"
-      ></v-img>
+      <!-- Logo Image with Easter Egg Tooltip -->
+      <v-tooltip location="bottom">
+        <template v-slot:activator="{ props }">
+          <v-img
+            :src="logoPath"
+            class="app-logo mr-3"
+            contain
+            max-height="48"
+            max-width="48"
+            @click="navigateHome"
+            v-bind="props"
+          ></v-img>
+        </template>
+        <span>Find the nephro candidate gene in the beanstack</span>
+      </v-tooltip>
 
       <!-- Toolbar Title and Version Info -->
       <v-toolbar-title class="mr-6">
-        <span class="clickable" @click="navigateHome"> NC-Scorer </span>
+        <v-tooltip location="bottom">
+          <template v-slot:activator="{ props }">
+            <span class="clickable" v-bind="props" @click="navigateHome"> NC-Scorer </span>
+          </template>
+          <span>Go to Home</span>
+        </v-tooltip>
         <br />
         <!-- Line break for version info -->
         <span
@@ -70,12 +81,7 @@
         <!-- Cache Toggle Button -->
         <v-tooltip location="bottom">
           <template v-slot:activator="{ props }">
-            <v-btn
-              icon
-              v-bind="props"
-              @click="toggleCacheEnabled"
-              class="ml-2"
-            >
+            <v-btn icon v-bind="props" @click="toggleCacheEnabled" class="ml-2">
               <v-icon>
                 {{ cacheEnabled ? 'mdi-database-check' : 'mdi-database-off' }}
               </v-icon>
@@ -87,12 +93,7 @@
         <!-- Theme Toggle Button -->
         <v-tooltip location="bottom">
           <template v-slot:activator="{ props }">
-            <v-btn
-              icon
-              v-bind="props"
-              @click="toggleTheme"
-              class="ml-2"
-            >
+            <v-btn icon v-bind="props" @click="toggleTheme" class="ml-2">
               <v-icon>
                 {{ darkTheme ? 'mdi-weather-night' : 'mdi-white-balance-sunny' }}
               </v-icon>
