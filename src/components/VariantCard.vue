@@ -54,11 +54,27 @@
                 />
 
                 <DataDisplayRow
-                  v-if="annotationSummary.gene_symbol"
+                  v-if="prioritizedGeneSymbol"
                   :config="{
                     label: 'Gene Symbol',
-                    description: 'Official gene symbol.',
+                    description: 'Prioritized gene symbol based on MANE Select status and impact severity.',
                     style: 'chip',
+                    font: 'italic',
+                  }"
+                  :value="prioritizedGeneSymbol"
+                  :title="annotationSummary.gene_symbol"
+                />
+
+                <DataDisplayRow
+                  v-if="
+                    annotationSummary.gene_symbol &&
+                    annotationSummary.gene_symbol !== prioritizedGeneSymbol &&
+                    annotationSummary.gene_symbol.includes(',')
+                  "
+                  :config="{
+                    label: 'All Gene Symbols',
+                    description: 'All gene symbols associated with this variant.',
+                    style: 'text',
                     font: 'italic',
                   }"
                   :value="annotationSummary.gene_symbol"
@@ -167,6 +183,7 @@ import { variantFrequencyConfig } from '@/config/variantFrequencyConfig.js';
 import { variantScoreConfig } from '@/config/variantScoreConfig.js';
 import { getColor, formatValue } from '@/utils/format.js';
 import useRetryState from '@/composables/useRetryState.js';
+import { getPrioritizedGeneSymbol } from '@/utils/geneSymbolUtils.js';
 
 export default {
   name: 'VariantCard',
@@ -222,9 +239,17 @@ export default {
             ? anno.gene_symbol.join(', ')
             : anno.gene_symbol,
           hgnc_id: Array.isArray(anno.hgnc_id) ? anno.hgnc_id.join(', ') : anno.hgnc_id,
+          fullAnnotation: anno, // Store full annotation for prioritization
         };
       }
       return {};
+    });
+    // Prioritized single gene symbol based on MANE Select and impact severity
+    const prioritizedGeneSymbol = computed(() => {
+      if (!annotationSummary.value.fullAnnotation) {
+        return annotationSummary.value.gene_symbol || '';
+      }
+      return getPrioritizedGeneSymbol(annotationSummary.value.fullAnnotation);
     });
 
     // Compute frequency data from the first colocated variant.
@@ -325,6 +350,7 @@ export default {
           score: scoreSummary.value.nephro_variant_score || 0,
           variant: props.variantInput,
           geneSummary: annotationSummary.value,
+          prioritizedGeneSymbol: prioritizedGeneSymbol.value, // Include the prioritized gene symbol
         });
       }
     });
@@ -347,6 +373,7 @@ export default {
       visibleScoreConfig,
       hasScore,
       retryStates,
+      prioritizedGeneSymbol, // Expose the prioritized gene symbol
     };
   },
 };

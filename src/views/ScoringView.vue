@@ -130,8 +130,13 @@ export default {
       return requiresSecondVariant.includes(inheritance);
     });
 
-    // Get gene symbol from the reactive state
+    // Get prioritized gene symbol from the reactive state
     const geneSymbol = computed(() => {
+      // Use the prioritizedGeneSymbol if available, which applies our gene prioritization logic
+      if (scoreState.variantData && scoreState.variantData.prioritizedGeneSymbol) {
+        return scoreState.variantData.prioritizedGeneSymbol;
+      }
+      // Fallback to the original logic if prioritizedGeneSymbol is not available
       if (scoreState.variantData && scoreState.variantData.geneSummary) {
         const gs = scoreState.variantData.geneSummary.gene_symbol;
         return Array.isArray(gs) ? gs[0] : gs;
@@ -158,8 +163,12 @@ export default {
       scoreState.variantScore = Number(data.score) || 0;
       scoreState.variantData = data;
 
-      // If we have gene data, update it in our state
-      if (data.geneSummary && data.geneSummary.gene_symbol) {
+      // If we have the prioritized gene symbol from VariantCard, use it directly
+      if (data.prioritizedGeneSymbol) {
+        scoreState.geneSymbol = data.prioritizedGeneSymbol;
+      }
+      // Fallback to the old method if prioritizedGeneSymbol is not available
+      else if (data.geneSummary && data.geneSummary.gene_symbol) {
         scoreState.geneSymbol = Array.isArray(data.geneSummary.gene_symbol)
           ? data.geneSummary.gene_symbol[0]
           : data.geneSummary.gene_symbol;

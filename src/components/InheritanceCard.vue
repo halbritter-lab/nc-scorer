@@ -134,6 +134,7 @@ export default {
     return {
       finalScore,
       finalScoreFormatted,
+      segregationProb, // Include segregationProb to fix the template warning
     };
   },
 };
