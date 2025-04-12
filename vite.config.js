@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import vuetify from 'vite-plugin-vuetify';
-import { sitemap } from 'vite-plugin-sitemap';
+import VitePluginSitemap from 'vite-plugin-sitemap';
 import path from 'path';
 
 // https://vitejs.dev/config/
@@ -13,7 +13,7 @@ export default defineConfig(({ mode }) => {
     plugins: [
       vue(),
       vuetify({ autoImport: true }), // Enable Vuetify component auto-import
-      sitemap({
+      VitePluginSitemap({
         hostname: isProd ? 'https://halbritter-lab.github.io/nc-scorer' : 'http://localhost:5173',
         lastmod: new Date().toISOString(),
         changefreq: 'weekly',

@@ -8,6 +8,11 @@
         label="Search genes"
         :loading="isLoading"
         @keyup.enter="search"
+        id="gene-search-input"
+        aria-label="Search for a gene by symbol"
+        density="comfortable"
+        hint="Enter a gene symbol (e.g. PKD1)"
+        persistent-hint
       ></v-autocomplete>
 
       <!-- Display an error alert if symbols fail to load -->
@@ -16,7 +21,16 @@
       </v-alert>
 
       <!-- Search Button -->
-      <v-btn color="primary" @click="search" class="mx-auto d-block"> Search </v-btn>
+      <v-btn
+        color="primary"
+        @click="search"
+        class="mx-auto d-block mt-4"
+        min-width="120px"
+        min-height="44px"
+        aria-label="Search for gene"
+      >
+        Search
+      </v-btn>
     </v-card-text>
   </v-card>
 </template>

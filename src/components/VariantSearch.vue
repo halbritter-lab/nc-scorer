@@ -8,13 +8,31 @@
           label="Enter Variant (VCF or HGVS)"
           outlined
           @keyup.enter="searchVariant"
+          id="variant-search-input"
+          aria-label="Enter a genomic variant in VCF or HGVS format"
+          density="comfortable"
+          hint="Format examples: '1-55051215-G-GA' or 'ENST00000302118:c.524-1063_524-1062insA'"
+          persistent-hint
         ></v-text-field>
-        <v-btn color="primary" @click="searchVariant" class="mx-auto d-block"> Search </v-btn>
+        <v-btn
+          color="primary"
+          @click="searchVariant"
+          class="mx-auto d-block mt-4"
+          min-width="120px"
+          min-height="44px"
+          aria-label="Search for variant"
+        >
+          Search
+        </v-btn>
       </v-card-text>
       <v-card-actions>
         <div class="example-text">
           <p>
-            <router-link :to="{ name: 'VariantView', params: { variantInput: '1-55051215-G-GA' } }">
+            <router-link
+              :to="{ name: 'VariantView', params: { variantInput: '1-55051215-G-GA' } }"
+              class="example-link"
+              aria-label="Example VCF format variant: 1-55051215-G-GA"
+            >
               Example (VCF): "1-55051215-G-GA"
             </router-link>
           </p>
@@ -24,6 +42,8 @@
                 name: 'VariantView',
                 params: { variantInput: 'ENST00000302118:c.524-1063_524-1062insA' },
               }"
+              class="example-link"
+              aria-label="Example HGVS format variant: ENST00000302118:c.524-1063_524-1062insA"
             >
               Example (HGVS): "ENST00000302118:c.524-1063_524-1062insA"
             </router-link>
@@ -77,5 +97,11 @@ export default {
   margin-top: 16px;
   font-size: 0.9rem;
   color: #666;
+}
+
+.example-link {
+  padding: 6px;
+  display: inline-block; /* Ensures the padding is applied effectively */
+  margin: 2px 0;
 }
 </style>

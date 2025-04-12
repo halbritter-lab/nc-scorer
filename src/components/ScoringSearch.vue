@@ -12,6 +12,11 @@
               label="1a. Enter Variant (VCF or HGVS)"
               outlined
               @keyup.enter="searchScoring"
+              id="scoring-variant-input"
+              aria-label="Enter primary variant in VCF or HGVS format"
+              density="comfortable"
+              hint="Format examples: '1-55051215-G-GA' or 'NM_001009944.3:c.11935C>T'"
+              persistent-hint
             ></v-text-field>
             <!-- Input 1b: Second Variant for Compound Heterozygous -->
             <v-text-field
@@ -21,6 +26,11 @@
               outlined
               @keyup.enter="searchScoring"
               class="mt-2"
+              id="scoring-variant-input-2"
+              aria-label="Enter second variant for compound heterozygous analysis"
+              density="comfortable"
+              hint="Enter the second variant for compound heterozygous inheritance"
+              persistent-hint
             ></v-text-field>
           </v-col>
           <!-- Input 2: Inheritance Options -->
@@ -30,6 +40,10 @@
               :items="inheritanceOptions"
               label="2. Inheritance Pattern"
               outlined
+              id="inheritance-pattern-select"
+              aria-label="Select inheritance pattern"
+              density="comfortable"
+              menu-props="{ maxHeight: '300px' }"
             ></v-select>
           </v-col>
           <!-- Input 3: Segregation Probability -->
@@ -43,32 +57,62 @@
               step="0.01"
               outlined
               :disabled="!showSegregationInput"
+              id="segregation-probability-input"
+              aria-label="Enter segregation probability value between 0 and 1"
+              density="comfortable"
+              hint="Value between 0 and 1, representing segregation probability"
+              persistent-hint
             ></v-text-field>
           </v-col>
         </v-row>
-        <v-btn color="primary" @click="searchScoring" class="mx-auto d-block"> Search </v-btn>
+        <v-btn
+          color="primary"
+          @click="searchScoring"
+          class="mx-auto d-block mt-4"
+          min-width="120px"
+          min-height="44px"
+          aria-label="Calculate variant scores"
+        >
+          Search
+        </v-btn>
       </v-card-text>
       <v-card-actions>
         <div class="example-text">
           <!-- Previous Examples -->
           <p>
-            <router-link :to="exampleLinkOld1">
+            <router-link
+              :to="exampleLinkOld1"
+              class="example-link"
+              aria-label="Example with VCF format 1-55051215-G-GA, Inherited dominant pattern, segregation 0.95"
+            >
               Example: "1-55051215-G-GA", Inherited dominant, Segregation 0.95
             </router-link>
           </p>
           <p>
-            <router-link :to="exampleLinkOld2">
+            <router-link
+              :to="exampleLinkOld2"
+              class="example-link"
+              aria-label="Example with HGVS format ENST00000302118:c.524-1063_524-1062insA, Denovo pattern"
+            >
               Example: "ENST00000302118:c.524-1063_524-1062insA", Denovo (no segregation)
             </router-link>
           </p>
           <!-- New Coding Variant Examples -->
           <p>
-            <router-link :to="exampleLinkPKD1">
+            <router-link
+              :to="exampleLinkPKD1"
+              class="example-link"
+              aria-label="Example with PKD1 gene variant NM_001009944.3:c.11935C>T, Inherited dominant, segregation 0.95"
+            >
               Example: NM_001009944.3:c.11935C>T in PKD1, Inherited dominant, Segregation 0.95
             </router-link>
           </p>
           <p>
-            <router-link :to="exampleLinkCOL4A5">
+            <router-link
+              :to="exampleLinkCOL4A5"
+              class="example-link"
+              aria-label="Example with COL4A5 gene variant NM_033380.3:c.1871G>A, Denovo pattern"
+            >
               Example: NM_033380.3:c.1871G>A in COL4A5, Denovo (no segregation)
             </router-link>
           </p>
@@ -249,5 +293,11 @@ export default {
   margin-top: 16px;
   font-size: 0.9rem;
   color: #666;
+}
+
+.example-link {
+  padding: 6px;
+  display: inline-block; /* Ensures the padding is applied effectively */
+  margin: 2px 0;
 }
 </style>
