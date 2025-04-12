@@ -7,7 +7,7 @@ export const variantFrequencyConfig = {
     label: 'gnomade',
     format: 'number',
     description: 'gnomade frequency',
-    round: 6,
+    round: 2, // Standardized to 2 decimal places
     visibility: true,
     style: 'chip',
     font: 'bold',
@@ -16,7 +16,7 @@ export const variantFrequencyConfig = {
     label: 'gnomadg',
     format: 'number',
     description: 'gnomadg frequency',
-    round: 6,
+    round: 2, // Standardized to 2 decimal places
     visibility: true,
     style: 'chip',
     font: 'bold',

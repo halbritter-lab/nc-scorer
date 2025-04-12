@@ -24,6 +24,8 @@ export const geneDetailsConfig = {
     visibility: true,
     style: 'chip',
     font: 'bold',
+    isKeyScore: true, // Mark as a key score for visual highlighting
+    scoreType: 'gene', // Identify as gene score for consistent coloring
   },
   symbol: {
     label: 'Symbol',

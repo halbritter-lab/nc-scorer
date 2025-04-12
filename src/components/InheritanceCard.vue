@@ -14,6 +14,10 @@
               style: 'chip',
               font: 'bold',
               defaultColor: 'primary',
+              format: 'number',
+              round: 2,
+              isKeyScore: true, // Mark as a key score for visual highlighting
+              scoreType: 'inheritance', // Identify as inheritance score for consistent coloring
             }"
             :value="finalScore"
           />
@@ -47,6 +51,7 @@
 import { computed, watchEffect } from 'vue';
 import { baseScores, scoringParameters } from '@/config/inheritanceConfig';
 import DataDisplayRow from '@/components/DataDisplayRow.vue';
+import { formatValue } from '@/utils/format';
 
 /**
  * Computes the final genetic variant score based on a base inheritance score and a segregation p-value.
@@ -116,8 +121,13 @@ export default {
       );
     });
 
-    // Format the final score to three decimal places.
-    const finalScoreFormatted = computed(() => finalScore.value.toFixed(3));
+    // Format the final score to two decimal places for consistency.
+    const finalScoreFormatted = computed(() => {
+      return formatValue(finalScore.value, {
+        format: 'number',
+        round: 2,
+      });
+    });
 
     // Emit the score when it changes
     // Use watchEffect to trigger on component creation and whenever the score changes

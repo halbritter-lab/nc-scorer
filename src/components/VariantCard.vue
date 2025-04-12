@@ -29,8 +29,13 @@
       </v-tooltip>
     </v-card-title>
     <v-card-text>
-      <div v-if="loading">
-        <v-progress-linear indeterminate color="primary"></v-progress-linear>
+      <div v-if="loading" class="loading-container">
+        <!-- Skeleton loader for better visual experience during loading -->
+        <v-skeleton-loader
+          class="mx-auto"
+          :type="scoreInterpretationConfig.skeletonLoaders.variant.type"
+          :loading="loading"
+        ></v-skeleton-loader>
       </div>
       <div v-else-if="error">
         <v-alert type="error" dismissible>{{ error }}</v-alert>
@@ -198,6 +203,7 @@ import { variantScoreConfig } from '@/config/variantScoreConfig.js';
 import { getColor, formatValue } from '@/utils/format.js';
 import useRetryState from '@/composables/useRetryState.js';
 import { getPrioritizedGeneSymbol } from '@/utils/geneSymbolUtils.js';
+import { scoreInterpretationConfig } from '@/config/scoreInterpretationConfig.js';
 
 export default {
   name: 'VariantCard',
@@ -325,6 +331,8 @@ export default {
       return formatted === null || formatted === undefined || formatted === '' ? 'NA' : formatted;
     };
 
+    // scoreInterpretationConfig is already imported and available to the template
+    
     onMounted(async () => {
       try {
         // Reset retry state before making the API call
@@ -388,6 +396,7 @@ export default {
       hasScore,
       retryStates,
       prioritizedGeneSymbol, // Expose the prioritized gene symbol
+      scoreInterpretationConfig, // Make available to the template
     };
   },
 };
@@ -445,5 +454,12 @@ export default {
 
 .retry-spinner {
   animation: spin 1.5s linear infinite;
+}
+
+.loading-container {
+  min-height: 240px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 </style>

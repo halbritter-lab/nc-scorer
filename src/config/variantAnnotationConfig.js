@@ -84,7 +84,7 @@ export const variantAnnotationConfig = {
     label: 'CADD Raw Score',
     format: 'number',
     description: 'CADD raw score',
-    round: 3,
+    round: 2, // Standardized to 2 decimal places
     visibility: false,
   },
   hgvsc: {

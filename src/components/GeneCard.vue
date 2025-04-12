@@ -29,8 +29,13 @@
       </v-tooltip>
     </v-card-title>
     <v-card-text>
-      <div v-if="loading">
-        <v-progress-linear indeterminate color="primary"></v-progress-linear>
+      <div v-if="loading" class="loading-container">
+        <!-- Skeleton loader for better visual experience during loading -->
+        <v-skeleton-loader
+          class="mx-auto"
+          :type="scoreInterpretationConfig.skeletonLoaders.gene.type"
+          :loading="loading"
+        ></v-skeleton-loader>
       </div>
       <div v-else-if="error">
         <v-alert type="error" dismissible>{{ error }}</v-alert>
@@ -47,6 +52,7 @@
                 style: item.style,
                 font: item.font,
                 colorThresholds: item.colorThresholds,
+                scoreType: item.scoreType, // Pass score type for consistent styling
               }"
               :value="item.value"
               :defaultValue="'NA'"
@@ -65,6 +71,7 @@ import { geneDetailsConfig } from '@/config/geneDetailsConfig.js';
 import { getColor, formatValue } from '@/utils/format.js';
 import useRetryState from '@/composables/useRetryState.js';
 import DataDisplayRow from '@/components/DataDisplayRow.vue';
+import { scoreInterpretationConfig } from '@/config/scoreInterpretationConfig';
 
 export default {
   name: 'GeneCard',
@@ -99,12 +106,16 @@ export default {
               color: getColor(value, config),
               style: config.style,
               font: config.font,
+              isKeyScore: config.isKeyScore || false, // Pass the isKeyScore flag
+              scoreType: config.scoreType || null, // Pass the scoreType for styling
             };
           }
         });
       }
       return formattedData;
     });
+
+    // scoreInterpretationConfig is available directly in the template
 
     onMounted(async () => {
       try {
@@ -150,6 +161,7 @@ export default {
       error,
       filteredGeneData,
       retryStates,
+      scoreInterpretationConfig,
     };
   },
 };
@@ -185,5 +197,12 @@ export default {
 
 .retry-spinner {
   animation: spin 1.5s linear infinite;
+}
+
+.loading-container {
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 </style>
