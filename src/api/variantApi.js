@@ -73,19 +73,68 @@ export async function queryVariant(variantInput, options = {}) {
       initialDelay: 500,
       maxDelay: 5000,
       shouldRetry: (error) => {
-        // Retry on network errors, timeouts, and server errors
-        // Also retry on any error from the variant-linker API that might be transient
-        return (
+        // Variant-specific handling
+        if (error.response) {
+          // Don't retry badly formatted variant IDs (likely 400 errors)
+          if (error.response.status === 400) {
+            console.debug(`Bad variant format for '${variantInput}' (400)`);
+            return false;
+          }
+          
+          // Don't retry if the variant doesn't exist in the database
+          if (error.response.status === 404) {
+            console.debug(`Variant '${variantInput}' not found (404)`);
+            return false;
+          }
+          
+          // Explicitly retry rate limiting and gateway timeouts
+          if (error.response.status === 429 || error.response.status === 504) {
+            console.debug(`Retrying rate limit/timeout for variant ${variantInput}`);
+            return true;
+          }
+          
+          // Retry server errors
+          if (error.response.status >= 500 && error.response.status < 600) {
+            console.debug(`Retrying server error (${error.response.status}) for variant ${variantInput}`);
+            return true;
+          }
+          
+          // Don't retry other client errors (4xx)
+          if (error.response.status >= 400 && error.response.status < 500) {
+            console.debug(`Not retrying client error (${error.response.status}) for variant ${variantInput}`);
+            return false;
+          }
+        }
+        
+        // Handle network errors
+        const isNetworkError = !error.response && (
           error.message.includes('network') ||
           error.message.includes('timeout') ||
           error.message.includes('Failed to fetch') ||
-          (error.response && error.response.status >= 500 && error.response.status < 600)
+          error.code === 'ECONNABORTED' ||
+          error.code === 'ECONNREFUSED' ||
+          error.code === 'ECONNRESET' ||
+          error.message.includes('Network Error') ||
+          error instanceof TypeError
         );
+        
+        if (isNetworkError) {
+          console.debug(`Retrying network error for variant ${variantInput}: ${error.message}`);
+          return true;
+        }
+        
+        // Default to not retrying for any other cases
+        return false;
       },
       onRetry: (error, attempt) => {
         console.warn(
           `Retry attempt ${attempt} for variant ${variantInput} after error: ${error.message}`
         );
+      },
+      onSuccess: (attempts) => {
+        if (attempts > 0) {
+          console.info(`Successfully analyzed variant ${variantInput} after ${attempts} retries`);
+        }
       },
     }
   );

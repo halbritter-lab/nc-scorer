@@ -20,12 +20,42 @@ export async function retryWithBackoff(fn, options = {}) {
     initialDelay = 300,
     maxDelay = 3000,
     shouldRetry = (error) => {
-      // Default retry condition: network errors or server errors (5xx)
-      return (
-        error.message.includes('network') ||
-        error.message.includes('timeout') ||
-        (error.response && error.response.status >= 500 && error.response.status < 600)
-      );
+      // Handle network errors (no response object)
+      if (!error.response) {
+        const isNetworkError = 
+          error.message.includes('network') ||
+          error.message.includes('timeout') ||
+          error.message.includes('Failed to fetch') ||
+          error.code === 'ECONNABORTED' ||
+          error.code === 'ECONNREFUSED' ||
+          error.code === 'ECONNRESET' ||
+          error.message.includes('Network Error') ||
+          error instanceof TypeError;
+        
+        if (isNetworkError) {
+          console.debug('Retrying network error:', error.message);
+          return true;
+        }
+        return false;
+      }
+
+      // Handle HTTP status code based errors
+      const status = error.response.status;
+      
+      // Server errors (5xx) and rate limiting (429)
+      if ((status >= 500 && status < 600) || status === 429 || status === 504) {
+        console.debug(`Retrying error with status code ${status}:`, error.message);
+        return true;
+      }
+      
+      // Client errors (4xx) - don't retry
+      if (status >= 400 && status < 500) {
+        console.debug(`Not retrying client error (${status}):`, error.message);
+        return false;
+      }
+      
+      // Default to not retrying for any other cases
+      return false;
     },
     onRetry = (error, attempt) => {
       console.warn(`Retry attempt ${attempt} after error: ${error.message}`);
