@@ -62,6 +62,23 @@
           </v-btn>
         </template>
 
+        <!-- Cache Toggle Button -->
+        <v-tooltip location="bottom">
+          <template v-slot:activator="{ props }">
+            <v-btn
+              icon
+              v-bind="props"
+              @click="toggleCacheEnabled"
+              class="ml-2"
+            >
+              <v-icon>
+                {{ cacheEnabled ? 'mdi-database-check' : 'mdi-database-off' }}
+              </v-icon>
+            </v-btn>
+          </template>
+          <span>{{ cacheEnabled ? 'Disable API Cache' : 'Enable API Cache' }}</span>
+        </v-tooltip>
+
         <!-- Theme Toggle Button -->
         <v-btn icon @click="toggleTheme" class="ml-2">
           <v-icon>
@@ -89,13 +106,15 @@ import appConfig from '../config/appConfig.json';
 import menuConfig from '../config/menuConfig.json';
 import { fetchLastCommit } from '@/api/github.js'; // Adjust the path as needed
 import useThemeToggle from '@/composables/useThemeToggle.js';
+import { useCacheSettings } from '@/composables/useCacheSettings.js';
 
 export default {
   name: 'AppBar',
   setup() {
     const router = useRouter();
-    // Use the theme toggle composable
+    // Use the theme toggle and cache settings composables
     const { darkTheme, toggleTheme } = useThemeToggle();
+    const { cacheEnabled, toggleCacheEnabled } = useCacheSettings();
     const version = packageInfo.version;
     const lastCommitHash = ref('loading...');
     const fetchError = ref(false);
@@ -153,6 +172,8 @@ export default {
     return {
       darkTheme,
       toggleTheme,
+      cacheEnabled,
+      toggleCacheEnabled,
       menuItems,
       version,
       lastCommitHash,

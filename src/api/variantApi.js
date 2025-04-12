@@ -2,6 +2,7 @@
 // Import variant-linker with proper compatibility for Vite
 import variantLinker from 'variant-linker';
 import { retryWithBackoff } from '@/utils/retry.js';
+import { useApiCache } from '@/composables/useApiCache';
 
 // Ensure module is available globally for proper initialization
 window.variantLinker = variantLinker;
@@ -25,12 +26,14 @@ import formulaConfig from '@/config/scoring/nephro_variant_score_gnomadg_missing
 
 /**
  * Query variant-linker to analyze a genetic variant.
+ * Implements client-side caching to improve performance and reduce API load.
  *
  * @param {string} variantInput - The variant to analyze (in VCF or HGVS format).
  * @param {Object} [options={}] - Optional parameters to control analysis.
  * @param {Object} [options.recoderOptions={ vcf_string: '1' }] - Options for Variant Recoder.
  * @param {Object} [options.vepOptions={ CADD: '1', hgvs: '1', merged: '1', mane: '1' }] - Options for VEP annotation.
- * @param {boolean} [options.cache=false] - Whether to enable caching of API responses.
+ * @param {boolean} [options.skipCache=false] - If true, always bypasses client-side cache.
+ * @param {number} [options.cacheTTL=1800000] - Cache time to live in ms (default 30min).
  * @param {string} [options.output='JSON'] - Desired output format ('JSON', 'CSV', etc.).
  * @param {string} [options.filter=''] - Filtering criteria as a string.
  * @returns {Promise<Object>} The result of the variant analysis.
@@ -40,10 +43,39 @@ export async function queryVariant(variantInput, options = {}) {
   const {
     recoderOptions = { vcf_string: '1' },
     vepOptions = { CADD: '1', hgvs: '1', merged: '1', mane: '1' },
-    cache = false,
+    skipCache = false, // New option to explicitly skip cache if needed
+    cacheTTL = 30 * 60 * 1000, // 30 minutes in milliseconds
     output = 'JSON',
     filter = '',
   } = options;
+  
+  // Initialize the API cache
+  const apiCache = useApiCache();
+  
+  // Normalize variant ID to use as cache key
+  const normalizedInput = variantInput.trim();
+  
+  // Create cache parameters object with options that affect the response
+  const cacheParams = {
+    recoderOptions,
+    vepOptions,
+    output,
+    filter
+  };
+  
+  // Generate a unique cache key for this request
+  const cacheKey = apiCache.generateCacheKey('variant', normalizedInput, cacheParams);
+  
+  // Check cache first if not explicitly skipping
+  if (!skipCache) {
+    const cachedData = apiCache.getCachedItem(cacheKey);
+    if (cachedData) {
+      console.debug(`Using cached data for variant: ${normalizedInput}`);
+      return cachedData;
+    }
+  } else {
+    console.debug(`Skipping cache for variant: ${normalizedInput}`);
+  }
 
   if (typeof variantLinker.analyzeVariant !== 'function') {
     throw new Error('analyzeVariant is not a function. Check the variant-linker module exports.');
@@ -58,15 +90,23 @@ export async function queryVariant(variantInput, options = {}) {
   return retryWithBackoff(
     async () => {
       // Return the result of the variant analysis
-      return await variantLinker.analyzeVariant({
-        variant: variantInput,
+      const result = await variantLinker.analyzeVariant({
+        variant: normalizedInput,
         recoderOptions,
         vepOptions,
         scoringConfig, // Pass the parsed scoring configuration
-        cache,
+        cache: false, // Always set to false as we're using our own caching mechanism
         output,
         filter,
       });
+      
+      // Store successful result in cache
+      if (result && !skipCache) {
+        apiCache.setCachedItem(cacheKey, result, cacheTTL);
+        console.debug(`Cached variant data: ${normalizedInput}`);
+      }
+      
+      return result;
     },
     {
       maxRetries: 3,
