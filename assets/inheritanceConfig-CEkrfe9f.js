@@ -1,0 +1,1 @@
+const o={Denovo:.95,"Homozygous recessive":.8,"Compound heterozygous (confirmed)":.8,"X-linked":.6,"Inherited dominant":.4,"Compound heterozygous (suspected)":.4,Unknown:.1},e={gamma:.001,epsilon:1e-10},n=["Denovo","Unknown","Compound heterozygous (suspected)"],s=["Compound heterozygous (confirmed)","Compound heterozygous (suspected)"];export{o as b,n,s as r,e as s};
