@@ -51,6 +51,7 @@
 
 <script>
 import { computed } from 'vue';
+import { baseScores, scoringParameters } from '@/config/inheritanceConfig';
 
 /**
  * Computes the final genetic variant score based on a base inheritance score and a segregation p-value.
@@ -99,24 +100,22 @@ export default {
     // Convert the segregation prop to a number.
     const segregationProb = computed(() => Number(props.segregation));
 
-    // Base score mapping for inheritance patterns.
-    // (This mapping can later be moved to a separate configuration file.)
-    const baseScores = {
-      Denovo: 0.95,
-      'Inherited dominant': 0.7,
-      'Homozygous recessive': 0.8,
-      'X-linked': 0.6,
-      'Compound heterozygous': 0.65,
-      Unknown: 0.1,
-    };
-
     // Determine the base score for the current inheritance pattern.
     const baseScore = computed(() =>
       baseScores[props.inheritance] !== undefined ? baseScores[props.inheritance] : 0.1
     );
 
     // Compute the final inheritance score.
-    const finalScore = computed(() => computeVariantScore(baseScore.value, segregationProb.value));
+    const finalScore = computed(() => {
+      // For Compound heterozygous (suspected), ignore segregation probability
+      const segregationToUse = props.inheritance === 'Compound heterozygous (suspected)' ? 1 : segregationProb.value;
+      return computeVariantScore(
+        baseScore.value,
+        segregationToUse,
+        scoringParameters.gamma,
+        scoringParameters.epsilon
+      );
+    });
 
     // Format the final score to three decimal places.
     const finalScoreFormatted = computed(() => finalScore.value.toFixed(3));

@@ -9,9 +9,18 @@
           <v-col cols="12" md="6">
             <v-text-field
               v-model="variantInput"
-              label="1. Enter Variant (VCF or HGVS)"
+              label="1a. Enter Variant (VCF or HGVS)"
               outlined
               @keyup.enter="searchScoring"
+            ></v-text-field>
+            <!-- Input 1b: Second Variant for Compound Heterozygous -->
+            <v-text-field
+              v-if="showSecondVariantInput"
+              v-model="variantInput2"
+              label="1b. Second Variant (for Compound Het)"
+              outlined
+              @keyup.enter="searchScoring"
+              class="mt-2"
             ></v-text-field>
           </v-col>
           <!-- Input 2: Inheritance Options -->
@@ -75,6 +84,7 @@
 <script>
 import { ref, computed } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
+import { noSegregationPatterns, requiresSecondVariant } from '@/config/inheritanceConfig';
 
 export default {
   name: 'ScoringSearch',
@@ -85,6 +95,7 @@ export default {
 
     // Initialize form fields from URL parameters if available; otherwise, use defaults.
     const variantInput = ref(route.params.variantInput || '');
+    const variantInput2 = ref(route.params.variantInput2 || '');
     const inheritance = ref(route.params.inheritance || 'Unknown');
     const segregation = ref(route.params.segregation || '1');
 
@@ -94,13 +105,19 @@ export default {
       'Inherited dominant',
       'Homozygous recessive',
       'X-linked',
-      'Compound heterozygous',
+      'Compound heterozygous (confirmed)',
+      'Compound heterozygous (suspected)',
       'Unknown',
     ];
 
-    // Only allow segregation input if the inheritance mode is not 'Denovo' or 'Unknown'.
+    // Only allow segregation input if the inheritance pattern allows it
     const showSegregationInput = computed(() => {
-      return inheritance.value !== 'Denovo' && inheritance.value !== 'Unknown';
+      return !noSegregationPatterns.includes(inheritance.value);
+    });
+
+    // Show second variant input field only for compound heterozygous patterns
+    const showSecondVariantInput = computed(() => {
+      return requiresSecondVariant.includes(inheritance.value);
     });
 
     /**
@@ -172,28 +189,44 @@ export default {
         error.value = 'Please enter a variant.';
         return;
       }
+      // If second variant input is required but missing, show an error
+      if (showSecondVariantInput.value && !variantInput2.value) {
+        error.value = 'Please enter a second variant for compound heterozygous analysis.';
+        return;
+      }
       // If segregation input is active but missing, show an error.
       if (showSegregationInput.value && !segregation.value) {
         error.value = 'Please enter a segregation probability.';
         return;
       }
       error.value = null;
+
+      // Prepare route params - conditionally include variantInput2 only when needed
+      const routeParams = {
+        variantInput: variantInput.value,
+        inheritance: inheritance.value,
+        segregation: segregation.value,
+      };
+      
+      // Add second variant to params only if it exists and is needed
+      if (showSecondVariantInput.value && variantInput2.value) {
+        routeParams.variantInput2 = variantInput2.value;
+      }
+
       router.push({
         name: 'ScoringView',
-        params: {
-          variantInput: variantInput.value,
-          inheritance: inheritance.value,
-          segregation: segregation.value,
-        },
+        params: routeParams,
       });
     };
 
     return {
       variantInput,
+      variantInput2,
       inheritance,
       segregation,
       inheritanceOptions,
       showSegregationInput,
+      showSecondVariantInput,
       searchScoring,
       error,
       exampleLinkOld1,

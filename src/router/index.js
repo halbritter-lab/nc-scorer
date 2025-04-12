@@ -32,8 +32,8 @@ const routes = [
     props: true,
   },
   {
-    // The ScoringView route now accepts additional optional parameters.
-    path: '/scoring/:variantInput/:inheritance?/:segregation?',
+    // The ScoringView route now accepts additional optional parameters including a second variant for compound heterozygous variants.
+    path: '/scoring/:variantInput/:inheritance?/:segregation?/:variantInput2?',
     name: 'ScoringView',
     component: ScoringView,
     props: true,

@@ -39,9 +39,17 @@
         />
       </v-col>
 
-      <!-- Variant Card -->
+      <!-- Variant Card(s) -->
       <v-col cols="12" md="6">
         <VariantCard ref="variantCardRef" :variantInput="variantInput" />
+
+        <!-- Second Variant Card (only for compound heterozygous variants) -->
+        <VariantCard
+          v-if="isCompoundHet && variantInput2"
+          ref="variantCard2Ref"
+          :variantInput="variantInput2"
+          class="mt-4"
+        />
       </v-col>
     </v-row>
   </v-container>
@@ -55,6 +63,7 @@ import GeneCard from '@/components/GeneCard.vue';
 import InheritanceCard from '@/components/InheritanceCard.vue';
 import CombinedScoreCard from '@/components/CombinedScoreCard.vue';
 import useRetryState from '@/composables/useRetryState.js';
+import { requiresSecondVariant } from '@/config/inheritanceConfig';
 
 export default {
   name: 'ScoringView',
@@ -77,11 +86,18 @@ export default {
     const variantInput = route.params.variantInput;
     const inheritance = route.params.inheritance || 'Inherited dominant';
     const segregation = route.params.segregation || '1';
+    const variantInput2 = route.params.variantInput2 || '';
 
     // Create refs to access child component instances.
     const variantCardRef = ref(null);
+    const variantCard2Ref = ref(null);
     const geneCardRef = ref(null);
     const inheritanceCardRef = ref(null);
+
+    // Check if current inheritance pattern is compound heterozygous
+    const isCompoundHet = computed(() => {
+      return requiresSecondVariant.includes(inheritance);
+    });
 
     // Compute geneSymbol from VariantCard’s exposed annotationSummary.
     const geneSymbol = computed(() => {
@@ -132,9 +148,11 @@ export default {
 
     return {
       variantInput,
+      variantInput2,
       inheritance,
       segregation,
       variantCardRef,
+      variantCard2Ref,
       geneCardRef,
       inheritanceCardRef,
       geneSymbol,
@@ -142,6 +160,7 @@ export default {
       variantScore,
       inheritanceScore,
       combinedScoreAvailable,
+      isCompoundHet,
       retrySnackbar, // Expose retry snackbar to the template
     };
   },
