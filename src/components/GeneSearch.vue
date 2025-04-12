@@ -16,9 +16,7 @@
       </v-alert>
 
       <!-- Search Button -->
-      <v-btn color="primary" @click="search" class="mx-auto d-block">
-        Search
-      </v-btn>
+      <v-btn color="primary" @click="search" class="mx-auto d-block"> Search </v-btn>
     </v-card-text>
   </v-card>
 </template>

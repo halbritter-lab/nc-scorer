@@ -10,7 +10,7 @@ import * as components from 'vuetify/components';
 import * as directives from 'vuetify/directives';
 
 // Material Design Icons
-import "@mdi/font/css/materialdesignicons.css";
+import '@mdi/font/css/materialdesignicons.css';
 
 // Import the theme configuration
 import themeConfig from '@/config/themeConfig.json';
@@ -19,11 +19,8 @@ const vuetify = createVuetify({
   components,
   directives,
   theme: {
-    defaultTheme: themeConfig.defaultTheme
-  }
+    defaultTheme: themeConfig.defaultTheme,
+  },
 });
 
-createApp(App)
-  .use(vuetify)
-  .use(router)
-  .mount('#app');
+createApp(App).use(vuetify).use(router).mount('#app');

@@ -9,22 +9,21 @@
           outlined
           @keyup.enter="searchVariant"
         ></v-text-field>
-        <v-btn color="primary" @click="searchVariant" class="mx-auto d-block">
-          Search
-        </v-btn>
+        <v-btn color="primary" @click="searchVariant" class="mx-auto d-block"> Search </v-btn>
       </v-card-text>
       <v-card-actions>
         <div class="example-text">
           <p>
-            <router-link
-              :to="{ name: 'VariantView', params: { variantInput: '1-55051215-G-GA' } }"
-            >
+            <router-link :to="{ name: 'VariantView', params: { variantInput: '1-55051215-G-GA' } }">
               Example (VCF): "1-55051215-G-GA"
             </router-link>
           </p>
           <p>
             <router-link
-              :to="{ name: 'VariantView', params: { variantInput: 'ENST00000302118:c.524-1063_524-1062insA' } }"
+              :to="{
+                name: 'VariantView',
+                params: { variantInput: 'ENST00000302118:c.524-1063_524-1062insA' },
+              }"
             >
               Example (HGVS): "ENST00000302118:c.524-1063_524-1062insA"
             </router-link>

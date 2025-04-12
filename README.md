@@ -61,6 +61,53 @@ After starting the application, navigate to `http://localhost:5173` (or the URL 
 
 Contributions to NCScorer are welcome! Please read our [Contributing Guidelines](CONTRIBUTING.md) for more information on how to report bugs, make feature requests, and submit pull requests.
 
+## Code Style & Linting
+
+This project uses ESLint and Prettier to enforce consistent code style and quality standards. The configuration is tailored for Vue 3 development using the Composition API.
+
+### Linting Commands
+
+- Run linting check with automatic fixes:
+  ```sh
+  npm run lint
+  ```
+
+- Alternative command for targeted linting and fixing:
+  ```sh
+  npm run lint:fix
+  ```
+
+### Code Style Guidelines
+
+- **Vue Components**: Use Vue 3 Composition API (`setup()` function or `<script setup>`) for new components
+- **JavaScript**: Follow ES6+ standards and practices
+- **Formatting Rules**:
+  - Single quotes for strings
+  - Semicolons at the end of statements
+  - 2 spaces for indentation
+  - Maximum line length of 100 characters
+  - Trailing commas in multi-line objects and arrays
+
+### Project Structure
+
+- `components/`: Reusable Vue components
+- `views/`: Page-level Vue components
+- `composables/`: Shared stateful logic (Vue 3 composition functions)
+- `api/`: API service functions for data fetching
+- `utils/`: Utility functions and helpers
+- `config/`: Application configuration and constants
+- `router/`: Vue Router configuration
+
+### Automatic Retry Mechanism
+
+The application includes a robust retry mechanism for API requests, which uses:
+
+- Exponential backoff strategy
+- Configurable retry conditions
+- Visual feedback for retry attempts
+
+When working with API calls, use the `retryWithBackoff` utility from `src/utils/retry.js` and consider implementing the retry state tracking provided by `useRetryState` composable.
+
 ## Code of Conduct
 
 To ensure a welcoming and supportive environment for all contributors, please review and adhere to our [Code of Conduct](CODE_OF_CONDUCT.md).

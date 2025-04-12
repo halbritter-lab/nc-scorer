@@ -1,7 +1,7 @@
 <template>
   <v-app>
     <!-- Include the AppBar component -->
-    <AppBar/>
+    <AppBar />
 
     <!-- Application content -->
     <v-main>
@@ -9,7 +9,7 @@
     </v-main>
 
     <!-- Include the FooterBar component -->
-    <FooterBar/>
+    <FooterBar />
   </v-app>
 </template>
 
@@ -25,6 +25,6 @@ export default {
   },
   setup() {
     // Composition API setup can go here
-  }
+  },
 };
 </script>

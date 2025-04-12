@@ -116,9 +116,7 @@ export default {
     );
 
     // Compute the final inheritance score.
-    const finalScore = computed(() =>
-      computeVariantScore(baseScore.value, segregationProb.value)
-    );
+    const finalScore = computed(() => computeVariantScore(baseScore.value, segregationProb.value));
 
     // Format the final score to three decimal places.
     const finalScoreFormatted = computed(() => finalScore.value.toFixed(3));

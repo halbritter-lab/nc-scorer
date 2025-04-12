@@ -1,7 +1,19 @@
 <!-- src/components/GeneCard.vue -->
 <template>
   <v-card class="gene-card">
-    <v-card-title>Gene Details for "{{ symbol }}"</v-card-title>
+    <v-card-title>
+      Gene Details for "{{ symbol }}"
+      <v-badge
+        v-if="retryStates.gene.attempts > 0"
+        color="warning"
+        :content="retryStates.gene.attempts"
+        :title="`Retried ${retryStates.gene.attempts} times due to network issues`"
+        offset-x="5"
+        offset-y="5"
+      >
+        <v-icon size="small" color="warning">mdi-refresh</v-icon>
+      </v-badge>
+    </v-card-title>
     <v-card-text>
       <div v-if="loading">
         <v-progress-linear indeterminate color="primary"></v-progress-linear>
@@ -25,7 +37,10 @@
                 <td>
                   <v-chip
                     v-if="item.style === 'chip'"
-                    :class="{'italic-font': item.font === 'italic', 'bold-font': item.font === 'bold'}"
+                    :class="{
+                      'italic-font': item.font === 'italic',
+                      'bold-font': item.font === 'bold',
+                    }"
                     :color="item.color"
                   >
                     {{ item.value }}
@@ -42,10 +57,11 @@
 </template>
 
 <script>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, inject } from 'vue';
 import { fetchGeneDetails } from '@/api/geneApi.js';
 import { geneDetailsConfig } from '@/config/geneDetailsConfig.js';
 import { getColor, formatValue } from '@/utils/format.js';
+import useRetryState from '@/composables/useRetryState.js';
 
 export default {
   name: 'GeneCard',
@@ -59,6 +75,9 @@ export default {
     const geneData = ref({});
     const loading = ref(true);
     const error = ref(null);
+
+    // Get shared retry state from parent or create a new one
+    const { retryStates, showSnackbar } = inject('retryState', useRetryState());
 
     // Compute gene details formatted by the configuration.
     const filteredGeneData = computed(() => {
@@ -83,8 +102,26 @@ export default {
 
     onMounted(async () => {
       try {
-        geneData.value = await fetchGeneDetails(props.symbol);
+        // Reset retry state before making the API call
+        retryStates.gene.reset();
+        retryStates.gene.component = 'GeneCard';
+
+        // Create a shared state object to track retries
+        const retryState = retryStates.gene;
+
+        geneData.value = await fetchGeneDetails(props.symbol, {
+          retryState,
+          onRetry: (error, attempt) => {
+            retryState.inProgress = true;
+            showSnackbar(`Retrying gene data (attempt ${attempt})...`, 'warning');
+          },
+          onSuccess: (attempts) => {
+            retryState.inProgress = false;
+            showSnackbar(`Successfully loaded gene data after ${attempts} retries`, 'success');
+          },
+        });
       } catch (err) {
+        retryStates.gene.inProgress = false;
         error.value = err.message || 'Error fetching gene data.';
       } finally {
         loading.value = false;
@@ -100,6 +137,7 @@ export default {
       loading,
       error,
       filteredGeneData,
+      retryStates,
     };
   },
 };

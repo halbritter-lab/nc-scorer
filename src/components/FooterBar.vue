@@ -27,9 +27,9 @@ export default {
     });
 
     return {
-      footerLinks
+      footerLinks,
     };
-  }
+  },
 };
 </script>
 

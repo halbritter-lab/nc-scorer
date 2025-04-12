@@ -18,10 +18,8 @@
 
       <!-- Toolbar Title and Version Info -->
       <v-toolbar-title class="mr-6">
-        <span class="clickable" @click="navigateHome">
-          NC-Scorer
-        </span>
-        <br>
+        <span class="clickable" @click="navigateHome"> NC-Scorer </span>
+        <br />
         <!-- Line break for version info -->
         <span
           class="version-info"
@@ -29,9 +27,7 @@
           @mouseleave="showCopyIcon = false"
         >
           Version: {{ version }} - Commit: {{ lastCommitHash }}
-          <v-icon v-if="showCopyIcon" @click="copyCitation">
-            mdi-content-copy
-          </v-icon>
+          <v-icon v-if="showCopyIcon" @click="copyCitation"> mdi-content-copy </v-icon>
         </span>
       </v-toolbar-title>
 
@@ -207,8 +203,6 @@ export default {
   animation: pulse 2s infinite;
   cursor: pointer;
 }
-
-
 
 /* Hover effect for clickable elements in the toolbar */
 .clickable:hover {

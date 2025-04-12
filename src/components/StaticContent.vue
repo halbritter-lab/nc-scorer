@@ -11,7 +11,9 @@
           <v-card-text v-html="section.content"></v-card-text>
           <!-- Only display the card actions if there are links -->
           <v-card-actions v-if="section.links && section.links.length > 0">
-            <v-btn v-for="link in section.links" :key="link.title" :to="link.url" text>{{ link.title }}</v-btn>
+            <v-btn v-for="link in section.links" :key="link.title" :to="link.url" text>{{
+              link.title
+            }}</v-btn>
           </v-card-actions>
         </v-card>
       </v-col>
@@ -25,9 +27,9 @@ export default {
   props: {
     config: {
       type: Object,
-      required: true
-    }
-  }
+      required: true,
+    },
+  },
 };
 </script>
 

@@ -1,6 +1,7 @@
 // src/api/variantApi.js
 // Import variant-linker with proper compatibility for Vite
 import variantLinker from 'variant-linker';
+import { retryWithBackoff } from '@/utils/retry.js';
 
 // Ensure module is available globally for proper initialization
 window.variantLinker = variantLinker;
@@ -9,7 +10,7 @@ window.variantLinker = variantLinker;
 if (variantLinker.config && typeof variantLinker.config.setBaseUrl === 'function') {
   // Check if we're in development mode
   const isDevelopment = import.meta.env.DEV;
-  
+
   if (isDevelopment) {
     // In development: use the proxy to avoid CORS issues
     variantLinker.config.setBaseUrl('ensembl');
@@ -45,21 +46,47 @@ export async function queryVariant(variantInput, options = {}) {
   } = options;
 
   if (typeof variantLinker.analyzeVariant !== 'function') {
-    throw new Error(
-      'analyzeVariant is not a function. Check the variant-linker module exports.'
-    );
+    throw new Error('analyzeVariant is not a function. Check the variant-linker module exports.');
   }
 
   // Parse the scoring configuration using the provided scoring config JSON files.
-  const scoringConfig = variantLinker.scoring.parseScoringConfig(variableAssignmentConfig, formulaConfig);
+  const scoringConfig = variantLinker.scoring.parseScoringConfig(
+    variableAssignmentConfig,
+    formulaConfig
+  );
 
-  return await variantLinker.analyzeVariant({
-    variant: variantInput,
-    recoderOptions,
-    vepOptions,
-    scoringConfig, // Pass the parsed scoring configuration
-    cache,
-    output,
-    filter,
-  });
+  return retryWithBackoff(
+    async () => {
+      // Return the result of the variant analysis
+      return await variantLinker.analyzeVariant({
+        variant: variantInput,
+        recoderOptions,
+        vepOptions,
+        scoringConfig, // Pass the parsed scoring configuration
+        cache,
+        output,
+        filter,
+      });
+    },
+    {
+      maxRetries: 3,
+      initialDelay: 500,
+      maxDelay: 5000,
+      shouldRetry: (error) => {
+        // Retry on network errors, timeouts, and server errors
+        // Also retry on any error from the variant-linker API that might be transient
+        return (
+          error.message.includes('network') ||
+          error.message.includes('timeout') ||
+          error.message.includes('Failed to fetch') ||
+          (error.response && error.response.status >= 500 && error.response.status < 600)
+        );
+      },
+      onRetry: (error, attempt) => {
+        console.warn(
+          `Retry attempt ${attempt} for variant ${variantInput} after error: ${error.message}`
+        );
+      },
+    }
+  );
 }

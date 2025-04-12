@@ -37,9 +37,7 @@
             ></v-text-field>
           </v-col>
         </v-row>
-        <v-btn color="primary" @click="searchScoring" class="mx-auto d-block">
-          Search
-        </v-btn>
+        <v-btn color="primary" @click="searchScoring" class="mx-auto d-block"> Search </v-btn>
       </v-card-text>
       <v-card-actions>
         <div class="example-text">

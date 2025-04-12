@@ -1,7 +1,19 @@
 <!-- src/components/VariantCard.vue -->
 <template>
   <v-card class="variant-card">
-    <v-card-title>Variant Details for "{{ variantInput }}"</v-card-title>
+    <v-card-title>
+      Variant Details for "{{ variantInput }}"
+      <v-badge
+        v-if="retryStates.variant.attempts > 0"
+        color="warning"
+        :content="retryStates.variant.attempts"
+        :title="`Retried ${retryStates.variant.attempts} times due to network issues`"
+        offset-x="5"
+        offset-y="5"
+      >
+        <v-icon size="small" color="warning">mdi-refresh</v-icon>
+      </v-badge>
+    </v-card-title>
     <v-card-text>
       <div v-if="loading">
         <v-progress-linear indeterminate color="primary"></v-progress-linear>
@@ -15,7 +27,7 @@
           <v-card-text>
             <v-table class="summary-table">
               <tbody>
-                <tr v-for="([scoreKey, config]) in visibleScoreConfig" :key="scoreKey">
+                <tr v-for="[scoreKey, config] in visibleScoreConfig" :key="scoreKey">
                   <td class="info-col">
                     <strong>{{ config.label }}:</strong>
                     <v-tooltip activator="parent" location="start">
@@ -25,7 +37,10 @@
                   <td class="value-col">
                     <v-chip
                       v-if="config.style === 'chip'"
-                      :class="{'italic-font': config.font === 'italic', 'bold-font': config.font === 'bold'}"
+                      :class="{
+                        'italic-font': config.font === 'italic',
+                        'bold-font': config.font === 'bold',
+                      }"
                       :color="getColor(scoreSummary[scoreKey], config)"
                       small
                     >
@@ -71,9 +86,7 @@
                 <tr v-if="annotationSummary.hgnc_id">
                   <td class="info-col">
                     <strong>HGNC ID:</strong>
-                    <v-tooltip activator="parent" location="start">
-                      HGNC Identifier.
-                    </v-tooltip>
+                    <v-tooltip activator="parent" location="start"> HGNC Identifier. </v-tooltip>
                   </td>
                   <td class="value-col">
                     <span>{{ annotationSummary.hgnc_id }}</span>
@@ -89,7 +102,7 @@
           <v-card-text>
             <v-table class="summary-table">
               <tbody>
-                <tr v-for="([freqKey, config]) in visibleFrequencyConfig" :key="freqKey">
+                <tr v-for="[freqKey, config] in visibleFrequencyConfig" :key="freqKey">
                   <td class="info-col">
                     <strong>{{ config.label }}:</strong>
                     <v-tooltip activator="parent" location="start">
@@ -99,7 +112,10 @@
                   <td class="value-col">
                     <v-chip
                       v-if="config.style === 'chip'"
-                      :class="{'italic-font': config.font === 'italic', 'bold-font': config.font === 'bold'}"
+                      :class="{
+                        'italic-font': config.font === 'italic',
+                        'bold-font': config.font === 'bold',
+                      }"
                       :color="getColor(frequencyExtracted[freqKey], config)"
                       small
                     >
@@ -149,7 +165,10 @@
                       <template v-else>
                         <v-chip
                           v-if="entry[1].style === 'chip'"
-                          :class="{'italic-font': entry[1].font === 'italic', 'bold-font': entry[1].font === 'bold'}"
+                          :class="{
+                            'italic-font': entry[1].font === 'italic',
+                            'bold-font': entry[1].font === 'bold',
+                          }"
                           :color="getColor(selectedTranscript[entry[0]], entry[1])"
                         >
                           {{ formatValue(selectedTranscript[entry[0]], entry[1]) }}
@@ -177,12 +196,13 @@
 </template>
 
 <script>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, inject } from 'vue';
 import { queryVariant } from '@/api/variantApi.js';
 import { variantAnnotationConfig } from '@/config/variantAnnotationConfig.js';
 import { variantFrequencyConfig } from '@/config/variantFrequencyConfig.js';
 import { variantScoreConfig } from '@/config/variantScoreConfig.js';
 import { getColor, formatValue } from '@/utils/format.js';
+import useRetryState from '@/composables/useRetryState.js';
 
 export default {
   name: 'VariantCard',
@@ -196,6 +216,9 @@ export default {
     const result = ref(null);
     const loading = ref(true);
     const error = ref(null);
+
+    // Get shared retry state from parent or create a new one
+    const { retryStates, showSnackbar } = inject('retryState', useRetryState());
 
     // Compute transcript consequences from the first annotationData object.
     const transcriptOptions = computed(() => {
@@ -211,37 +234,27 @@ export default {
     });
 
     // Compute a list of transcript IDs.
-    const transcriptIds = computed(() =>
-      transcriptOptions.value.map(tc => tc.transcript_id)
-    );
+    const transcriptIds = computed(() => transcriptOptions.value.map((tc) => tc.transcript_id));
     const selectedTranscriptId = ref(null);
     const selectedTranscript = computed(() =>
-      transcriptOptions.value.find(tc => tc.transcript_id === selectedTranscriptId.value)
+      transcriptOptions.value.find((tc) => tc.transcript_id === selectedTranscriptId.value)
     );
 
     // Compute a filtered array of [propKey, config] entries for annotation details.
     const visibleAnnotationConfig = computed(() => {
-      return Object.entries(variantAnnotationConfig).filter(
-        ([, config]) => config.visibility
-      );
+      return Object.entries(variantAnnotationConfig).filter(([, config]) => config.visibility);
     });
 
     // Compute summary data from the first annotation object.
     const annotationSummary = computed(() => {
-      if (
-        result.value &&
-        result.value.annotationData &&
-        result.value.annotationData.length > 0
-      ) {
+      if (result.value && result.value.annotationData && result.value.annotationData.length > 0) {
         const anno = result.value.annotationData[0];
         return {
           most_severe_consequence: anno.most_severe_consequence,
           gene_symbol: Array.isArray(anno.gene_symbol)
             ? anno.gene_symbol.join(', ')
             : anno.gene_symbol,
-          hgnc_id: Array.isArray(anno.hgnc_id)
-            ? anno.hgnc_id.join(', ')
-            : anno.hgnc_id,
+          hgnc_id: Array.isArray(anno.hgnc_id) ? anno.hgnc_id.join(', ') : anno.hgnc_id,
         };
       }
       return {};
@@ -274,9 +287,7 @@ export default {
 
     // Compute visible frequency config entries.
     const visibleFrequencyConfig = computed(() => {
-      return Object.entries(variantFrequencyConfig).filter(
-        ([, config]) => config.visibility
-      );
+      return Object.entries(variantFrequencyConfig).filter(([, config]) => config.visibility);
     });
 
     // Compute score summary from the first annotation object.
@@ -296,9 +307,7 @@ export default {
 
     // Compute visible score config entries.
     const visibleScoreConfig = computed(() => {
-      return Object.entries(variantScoreConfig).filter(
-        ([, config]) => config.visibility
-      );
+      return Object.entries(variantScoreConfig).filter(([, config]) => config.visibility);
     });
 
     // Determine if a score exists.
@@ -307,18 +316,35 @@ export default {
     // Helper: Format value or return a default ("NA") if value is null/undefined or empty.
     const formatOrDefault = (value, config) => {
       const formatted = formatValue(value, config);
-      return (formatted === null || formatted === undefined || formatted === '')
-        ? 'NA'
-        : formatted;
+      return formatted === null || formatted === undefined || formatted === '' ? 'NA' : formatted;
     };
 
     onMounted(async () => {
       try {
-        result.value = await queryVariant(props.variantInput);
+        // Reset retry state before making the API call
+        retryStates.variant.reset();
+        retryStates.variant.component = 'VariantCard';
+
+        // Create a shared state object to track retries
+        const retryState = retryStates.variant;
+
+        result.value = await queryVariant(props.variantInput, {
+          retryState,
+          onRetry: (error, attempt) => {
+            retryState.inProgress = true;
+            showSnackbar(`Retrying variant data (attempt ${attempt})...`, 'warning');
+          },
+          onSuccess: (attempts) => {
+            retryState.inProgress = false;
+            showSnackbar(`Successfully loaded variant data after ${attempts} retries`, 'success');
+          },
+        });
+
         if (transcriptIds.value.length > 0) {
           selectedTranscriptId.value = transcriptIds.value[0];
         }
       } catch (err) {
+        retryStates.variant.inProgress = false;
         error.value = err.message || 'Error fetching variant data.';
       } finally {
         loading.value = false;
@@ -348,6 +374,7 @@ export default {
       scoreSummary,
       visibleScoreConfig,
       hasScore,
+      retryStates,
     };
   },
 };

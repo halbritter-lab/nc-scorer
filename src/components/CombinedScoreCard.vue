@@ -10,9 +10,7 @@
           Final score is computed as the weighted sum of the three scores, with maximum 10.
         </span>
       </v-tooltip>
-      <span class="score-tooltip">
-        (Gene×4 + Variant×4 + Inheritance×2) / 10
-      </span>
+      <span class="score-tooltip"> (Gene×4 + Variant×4 + Inheritance×2) / 10 </span>
     </v-card-text>
   </v-card>
 </template>

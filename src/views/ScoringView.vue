@@ -1,5 +1,14 @@
 <template>
   <v-container>
+    <!-- Retry Snackbar -->
+    <v-snackbar
+      v-model="retrySnackbar.visible"
+      :color="retrySnackbar.color"
+      :timeout="retrySnackbar.timeout"
+    >
+      {{ retrySnackbar.message }}
+    </v-snackbar>
+
     <!-- Combined Score Card at the top -->
     <v-row>
       <v-col cols="12">
@@ -20,12 +29,14 @@
           <GeneCard ref="geneCardRef" :symbol="geneSymbol" />
         </v-card>
         <v-card class="mb-4" v-else>
-          <v-alert type="info">
-            Waiting for gene data...
-          </v-alert>
+          <v-alert type="info"> Waiting for gene data... </v-alert>
         </v-card>
         <!-- Inheritance Card -->
-        <InheritanceCard ref="inheritanceCardRef" :inheritance="inheritance" :segregation="segregation" />
+        <InheritanceCard
+          ref="inheritanceCardRef"
+          :inheritance="inheritance"
+          :segregation="segregation"
+        />
       </v-col>
 
       <!-- Variant Card -->
@@ -37,12 +48,13 @@
 </template>
 
 <script>
-import { ref, computed } from 'vue';
+import { ref, computed, provide } from 'vue';
 import { useRoute } from 'vue-router';
 import VariantCard from '@/components/VariantCard.vue';
 import GeneCard from '@/components/GeneCard.vue';
 import InheritanceCard from '@/components/InheritanceCard.vue';
 import CombinedScoreCard from '@/components/CombinedScoreCard.vue';
+import useRetryState from '@/composables/useRetryState.js';
 
 export default {
   name: 'ScoringView',
@@ -54,6 +66,12 @@ export default {
   },
   setup() {
     const route = useRoute();
+
+    // Set up retry state for the API requests
+    const { retryStates, showSnackbar, snackbar: retrySnackbar } = useRetryState();
+
+    // Provide retry state to child components
+    provide('retryState', { retryStates, showSnackbar });
 
     // Retrieve parameters from the URL (with defaults).
     const variantInput = route.params.variantInput;
@@ -124,6 +142,7 @@ export default {
       variantScore,
       inheritanceScore,
       combinedScoreAvailable,
+      retrySnackbar, // Expose retry snackbar to the template
     };
   },
 };

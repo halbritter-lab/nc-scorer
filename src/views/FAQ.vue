@@ -3,18 +3,18 @@
 </template>
 
 <script>
-import StaticContent from "@/components/StaticContent.vue";
-import faqConfig from "@/config/faqPageConfig.json";
+import StaticContent from '@/components/StaticContent.vue';
+import faqConfig from '@/config/faqPageConfig.json';
 
 export default {
   name: 'FAQPage',
   components: {
-    StaticContent
+    StaticContent,
   },
   data() {
     return {
-      faqConfig
+      faqConfig,
     };
-  }
+  },
 };
 </script>
