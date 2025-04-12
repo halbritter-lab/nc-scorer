@@ -1,71 +1,82 @@
 <!-- components/AppBar.vue -->
 <template>
   <v-app-bar app color="teal" dark>
-    <!-- Logo Image -->
-    <v-img
-      src="img/logo.png"
-      class="mx-3 app-logo"
-      contain
-      max-height="48"
-      max-width="48"
-      @click="navigateHome"
-    ></v-img>
+    <!-- Left Spacer for Centering -->
+    <v-spacer></v-spacer>
 
-    <!-- Toolbar Title and Version Info -->
-    <v-toolbar-title>
-      <span class="clickable" @click="navigateHome">
-        NC-Scorer
-      </span>
-      <br>
-      <!-- Line break for version info -->
-      <span
-        class="version-info"
-        @mouseenter="showCopyIcon = true"
-        @mouseleave="showCopyIcon = false"
-      >
-        Version: {{ version }} - Commit: {{ lastCommitHash }}
-        <v-icon v-if="showCopyIcon" @click="copyCitation">
-          mdi-content-copy
-        </v-icon>
-      </span>
-    </v-toolbar-title>
+    <!-- App Logo, Title and Navigation Group (Centered) -->
+    <div class="d-flex align-center centered-content">
+      <!-- Logo Image -->
+      <v-img
+        :src="logoPath"
+        class="app-logo mr-3"
+        contain
+        max-height="48"
+        max-width="48"
+        @click="navigateHome"
+      ></v-img>
 
-    <!-- Dynamic Menu Items with Nested Dropdowns -->
-    <template v-for="item in menuItems" :key="item.text">
-      <v-menu offset-y v-if="item.children">
-        <template v-slot:activator="{ props }">
-          <v-btn text v-bind="props">
+      <!-- Toolbar Title and Version Info -->
+      <v-toolbar-title class="mr-6">
+        <span class="clickable" @click="navigateHome">
+          NC-Scorer
+        </span>
+        <br>
+        <!-- Line break for version info -->
+        <span
+          class="version-info"
+          @mouseenter="showCopyIcon = true"
+          @mouseleave="showCopyIcon = false"
+        >
+          Version: {{ version }} - Commit: {{ lastCommitHash }}
+          <v-icon v-if="showCopyIcon" @click="copyCitation">
+            mdi-content-copy
+          </v-icon>
+        </span>
+      </v-toolbar-title>
+
+      <!-- Navigation Menu Items -->
+      <div class="menu-items">
+        <template v-for="item in menuItems" :key="item.text">
+          <v-menu offset-y v-if="item.children">
+            <template v-slot:activator="{ props }">
+              <v-btn text v-bind="props" class="mx-1">
+                <v-icon left v-if="item.icon">{{ item.icon }}</v-icon>
+                {{ item.text }}
+              </v-btn>
+            </template>
+            <v-list>
+              <v-list-item
+                v-for="childItem in item.children"
+                :key="childItem.text"
+                :to="childItem.to"
+              >
+                <v-list-item-title>
+                  <v-icon v-if="childItem.icon">
+                    {{ childItem.icon }}
+                  </v-icon>
+                  {{ childItem.text }}
+                </v-list-item-title>
+              </v-list-item>
+            </v-list>
+          </v-menu>
+          <v-btn :to="item.to" text v-else class="mx-1">
             <v-icon left v-if="item.icon">{{ item.icon }}</v-icon>
             {{ item.text }}
           </v-btn>
         </template>
-        <v-list>
-          <v-list-item
-            v-for="childItem in item.children"
-            :key="childItem.text"
-            :to="childItem.to"
-          >
-            <v-list-item-title>
-              <v-icon v-if="childItem.icon">
-                {{ childItem.icon }}
-              </v-icon>
-              {{ childItem.text }}
-            </v-list-item-title>
-          </v-list-item>
-        </v-list>
-      </v-menu>
-      <v-btn :to="item.to" text v-else>
-        <v-icon left v-if="item.icon">{{ item.icon }}</v-icon>
-        {{ item.text }}
-      </v-btn>
-    </template>
 
-    <!-- Theme Toggle Button -->
-    <v-btn icon @click="toggleTheme">
-      <v-icon>
-        {{ darkTheme ? 'mdi-weather-night' : 'mdi-white-balance-sunny' }}
-      </v-icon>
-    </v-btn>
+        <!-- Theme Toggle Button -->
+        <v-btn icon @click="toggleTheme" class="ml-2">
+          <v-icon>
+            {{ darkTheme ? 'mdi-weather-night' : 'mdi-white-balance-sunny' }}
+          </v-icon>
+        </v-btn>
+      </div>
+    </div>
+
+    <!-- Right Spacer for Centering -->
+    <v-spacer></v-spacer>
   </v-app-bar>
 
   <!-- Snackbar for feedback -->
@@ -135,6 +146,14 @@ export default {
     // Computed property for menu items
     const menuItems = computed(() => menuConfig.items);
 
+    // Compute logo path with absolute URL to prevent issues during navigation
+    const logoPath = computed(() => {
+      // Use import.meta.env.BASE_URL for Vite, or fallback to process.env
+      const baseUrl = import.meta.env.BASE_URL || process.env.BASE_URL || '/';
+      // Ensure the path always starts with the base URL
+      return `${baseUrl}img/logo.png`.replace(/\/\//g, '/');
+    });
+
     return {
       darkTheme,
       toggleTheme,
@@ -148,6 +167,7 @@ export default {
       copyCitation,
       showCopyIcon,
       navigateHome,
+      logoPath,
     };
   },
 };
@@ -188,6 +208,8 @@ export default {
   cursor: pointer;
 }
 
+
+
 /* Hover effect for clickable elements in the toolbar */
 .clickable:hover {
   opacity: 0.8;
@@ -198,11 +220,23 @@ export default {
 /* Styles for the version info */
 .version-info {
   display: block;
-  margin-left: auto;
-  padding-right: 16px;
   color: rgba(255, 255, 255, 0.7);
   font-size: 0.8rem;
   margin-top: -10px;
+  white-space: nowrap;
+}
+
+/* Centered content container */
+.centered-content {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Menu items container */
+.menu-items {
+  display: flex;
+  align-items: center;
 }
 
 /* Show the copy icon when hovering over the version info */

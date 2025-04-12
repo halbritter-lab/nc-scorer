@@ -20,7 +20,9 @@ export default defineConfig(({ mode }) => {
     },
     base: isProd ? "/nc-scorer/" : "/", // Preserve the base URL for GitHub Pages
     server: {
-      // port: 8080,
+      watch: {
+        usePolling: true
+      },
       proxy: {
         '/ensembl/': {
           target: 'https://rest.ensembl.org',
