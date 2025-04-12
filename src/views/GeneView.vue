@@ -1,12 +1,13 @@
 <!-- src/views/GeneView.vue -->
 <template>
-  <v-container>
+  <ContentContainer>
     <GeneCard :symbol="symbol" />
-  </v-container>
+  </ContentContainer>
 </template>
 
 <script>
 import GeneCard from '@/components/GeneCard.vue';
+import ContentContainer from '@/components/ContentContainer.vue';
 
 export default {
   name: 'GeneView',
@@ -18,6 +19,7 @@ export default {
   },
   components: {
     GeneCard,
+    ContentContainer,
   },
 };
 </script>

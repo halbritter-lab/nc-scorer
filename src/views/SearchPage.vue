@@ -1,6 +1,6 @@
 <!-- src/views/SearchPage.vue -->
 <template>
-  <v-container>
+  <ContentContainer>
     <v-row>
       <v-col cols="12">
         <v-alert border="start" variant="tonal" color="info" class="mb-4">
@@ -36,7 +36,7 @@
         </v-tabs-window>
       </v-card-text>
     </v-card>
-  </v-container>
+  </ContentContainer>
 </template>
 
 <script>
@@ -44,6 +44,7 @@ import { ref } from 'vue';
 import GeneSearch from '../components/GeneSearch.vue';
 import VariantSearch from '../components/VariantSearch.vue';
 import ScoringSearch from '../components/ScoringSearch.vue';
+import ContentContainer from '@/components/ContentContainer.vue';
 
 export default {
   name: 'SearchPage',
@@ -51,6 +52,7 @@ export default {
     GeneSearch,
     VariantSearch,
     ScoringSearch,
+    ContentContainer,
   },
   setup() {
     // Set activeTab to 'scoring' by default.

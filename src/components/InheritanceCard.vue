@@ -108,7 +108,8 @@ export default {
     // Compute the final inheritance score.
     const finalScore = computed(() => {
       // For Compound heterozygous (suspected), ignore segregation probability
-      const segregationToUse = props.inheritance === 'Compound heterozygous (suspected)' ? 1 : segregationProb.value;
+      const segregationToUse =
+        props.inheritance === 'Compound heterozygous (suspected)' ? 1 : segregationProb.value;
       return computeVariantScore(
         baseScore.value,
         segregationToUse,

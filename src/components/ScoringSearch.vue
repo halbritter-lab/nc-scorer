@@ -207,7 +207,7 @@ export default {
         inheritance: inheritance.value,
         segregation: segregation.value,
       };
-      
+
       // Add second variant to params only if it exists and is needed
       if (showSecondVariantInput.value && variantInput2.value) {
         routeParams.variantInput2 = variantInput2.value;

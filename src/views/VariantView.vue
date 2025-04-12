@@ -1,12 +1,13 @@
 <!-- src/views/VariantView.vue -->
 <template>
-  <v-container>
+  <ContentContainer>
     <VariantCard :variantInput="variantInput" />
-  </v-container>
+  </ContentContainer>
 </template>
 
 <script>
 import VariantCard from '@/components/VariantCard.vue';
+import ContentContainer from '@/components/ContentContainer.vue';
 
 export default {
   name: 'VariantView',
@@ -18,6 +19,7 @@ export default {
   },
   components: {
     VariantCard,
+    ContentContainer,
   },
 };
 </script>

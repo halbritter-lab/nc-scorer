@@ -61,7 +61,7 @@ export default {
 
 <style scoped>
 .combined-score-card {
-  max-width: 600px;
+  width: 100%;
   margin: auto;
   padding: 16px;
   text-align: center;
