@@ -3,6 +3,7 @@
 import variantLinker from 'variant-linker';
 import { retryWithBackoff } from '@/utils/retry.js';
 import { useApiCache } from '@/composables/useApiCache';
+import { useNotifications } from '@/composables/useNotifications';
 
 // Ensure module is available globally for proper initialization
 window.variantLinker = variantLinker;
@@ -47,22 +48,25 @@ export async function queryVariant(variantInput, options = {}) {
     cacheTTL = 30 * 60 * 1000, // 30 minutes in milliseconds
     output = 'JSON',
     filter = '',
+    onRetry = null, // Add callback for retry events
+    onSuccess = null, // Add callback for success after retries
   } = options;
-  
-  // Initialize the API cache
+
+  // Initialize the API cache and notifications system
   const apiCache = useApiCache();
-  
+  const { notifyRetry, notifySuccess } = useNotifications();
+
   // Normalize variant ID to use as cache key
   const normalizedInput = variantInput.trim();
-  
+
   // Create cache parameters object with options that affect the response
   const cacheParams = {
     recoderOptions,
     vepOptions,
     output,
-    filter
+    filter,
   };
-  
+
   // Generate a unique cache key for this request
   const cacheKey = apiCache.generateCacheKey('variant', normalizedInput, cacheParams);
   
@@ -70,11 +74,8 @@ export async function queryVariant(variantInput, options = {}) {
   if (!skipCache) {
     const cachedData = apiCache.getCachedItem(cacheKey);
     if (cachedData) {
-      console.debug(`Using cached data for variant: ${normalizedInput}`);
       return cachedData;
     }
-  } else {
-    console.debug(`Skipping cache for variant: ${normalizedInput}`);
   }
 
   if (typeof variantLinker.analyzeVariant !== 'function') {
@@ -103,78 +104,37 @@ export async function queryVariant(variantInput, options = {}) {
       // Store successful result in cache
       if (result && !skipCache) {
         apiCache.setCachedItem(cacheKey, result, cacheTTL);
-        console.debug(`Cached variant data: ${normalizedInput}`);
       }
-      
+
       return result;
     },
     {
       maxRetries: 3,
       initialDelay: 500,
       maxDelay: 5000,
-      shouldRetry: (error) => {
-        // Variant-specific handling
-        if (error.response) {
-          // Don't retry badly formatted variant IDs (likely 400 errors)
-          if (error.response.status === 400) {
-            console.debug(`Bad variant format for '${variantInput}' (400)`);
-            return false;
-          }
-          
-          // Don't retry if the variant doesn't exist in the database
-          if (error.response.status === 404) {
-            console.debug(`Variant '${variantInput}' not found (404)`);
-            return false;
-          }
-          
-          // Explicitly retry rate limiting and gateway timeouts
-          if (error.response.status === 429 || error.response.status === 504) {
-            console.debug(`Retrying rate limit/timeout for variant ${variantInput}`);
-            return true;
-          }
-          
-          // Retry server errors
-          if (error.response.status >= 500 && error.response.status < 600) {
-            console.debug(`Retrying server error (${error.response.status}) for variant ${variantInput}`);
-            return true;
-          }
-          
-          // Don't retry other client errors (4xx)
-          if (error.response.status >= 400 && error.response.status < 500) {
-            console.debug(`Not retrying client error (${error.response.status}) for variant ${variantInput}`);
-            return false;
-          }
-        }
-        
-        // Handle network errors
-        const isNetworkError = !error.response && (
-          error.message.includes('network') ||
-          error.message.includes('timeout') ||
-          error.message.includes('Failed to fetch') ||
-          error.code === 'ECONNABORTED' ||
-          error.code === 'ECONNREFUSED' ||
-          error.code === 'ECONNRESET' ||
-          error.message.includes('Network Error') ||
-          error instanceof TypeError
-        );
-        
-        if (isNetworkError) {
-          console.debug(`Retrying network error for variant ${variantInput}: ${error.message}`);
-          return true;
-        }
-        
-        // Default to not retrying for any other cases
-        return false;
+      // Custom error configuration for variant-specific behavior
+      errorConfig: {
+        // Define non-retryable 4xx status codes specifically for variant API
+        nonRetryableStatusCodes: [400, 401, 403, 404, 405, 422],
+        // Define retryable status codes, particularly for rate-limiting
+        retryableStatusCodes: [429, 500, 501, 502, 503, 504],
       },
       onRetry: (error, attempt) => {
-        console.warn(
-          `Retry attempt ${attempt} for variant ${variantInput} after error: ${error.message}`
-        );
+        // Only show a snackbar notification about the retry
+        notifyRetry(normalizedInput, attempt, error.message);
+
+        // Call the user-provided onRetry callback if supplied
+        if (onRetry) onRetry(error, attempt);
       },
-      onSuccess: (attempts) => {
+      onSuccess: (result, attempts) => {
         if (attempts > 0) {
-          console.info(`Successfully analyzed variant ${variantInput} after ${attempts} retries`);
+          notifySuccess(
+            `Successfully analyzed variant ${normalizedInput} after ${attempts} retries`
+          );
         }
+
+        // Call the user-provided onSuccess callback if supplied
+        if (onSuccess) onSuccess(attempts);
       },
     }
   );

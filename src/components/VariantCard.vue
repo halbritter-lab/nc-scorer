@@ -3,6 +3,7 @@
   <v-card class="variant-card">
     <v-card-title>
       Variant Details for "{{ variantInput }}"
+      <!-- Retry count badge - shown when retries have occurred -->
       <v-badge
         v-if="retryStates.variant.attempts > 0"
         color="warning"
@@ -13,6 +14,19 @@
       >
         <v-icon size="small" color="warning">mdi-refresh</v-icon>
       </v-badge>
+
+      <!-- Spinning icon when retry is in progress -->
+      <v-tooltip
+        v-if="retryStates.variant.inProgress"
+        location="top"
+        text="Retrying API request..."
+      >
+        <template v-slot:activator="{ props }">
+          <v-icon v-bind="props" size="small" color="warning" class="ml-2 retry-spinner">
+            mdi-refresh
+          </v-icon>
+        </template>
+      </v-tooltip>
     </v-card-title>
     <v-card-text>
       <div v-if="loading">
@@ -202,7 +216,7 @@ export default {
     const error = ref(null);
 
     // Get shared retry state from parent or create a new one
-    const { retryStates, showSnackbar } = inject('retryState', useRetryState());
+    const { retryStates } = inject('retryState', useRetryState());
 
     // Compute transcript consequences from the first annotationData object.
     const transcriptOptions = computed(() => {
@@ -322,13 +336,13 @@ export default {
 
         result.value = await queryVariant(props.variantInput, {
           retryState,
-          onRetry: (error, attempt) => {
+          onRetry: () => {
             retryState.inProgress = true;
-            showSnackbar(`Retrying variant data (attempt ${attempt})...`, 'warning');
+            // Using global notification system only
           },
-          onSuccess: (attempts) => {
+          onSuccess: () => {
             retryState.inProgress = false;
-            showSnackbar(`Successfully loaded variant data after ${attempts} retries`, 'success');
+            // Using global notification system only
           },
         });
 
@@ -418,5 +432,18 @@ export default {
 }
 .summary-item {
   margin-bottom: 4px;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.retry-spinner {
+  animation: spin 1.5s linear infinite;
 }
 </style>

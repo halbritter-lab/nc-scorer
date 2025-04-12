@@ -3,6 +3,7 @@
   <v-card class="gene-card">
     <v-card-title>
       Gene Details for "{{ symbol }}"
+      <!-- Retry count badge - shown when retries have occurred -->
       <v-badge
         v-if="retryStates.gene.attempts > 0"
         color="warning"
@@ -13,6 +14,19 @@
       >
         <v-icon size="small" color="warning">mdi-refresh</v-icon>
       </v-badge>
+
+      <!-- Spinning icon when retry is in progress -->
+      <v-tooltip
+        v-if="retryStates.gene.inProgress"
+        location="top"
+        text="Retrying API request..."
+      >
+        <template v-slot:activator="{ props }">
+          <v-icon v-bind="props" size="small" color="warning" class="ml-2 retry-spinner">
+            mdi-refresh
+          </v-icon>
+        </template>
+      </v-tooltip>
     </v-card-title>
     <v-card-text>
       <div v-if="loading">
@@ -69,7 +83,7 @@ export default {
     const error = ref(null);
 
     // Get shared retry state from parent or create a new one
-    const { retryStates, showSnackbar } = inject('retryState', useRetryState());
+    const { retryStates } = inject('retryState', useRetryState());
 
     // Compute gene details formatted by the configuration.
     const filteredGeneData = computed(() => {
@@ -103,13 +117,13 @@ export default {
 
         geneData.value = await fetchGeneDetails(props.symbol, {
           retryState,
-          onRetry: (error, attempt) => {
+          onRetry: () => {
             retryState.inProgress = true;
-            showSnackbar(`Retrying gene data (attempt ${attempt})...`, 'warning');
+            // Using global notification system only
           },
-          onSuccess: (attempts) => {
+          onSuccess: () => {
             retryState.inProgress = false;
-            showSnackbar(`Successfully loaded gene data after ${attempts} retries`, 'success');
+            // Using global notification system only
           },
         });
       } catch (err) {
@@ -158,5 +172,18 @@ export default {
 }
 .bold-font {
   font-weight: bold;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.retry-spinner {
+  animation: spin 1.5s linear infinite;
 }
 </style>
