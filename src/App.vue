@@ -31,12 +31,12 @@ export default {
     GlobalNotification,
   },
   setup() {
-    const { startTour, isFirstVisit } = useTour();
+    const { startTour, shouldShowTour } = useTour();
 
-    // Auto-start the tour for first-time visitors after a short delay
-    // to ensure the UI has fully loaded
+    // Auto-start the tour for new users or those who haven't explicitly completed/skipped it
+    // after a short delay to ensure the UI has fully loaded
     onMounted(() => {
-      if (isFirstVisit()) {
+      if (shouldShowTour()) {
         // Delay tour start to ensure all components are mounted
         setTimeout(() => {
           startTour();

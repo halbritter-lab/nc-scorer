@@ -3,14 +3,33 @@ import { ref, onMounted, onUnmounted } from 'vue';
 import Shepherd from 'shepherd.js';
 import 'shepherd.js/dist/css/shepherd.css';
 
-// Helper function to check if it's the user's first visit
-const isFirstVisit = () => {
-  return localStorage.getItem('nc-scorer-tour-shown') !== 'true';
+// Helper function to check if the tour should be shown
+const shouldShowTour = () => {
+  const tourStatus = localStorage.getItem('nc-scorer-tour-status');
+  // Only show the tour if it hasn't been completed or skipped
+  return tourStatus !== 'completed' && tourStatus !== 'skipped';
 };
 
-// Helper function to mark the tour as shown
-const markTourAsShown = () => {
-  localStorage.setItem('nc-scorer-tour-shown', 'true');
+// Helper functions to manage tour status
+const markTourAsCompleted = () => {
+  localStorage.setItem('nc-scorer-tour-status', 'completed');
+};
+
+const markTourAsSkipped = () => {
+  localStorage.setItem('nc-scorer-tour-status', 'skipped');
+};
+
+const resetTourStatus = () => {
+  localStorage.removeItem('nc-scorer-tour-status');
+};
+
+// Backward compatibility - convert old format if needed
+const migrateOldTourStatus = () => {
+  if (localStorage.getItem('nc-scorer-tour-shown') === 'true' && 
+      !localStorage.getItem('nc-scorer-tour-status')) {
+    localStorage.setItem('nc-scorer-tour-status', 'completed');
+    localStorage.removeItem('nc-scorer-tour-shown');
+  }
 };
 
 export default function useTour() {
@@ -384,6 +403,7 @@ export default function useTour() {
     if (tour.value) {
       tour.value.cancel();
       isTourActive.value = false;
+      markTourAsSkipped();
     }
   };
 
@@ -392,23 +412,33 @@ export default function useTour() {
     if (tour.value) {
       tour.value.complete();
       isTourActive.value = false;
-      markTourAsShown();
+      markTourAsCompleted();
     }
+  };
+
+  // Restart the tour manually (for use in settings or FAQ)
+  const restartTour = () => {
+    resetTourStatus();
+    startTour();
   };
 
   // Check local storage and initialize on component mount
   onMounted(() => {
+    // Migrate any old format tour status
+    migrateOldTourStatus();
+    
     initTour();
 
     // Set up event listeners
     if (tour.value) {
       tour.value.on('cancel', () => {
         isTourActive.value = false;
+        markTourAsSkipped();
       });
 
       tour.value.on('complete', () => {
         isTourActive.value = false;
-        markTourAsShown();
+        markTourAsCompleted();
       });
     }
   });
@@ -427,6 +457,8 @@ export default function useTour() {
     startTour,
     cancelTour,
     completeTour,
-    isFirstVisit,
+    shouldShowTour,
+    restartTour,
+    resetTourStatus,
   };
 }
