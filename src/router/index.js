@@ -10,6 +10,7 @@ const FAQ = () => import(/* webpackChunkName: "faq" */ '@/views/FAQ.vue');
 const PageNotFound = () => import(/* webpackChunkName: "404" */ '@/views/PageNotFound.vue');
 const VariantView = () => import(/* webpackChunkName: "variant" */ '@/views/VariantView.vue');
 const ScoringView = () => import(/* webpackChunkName: "scoring" */ '@/views/ScoringView.vue');
+const GeneScoresTableView = () => import(/* webpackChunkName: "gene-scores" */ '@/views/GeneScoresTableView.vue');
 
 const routes = [
   {
@@ -40,6 +41,11 @@ const routes = [
     name: 'ScoringView',
     component: ScoringView,
     props: true,
+  },
+  {
+    path: '/genes',
+    name: 'GeneScoresTableView',
+    component: GeneScoresTableView,
   },
   {
     path: '/:catchAll(.*)',

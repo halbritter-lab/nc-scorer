@@ -1,6 +1,13 @@
 {
   "items": [
     {
+      "text": "Gene Scores",
+      "icon": "mdi-database-search",
+      "to": "/genes",
+      "tooltip": "Browse all gene scores",
+      "visibility": "all"
+    },
+    {
       "text": "FAQ",
       "icon": "mdi-help-circle",
       "to": "/faq",

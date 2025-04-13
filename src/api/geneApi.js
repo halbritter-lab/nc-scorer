@@ -26,6 +26,86 @@ export async function fetchSymbolsIndex() {
  * @param {number} [options.cacheTTL] - Cache time to live in ms.
  * @returns {Promise<Object>} The gene data with source information.
  */
+/**
+ * Fetch all gene scores from the summary JSON file.
+ * @param {Object} [options={}] - Options for fetching gene scores.
+ * @param {Object} [options.retryState] - State for tracking retries.
+ * @param {Function} [options.onRetry] - Callback on retry.
+ * @param {Function} [options.onSuccess] - Callback on success.
+ * @param {boolean} [options.skipCache=false] - If true, bypasses cache.
+ * @param {number} [options.cacheTTL] - Cache time to live in ms.
+ * @returns {Promise<Object>} The gene scores data with source information.
+ */
+export async function fetchAllGeneScores(options = {}) {
+  const { 
+    retryState, 
+    onRetry, 
+    onSuccess, 
+    skipCache = false,
+    cacheTTL = 12 * 60 * 60 * 1000 // 12 hours default
+  } = options;
+  
+  // Initialize the API cache
+  const apiCache = useApiCache();
+  
+  // Create cache key
+  const cacheKey = apiCache.generateCacheKey('all-gene-scores');
+  
+  // Check cache first if not explicitly skipping
+  if (!skipCache) {
+    const cachedResult = apiCache.getCachedItem(cacheKey);
+    if (cachedResult) {
+      return cachedResult; // Returns {data, source} object
+    }
+  }
+  
+  return retryWithBackoff(
+    async () => {
+      // Fetch the gene info summary file
+      const response = await axios.get(geneApiConfig.geneInfoSummaryUrl);
+      const result = response.data;
+      
+      // Store successful result in cache and get response with source info
+      if (result && !skipCache) {
+        return apiCache.setCachedItem(cacheKey, result, cacheTTL); // Returns {data, source} object
+      }
+      
+      // If skipCache is true, still return with source info
+      return { 
+        data: result, 
+        source: { fromCache: false } 
+      };
+    },
+    {
+      maxRetries: 3,
+      initialDelay: 500,
+      maxDelay: 5000,
+      onRetry: (error, attempt) => {
+        console.warn(`Retry attempt ${attempt} for gene scores summary after error: ${error.message}`);
+        if (onRetry) onRetry(error, attempt);
+      },
+      onSuccess: (attempts) => {
+        if (attempts > 0) {
+          console.info(`Successfully fetched gene scores summary after ${attempts} retries`);
+        }
+        if (onSuccess) onSuccess(attempts);
+      },
+      retryState, // Pass through retry state if provided
+    }
+  );
+}
+
+/**
+ * Fetch detailed gene data for a given symbol.
+ * @param {string} symbol - The gene symbol.
+ * @param {Object} [options={}] - Options for fetching gene details.
+ * @param {Object} [options.retryState] - State for tracking retries.
+ * @param {Function} [options.onRetry] - Callback on retry.
+ * @param {Function} [options.onSuccess] - Callback on success.
+ * @param {boolean} [options.skipCache=false] - If true, bypasses cache.
+ * @param {number} [options.cacheTTL] - Cache time to live in ms.
+ * @returns {Promise<Object>} The gene data with source information.
+ */
 export async function fetchGeneDetails(symbol, options = {}) {
   const { 
     retryState, 
