@@ -46,7 +46,7 @@ export function useApiCache() {
   /**
    * Get an item from cache if it exists and is valid
    * @param {string} cacheKey - The cache key
-   * @returns {Object|null} The cached data or null if not found/expired
+   * @returns {Object|null} The cached data with source info or null if not found/expired
    */
   function getCachedItem(cacheKey) {
     // Don't use cache if disabled by user preference
@@ -75,7 +75,14 @@ export function useApiCache() {
     
     // Valid cache hit
     cacheState.hits++;
-    return item.data;
+    // Return the data with source information
+    return { 
+      data: item.data, 
+      source: { 
+        fromCache: true, 
+        cachedAt: item.cached 
+      } 
+    };
   }
   
   /**
@@ -83,23 +90,34 @@ export function useApiCache() {
    * @param {string} cacheKey - The cache key
    * @param {*} data - The data to cache
    * @param {number} [ttl=DEFAULT_TTL] - Time to live in milliseconds
+   * @returns {Object} The data with source info (fresh from API)
    */
   function setCachedItem(cacheKey, data, ttl = DEFAULT_TTL) {
     // Don't cache if disabled by user preference
-    if (!cacheEnabled.value) return;
+    if (!cacheEnabled.value) return { data, source: { fromCache: false } };
     
     // Calculate expiration time
     const expires = ttl > 0 ? Date.now() + ttl : null;
+    const cachedAt = Date.now();
     
     // Store in cache
     cacheState.cache[cacheKey] = {
       data,
       expires,
-      cached: Date.now()
+      cached: cachedAt
     };
     
     // Persist to sessionStorage
     saveToStorage();
+    
+    // Return the data with source information
+    return { 
+      data, 
+      source: { 
+        fromCache: false, 
+        cachedAt 
+      } 
+    };
   }
   
   /**

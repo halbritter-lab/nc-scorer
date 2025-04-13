@@ -1,32 +1,50 @@
 <!-- src/components/VariantCard.vue -->
 <template>
   <v-card class="variant-card">
-    <v-card-title>
-      Variant Details for "{{ variantInput }}"
-      <!-- Retry count badge - shown when retries have occurred -->
-      <v-badge
-        v-if="retryStates.variant.attempts > 0"
-        color="warning"
-        :content="retryStates.variant.attempts"
-        :title="`Retried ${retryStates.variant.attempts} times due to network issues`"
-        offset-x="5"
-        offset-y="5"
-      >
-        <v-icon size="small" color="warning">mdi-refresh</v-icon>
-      </v-badge>
+    <v-card-title class="d-flex flex-wrap align-center">
+      <div class="variant-title text-truncate" :title="variantInput">
+        Variant Details for "{{ variantInput }}"
+      </div>
+      
+      <div class="d-flex flex-nowrap ml-auto">
+        <!-- Retry count badge - shown when retries have occurred -->
+        <v-badge
+          v-if="retryStates.variant.attempts > 0"
+          color="warning"
+          :content="retryStates.variant.attempts"
+          :title="`Retried ${retryStates.variant.attempts} times due to network issues`"
+          offset-x="5"
+          offset-y="5"
+        >
+          <v-icon size="small" color="warning">mdi-refresh</v-icon>
+        </v-badge>
 
-      <!-- Spinning icon when retry is in progress -->
-      <v-tooltip
-        v-if="retryStates.variant.inProgress"
-        location="top"
-        text="Retrying API request..."
-      >
-        <template v-slot:activator="{ props }">
-          <v-icon v-bind="props" size="small" color="warning" class="ml-2 retry-spinner">
-            mdi-refresh
-          </v-icon>
-        </template>
-      </v-tooltip>
+        <!-- Spinning icon when retry is in progress -->
+        <v-tooltip
+          v-if="retryStates.variant.inProgress"
+          location="top"
+          text="Retrying API request..."
+        >
+          <template v-slot:activator="{ props }">
+            <v-icon v-bind="props" size="small" color="warning" class="ml-2 retry-spinner">
+              mdi-refresh
+            </v-icon>
+          </template>
+        </v-tooltip>
+        
+        <!-- Cache indicator - shows briefly when data is from cache -->
+        <v-fade-transition>
+          <v-chip
+            v-if="showCacheIndicator"
+            size="small"
+            color="primary"
+            class="ml-2 cache-indicator"
+          >
+            <v-icon start size="small">mdi-database-check-outline</v-icon>
+            Cached
+          </v-chip>
+        </v-fade-transition>
+      </div>
     </v-card-title>
     <v-card-text>
       <div v-if="loading" class="loading-container">
@@ -227,6 +245,8 @@ export default {
     const loading = ref(true);
     const error = ref(null);
     const isMaxRetriesError = ref(false);
+    const fromCache = ref(false);
+    const showCacheIndicator = ref(false);
 
     // Get shared retry state from parent or create a new one
     const { retryStates } = inject('retryState', useRetryState());
@@ -349,7 +369,7 @@ export default {
         // Create a shared state object to track retries
         const retryState = retryStates.variant;
 
-        result.value = await queryVariant(props.variantInput, {
+        const response = await queryVariant(props.variantInput, {
           retryState,
           onRetry: () => {
             retryState.inProgress = true;
@@ -360,6 +380,20 @@ export default {
             // Using global notification system only
           },
         });
+        
+        // Handle the new response format with source information
+        result.value = response.data;
+        
+        // Set cache indicator if data was from cache
+        if (response.source && response.source.fromCache) {
+          fromCache.value = true;
+          showCacheIndicator.value = true;
+          
+          // Auto-hide the indicator after 3 seconds
+          setTimeout(() => {
+            showCacheIndicator.value = false;
+          }, 3000);
+        }
 
         if (transcriptIds.value.length > 0) {
           selectedTranscriptId.value = transcriptIds.value[0];
@@ -413,6 +447,8 @@ export default {
       prioritizedGeneSymbol, // Expose the prioritized gene symbol
       scoreInterpretationConfig, // Make available to the template
       isMaxRetriesError,
+      showCacheIndicator,
+      fromCache
     };
   },
 };
@@ -477,5 +513,13 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.cache-indicator {
+  font-size: 0.75rem;
+}
+
+.variant-title {
+  max-width: calc(100% - 100px); /* Reserve space for indicators */
 }
 </style>

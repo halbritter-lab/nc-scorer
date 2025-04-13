@@ -72,9 +72,9 @@ export async function queryVariant(variantInput, options = {}) {
   
   // Check cache first if not explicitly skipping
   if (!skipCache) {
-    const cachedData = apiCache.getCachedItem(cacheKey);
-    if (cachedData) {
-      return cachedData;
+    const cachedResult = apiCache.getCachedItem(cacheKey);
+    if (cachedResult) {
+      return cachedResult; // Returns {data, source} object
     }
   }
 
@@ -101,12 +101,16 @@ export async function queryVariant(variantInput, options = {}) {
         filter,
       });
       
-      // Store successful result in cache
+      // Store successful result in cache and get response with source info
       if (result && !skipCache) {
-        apiCache.setCachedItem(cacheKey, result, cacheTTL);
+        return apiCache.setCachedItem(cacheKey, result, cacheTTL); // Returns {data, source} object
       }
 
-      return result;
+      // If skipCache is true, still return with source info
+      return { 
+        data: result, 
+        source: { fromCache: false } 
+      };
     },
     {
       maxRetries: 3,

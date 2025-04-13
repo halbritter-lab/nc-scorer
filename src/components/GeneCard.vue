@@ -1,28 +1,46 @@
 <!-- src/components/GeneCard.vue -->
 <template>
   <v-card class="gene-card">
-    <v-card-title>
-      Gene Details for "{{ symbol }}"
-      <!-- Retry count badge - shown when retries have occurred -->
-      <v-badge
-        v-if="retryStates.gene.attempts > 0"
-        color="warning"
-        :content="retryStates.gene.attempts"
-        :title="`Retried ${retryStates.gene.attempts} times due to network issues`"
-        offset-x="5"
-        offset-y="5"
-      >
-        <v-icon size="small" color="warning">mdi-refresh</v-icon>
-      </v-badge>
+    <v-card-title class="d-flex flex-wrap align-center">
+      <div class="gene-title text-truncate" :title="symbol">
+        Gene Details for "{{ symbol }}"
+      </div>
+      
+      <div class="d-flex flex-nowrap ml-auto">
+        <!-- Retry count badge - shown when retries have occurred -->
+        <v-badge
+          v-if="retryStates.gene.attempts > 0"
+          color="warning"
+          :content="retryStates.gene.attempts"
+          :title="`Retried ${retryStates.gene.attempts} times due to network issues`"
+          offset-x="5"
+          offset-y="5"
+        >
+          <v-icon size="small" color="warning">mdi-refresh</v-icon>
+        </v-badge>
 
-      <!-- Spinning icon when retry is in progress -->
-      <v-tooltip v-if="retryStates.gene.inProgress" location="top" text="Retrying API request...">
-        <template v-slot:activator="{ props }">
-          <v-icon v-bind="props" size="small" color="warning" class="ml-2 retry-spinner">
-            mdi-refresh
-          </v-icon>
-        </template>
-      </v-tooltip>
+        <!-- Spinning icon when retry is in progress -->
+        <v-tooltip v-if="retryStates.gene.inProgress" location="top" text="Retrying API request...">
+          <template v-slot:activator="{ props }">
+            <v-icon v-bind="props" size="small" color="warning" class="ml-2 retry-spinner">
+              mdi-refresh
+            </v-icon>
+          </template>
+        </v-tooltip>
+        
+        <!-- Cache indicator - shows briefly when data is from cache -->
+        <v-fade-transition>
+          <v-chip
+            v-if="showCacheIndicator"
+            size="small"
+            color="primary"
+            class="ml-2 cache-indicator"
+          >
+            <v-icon start size="small">mdi-database-check-outline</v-icon>
+            Cached
+          </v-chip>
+        </v-fade-transition>
+      </div>
     </v-card-title>
     <v-card-text>
       <div v-if="loading" class="loading-container">
@@ -91,6 +109,8 @@ export default {
     const loading = ref(true);
     const error = ref(null);
     const isMaxRetriesError = ref(false);
+    const fromCache = ref(false);
+    const showCacheIndicator = ref(false);
 
     // Get shared retry state from parent or create a new one
     const { retryStates } = inject('retryState', useRetryState());
@@ -129,7 +149,7 @@ export default {
         // Create a shared state object to track retries
         const retryState = retryStates.gene;
 
-        geneData.value = await fetchGeneDetails(props.symbol, {
+        const result = await fetchGeneDetails(props.symbol, {
           retryState,
           onRetry: () => {
             retryState.inProgress = true;
@@ -140,6 +160,20 @@ export default {
             // Using global notification system only
           },
         });
+        
+        // Handle the new response format with source information
+        geneData.value = result.data;
+        
+        // Set cache indicator if data was from cache
+        if (result.source && result.source.fromCache) {
+          fromCache.value = true;
+          showCacheIndicator.value = true;
+          
+          // Auto-hide the indicator after 3 seconds
+          setTimeout(() => {
+            showCacheIndicator.value = false;
+          }, 3000);
+        }
       } catch (err) {
         retryStates.gene.inProgress = false;
         // Check if we've exhausted retry attempts
@@ -174,6 +208,8 @@ export default {
       retryStates,
       scoreInterpretationConfig,
       isMaxRetriesError,
+      showCacheIndicator,
+      fromCache
     };
   },
 };
@@ -216,5 +252,13 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.cache-indicator {
+  font-size: 0.75rem;
+}
+
+.gene-title {
+  max-width: calc(100% - 100px); /* Reserve space for indicators */
 }
 </style>

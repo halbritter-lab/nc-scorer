@@ -2,6 +2,7 @@
 import axios from 'axios';
 import geneApiConfig from '@/config/geneApiConfig.json';
 import { retryWithBackoff } from '@/utils/retry.js';
+import { useApiCache } from '@/composables/useApiCache';
 
 /**
  * Fetch the index of gene symbols.
@@ -17,17 +18,55 @@ export async function fetchSymbolsIndex() {
 /**
  * Fetch detailed gene data for a given symbol.
  * @param {string} symbol - The gene symbol.
- * @returns {Promise<Object>} The gene data.
+ * @param {Object} [options={}] - Options for fetching gene details.
+ * @param {Object} [options.retryState] - State for tracking retries.
+ * @param {Function} [options.onRetry] - Callback on retry.
+ * @param {Function} [options.onSuccess] - Callback on success.
+ * @param {boolean} [options.skipCache=false] - If true, bypasses cache.
+ * @param {number} [options.cacheTTL] - Cache time to live in ms.
+ * @returns {Promise<Object>} The gene data with source information.
  */
 export async function fetchGeneDetails(symbol, options = {}) {
-  const { retryState, onRetry, onSuccess } = options;
+  const { 
+    retryState, 
+    onRetry, 
+    onSuccess, 
+    skipCache = false,
+    cacheTTL = 30 * 60 * 1000 // 30 minutes default
+  } = options;
+  
+  // Initialize the API cache
+  const apiCache = useApiCache();
+  
+  // Normalize symbol and create cache parameters
+  const normalizedSymbol = symbol.trim().toUpperCase();
+  const cacheKey = apiCache.generateCacheKey('gene', normalizedSymbol);
+  
+  // Check cache first if not explicitly skipping
+  if (!skipCache) {
+    const cachedResult = apiCache.getCachedItem(cacheKey);
+    if (cachedResult) {
+      return cachedResult; // Returns {data, source} object
+    }
+  }
   
   return retryWithBackoff(
     async () => {
       // Construct the URL using the base URL from config and the symbol.
       const url = `${geneApiConfig.geneDetailsBaseUrl}${symbol}.json`;
       const response = await axios.get(url);
-      return response.data;
+      const result = response.data;
+      
+      // Store successful result in cache and get response with source info
+      if (result && !skipCache) {
+        return apiCache.setCachedItem(cacheKey, result, cacheTTL); // Returns {data, source} object
+      }
+      
+      // If skipCache is true, still return with source info
+      return { 
+        data: result, 
+        source: { fromCache: false } 
+      };
     },
     {
       maxRetries: 3,
