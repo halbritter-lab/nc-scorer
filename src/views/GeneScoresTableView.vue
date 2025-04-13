@@ -1,5 +1,5 @@
 <template>
-  <v-container>
+  <ContentContainer>
     <v-row>
       <v-col cols="12">
         <h1 class="text-h4 mb-4">Gene Scores Overview</h1>
@@ -25,14 +25,33 @@
             ></v-text-field>
           </v-col>
           <v-col cols="12" md="6" class="d-flex justify-end align-center">
-            <v-btn
-              color="primary"
-              prepend-icon="mdi-download"
-              @click="downloadGeneScores"
-              :disabled="loadingState.loading || loadingState.error || filteredGenes.length === 0"
-            >
-              Download Data
-            </v-btn>
+            <!-- Download menu with format options -->
+            <v-menu>
+              <template v-slot:activator="{ props }">
+                <v-btn
+                  color="primary"
+                  prepend-icon="mdi-download"
+                  v-bind="props"
+                  size="small"
+                  variant="tonal"
+                  :disabled="loadingState.loading || loadingState.error || filteredGenes.length === 0"
+                >
+                  Download Data
+                </v-btn>
+              </template>
+              <v-list density="compact">
+                <v-list-item
+                  @click="downloadGeneScores('csv')"
+                  prepend-icon="mdi-file-delimited"
+                  title="Download as CSV"
+                />
+                <v-list-item
+                  @click="downloadGeneScores('excel')"
+                  prepend-icon="mdi-file-excel"
+                  title="Download as Excel"
+                />
+              </v-list>
+            </v-menu>
           </v-col>
         </v-row>
         
@@ -94,15 +113,19 @@
         </v-data-table>
       </v-col>
     </v-row>
-  </v-container>
+  </ContentContainer>
 </template>
 
 <script>
 import { ref, computed, reactive, onMounted } from 'vue';
 import { fetchAllGeneScores } from '@/api/geneApi';
+import ContentContainer from '@/components/ContentContainer.vue';
 
 export default {
   name: 'GeneScoresTableView',
+  components: {
+    ContentContainer,
+  },
   
   setup() {
     // Table configuration
@@ -192,8 +215,92 @@ export default {
       return 'grey';
     };
     
-    // Download gene scores as CSV
-    const downloadGeneScores = () => {
+    /**
+     * Generate a filename for the downloaded results
+     * 
+     * @param {string} format - The file format ('csv' or 'excel')
+     * @returns {string} - Sanitized filename with appropriate extension
+     */
+    const generateFilename = (format = 'csv') => {
+      // Get current date in YYYY-MM-DD format
+      const date = new Date().toISOString().split('T')[0];
+      // Base filename
+      const filename = `nc_scorer_gene_scores_${date}`;
+      
+      // Add appropriate extension
+      return format === 'excel' ? `${filename}.xlsx` : `${filename}.csv`;
+    };
+
+    /**
+     * Generate a CSV string from headers and data
+     * 
+     * @param {string[]} headers - Column headers
+     * @param {string[][]} rows - Data rows
+     * @returns {string} - CSV content
+     */
+    const generateCSV = (headers, rows) => {
+      return [
+        headers.join(','),
+        ...rows.map(row => row.join(','))
+      ].join('\n');
+    };
+
+    /**
+     * Trigger file download from blob
+     * 
+     * @param {Blob} blob - File blob
+     * @param {string} filename - Download filename
+     */
+    const triggerDownload = (blob, filename) => {
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      
+      link.setAttribute('href', url);
+      link.setAttribute('download', filename);
+      link.style.visibility = 'hidden';
+      
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    };
+
+    /**
+     * Generate Excel file using SheetJS library
+     * 
+     * @param {string[]} headers - Column headers
+     * @param {string[][]} rows - Data rows
+     * @param {string} filename - Output filename
+     */
+    const generateExcel = async (headers, rows, filename) => {
+      try {
+        // Dynamically import SheetJS (xlsx) library
+        const XLSX = await import('xlsx');
+        
+        // Create worksheet
+        const worksheet = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+        
+        // Create workbook and add worksheet
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Gene Scores');
+        
+        // Generate Excel file and trigger download
+        const excelBlob = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+        triggerDownload(new Blob([excelBlob], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), filename);
+      } catch (error) {
+        console.error('Error generating Excel file:', error);
+        alert('Failed to generate Excel file. CSV download will be attempted instead.');
+        
+        // Fallback to CSV download
+        downloadGeneScores('csv');
+      }
+    };
+
+    /**
+     * Download gene scores in the specified format
+     * 
+     * @param {string} format - Format to download ('csv' or 'excel')
+     */
+    const downloadGeneScores = async (format = 'csv') => {
       const genesToDownload = filteredGenes.value;
       
       if (genesToDownload.length === 0) {
@@ -201,7 +308,7 @@ export default {
         return;
       }
       
-      // Generate CSV header
+      // Define data structure
       const headers = [
         'Gene Symbol',
         'HGNC ID',
@@ -210,7 +317,7 @@ export default {
         'Gene Set'
       ];
       
-      // Generate CSV rows
+      // Generate data rows
       const rows = genesToDownload.map(gene => [
         gene.symbol,
         formatHgncId(gene.hgncIdInt),
@@ -219,24 +326,16 @@ export default {
         formatGeneSet(gene.geneSet)
       ]);
       
-      // Combine header and rows
-      const csvContent = [
-        headers.join(','),
-        ...rows.map(row => row.join(','))
-      ].join('\n');
-      
-      // Create blob and download
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      
-      link.setAttribute('href', url);
-      link.setAttribute('download', `nc_scorer_gene_scores_${new Date().toISOString().split('T')[0]}.csv`);
-      link.style.visibility = 'hidden';
-      
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      // Generate file based on format selection
+      if (format === 'excel') {
+        // Generate Excel file
+        generateExcel(headers, rows, generateFilename('excel'));
+      } else {
+        // Generate CSV and trigger download
+        const csvContent = generateCSV(headers, rows);
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        triggerDownload(blob, generateFilename('csv'));
+      }
     };
     
     // Fetch data on component mount
