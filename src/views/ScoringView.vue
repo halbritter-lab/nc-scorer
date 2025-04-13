@@ -13,17 +13,15 @@
     <!-- Combined Score Card at the top -->
     <v-row>
       <v-col cols="12">
-        <!-- Placeholder card that maintains exact dimensions while data loads -->
+        <!-- Placeholder card with skeleton loader while data loads -->
         <v-card v-if="!combinedScoreAvailable" class="combined-score-card">
           <v-card-title class="px-4 py-3">Nephro Candidate Score (NSC)</v-card-title>
-          <v-card-text class="text-center pa-0 pb-4">
-            <div class="placeholder-score-chip">...</div>
-            <v-progress-linear
-              indeterminate
-              color="primary"
-              style="opacity: 0.7"
-            ></v-progress-linear>
-            <span class="empty-tooltip-space"></span>
+          <v-card-text class="text-center pa-4">
+            <v-skeleton-loader
+              class="mx-auto"
+              :type="scoreInterpretationConfig.skeletonLoaders.combined.type"
+              :loading="true"
+            ></v-skeleton-loader>
           </v-card-text>
         </v-card>
 
@@ -80,6 +78,7 @@ import CombinedScoreCard from '@/components/CombinedScoreCard.vue';
 import ContentContainer from '@/components/ContentContainer.vue';
 import useRetryState from '@/composables/useRetryState.js';
 import { requiresSecondVariant } from '@/config/inheritanceConfig';
+import { scoreInterpretationConfig } from '@/config/scoreInterpretationConfig';
 
 export default {
   name: 'ScoringView',
@@ -202,6 +201,7 @@ export default {
       combinedScoreAvailable,
       isCompoundHet,
       retrySnackbar,
+      scoreInterpretationConfig, // Make available to the template for skeleton loaders
       handleVariantScoreUpdate,
       handleGeneScoreUpdate,
       handleInheritanceScoreUpdate,
@@ -215,36 +215,14 @@ export default {
   margin-bottom: 16px;
 }
 
-/* Adding a comment to keep custom styles applied to both placeholder and real NSC card */
-/* The combined-score-card class is now used for both placeholder and real component */
-
-/* Match the exact dimensions and appearance of the score chip in the real component */
-.placeholder-score-chip {
-  display: inline-block;
-  background-color: rgba(0, 0, 0, 0.05);
-  color: rgba(0, 0, 0, 0.38);
-  border-radius: 16px;
-  font-size: 1.5rem;
-  font-weight: 500;
-  padding: 12px 24px;
-  min-width: 80px;
-  height: 48px;
-  line-height: 24px;
-  margin-top: 8px;
-  margin-bottom: 8px;
+/* Style for both placeholder and real score cards */
+.combined-score-card {
+  width: 100%;
 }
 
-/* Match the score tooltip styling from the CombinedScoreCard */
 .score-tooltip {
   margin-left: 8px;
   font-size: 0.8rem;
   color: #555;
-}
-
-/* Empty space element to maintain height of the tooltip area */
-.empty-tooltip-space {
-  display: inline-block;
-  height: 16px;
-  width: 100%;
 }
 </style>

@@ -29,9 +29,9 @@ export const scoreInterpretationConfig = {
   },
   // Skeleton loader configurations
   skeletonLoaders: {
-    gene: { type: 'table-heading, list-item-two-line@3' },
-    variant: { type: 'table-heading, list-item-two-line@5' },
-    inheritance: { type: 'table-heading, list-item-two-line@3' },
-    combined: { type: 'card-heading, list-item-avatar' },
+    gene: { type: 'table-heading, list-item-two-line, list-item-two-line, list-item-two-line' },
+    variant: { type: 'table-heading, list-item-two-line, list-item-two-line, list-item-two-line, list-item-two-line, list-item-two-line' },
+    inheritance: { type: 'table-heading, list-item-two-line, list-item-two-line, list-item-two-line' },
+    combined: { type: 'chip, image' },
   },
 };

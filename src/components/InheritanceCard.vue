@@ -3,7 +3,15 @@
   <v-card class="inheritance-card">
     <v-card-title>Inheritance Parameters</v-card-title>
     <v-card-text>
-      <v-table class="summary-table">
+      <!-- Loading state with skeleton loader -->
+      <div v-if="loading" class="loading-container">
+        <v-skeleton-loader
+          class="mx-auto"
+          :type="scoreInterpretationConfig.skeletonLoaders.inheritance.type"
+          :loading="loading"
+        ></v-skeleton-loader>
+      </div>
+      <v-table v-else class="summary-table">
         <tbody>
           <!-- Inheritance Score Row -->
           <DataDisplayRow
@@ -48,10 +56,11 @@
 </template>
 
 <script>
-import { computed, watchEffect } from 'vue';
+import { computed, watchEffect, ref, onMounted } from 'vue';
 import { baseScores, scoringParameters } from '@/config/inheritanceConfig';
 import DataDisplayRow from '@/components/DataDisplayRow.vue';
 import { formatValue } from '@/utils/format';
+import { scoreInterpretationConfig } from '@/config/scoreInterpretationConfig';
 
 /**
  * Computes the final genetic variant score based on a base inheritance score and a segregation p-value.
@@ -100,6 +109,9 @@ export default {
     },
   },
   setup(props, { emit }) {
+    // Add loading state
+    const loading = ref(true);
+    
     // Convert the segregation prop to a number.
     const segregationProb = computed(() => Number(props.segregation));
 
@@ -107,6 +119,14 @@ export default {
     const baseScore = computed(() =>
       baseScores[props.inheritance] !== undefined ? baseScores[props.inheritance] : 0.1
     );
+    
+    // Simulate a brief loading state for better UX
+    onMounted(() => {
+      // Short timeout to show the skeleton (better UX for quick calculations)
+      setTimeout(() => {
+        loading.value = false;
+      }, 500);
+    });
 
     // Compute the final inheritance score.
     const finalScore = computed(() => {
@@ -142,9 +162,11 @@ export default {
     });
 
     return {
+      loading,
       finalScore,
       finalScoreFormatted,
       segregationProb, // Include segregationProb to fix the template warning
+      scoreInterpretationConfig, // Expose config for skeleton loader
     };
   },
 };
@@ -166,5 +188,12 @@ export default {
 .value-col {
   width: 60%;
   vertical-align: top;
+}
+
+.loading-container {
+  min-height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 </style>
