@@ -7,7 +7,15 @@
     "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint src --ext .vue,.js --fix",
-    "lint:fix": "eslint src --ext .vue,.js --fix"
+    "lint:fix": "eslint src --ext .vue,.js --fix",
+    "semantic-release": "semantic-release",
+    "commit": "git-cz",
+    "prepare": "husky install"
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
   },
   "dependencies": {
     "@mdi/font": "^7.4.47",
@@ -24,16 +32,28 @@
     "@babel/core": "^7.26.10",
     "@babel/eslint-parser": "^7.27.0",
     "@babel/preset-env": "^7.26.9",
+    "@commitlint/cli": "^19.8.0",
+    "@commitlint/config-conventional": "^19.8.0",
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/commit-analyzer": "^13.0.1",
+    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/github": "^11.0.1",
+    "@semantic-release/npm": "^12.0.1",
+    "@semantic-release/release-notes-generator": "^14.0.3",
     "@vitejs/plugin-vue": "^5.2.3",
     "@vue/babel-preset-app": "^5.0.8",
     "@vue/cli-plugin-babel": "^5.0.8",
+    "commitizen": "^4.3.1",
+    "cz-conventional-changelog": "^3.3.0",
     "eslint": "^7.32.0",
     "eslint-config-prettier": "^8.8.0",
     "eslint-plugin-prettier": "^4.2.1",
     "eslint-plugin-vue": "^8.7.1",
+    "husky": "^8.0.0",
     "prettier": "^3.5.3",
     "rollup-plugin-visualizer": "^5.14.0",
     "sass": "^1.86.3",
+    "semantic-release": "^24.2.3",
     "sharp": "^0.34.1",
     "vite": "^6.2.6",
     "vite-plugin-sitemap": "^0.7.1",

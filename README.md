@@ -100,6 +100,57 @@ This project uses ESLint and Prettier to enforce consistent code style and quali
 - `config/`: Application configuration and constants
 - `router/`: Vue Router configuration
 
+### Semantic Versioning and Conventional Commits
+
+NC-Scorer uses automated semantic versioning to streamline the release process:
+
+#### Commit Message Format
+
+The project follows the [Conventional Commits](https://www.conventionalcommits.org/) specification for commit messages:
+
+```
+<type>(<scope>): <description>
+
+[optional body]
+
+[optional footer(s)]
+```
+
+Common types:
+- `feat`: A new feature (triggers a minor version increment)
+- `fix`: A bug fix (triggers a patch version increment)
+- `docs`: Documentation changes only
+- `style`: Changes that don't affect code functionality (formatting, etc.)
+- `refactor`: Code changes that neither fix bugs nor add features
+- `perf`: Performance improvements
+- `test`: Adding or correcting tests
+- `build`: Changes to build system or dependencies
+- `ci`: Changes to CI configuration
+- `chore`: Other changes that don't modify src or test files
+
+Breaking changes are indicated by `!` after the type/scope or by `BREAKING CHANGE:` in the footer, which triggers a major version increment.
+
+#### Commit Tooling
+
+To create properly formatted commits, run:
+
+```sh
+npm run commit
+```
+
+This will launch an interactive prompt to guide you through creating a compliant commit message.
+
+#### Automatic Versioning
+
+The project uses [semantic-release](https://github.com/semantic-release/semantic-release) to automate:
+
+- Version determination based on commit types
+- Changelog generation in the CHANGELOG.md file
+- Git tag creation
+- GitHub release creation
+
+This process occurs automatically when changes are pushed to the main branch, ensuring consistent versioning according to [Semantic Versioning](https://semver.org/) principles.
+
 ### Automatic Retry Mechanism
 
 The application includes a robust retry mechanism for API requests, which uses:
