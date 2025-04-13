@@ -182,11 +182,20 @@ export default {
     const router = useRouter();
     const route = useRoute();
 
-    // Initialize form fields from URL parameters if available; otherwise, use defaults.
-    const variantInput = ref(route.params.variantInput || '');
-    const variantInput2 = ref(route.params.variantInput2 || '');
-    const inheritance = ref(route.params.inheritance || 'Unknown');
-    const segregation = ref(route.params.segregation || '1');
+    // Initialize form fields from URL parameters or query parameters if available; otherwise, use defaults.
+    // Check both route.params (normal navigation) and route.query (from Edit Search button)
+    const variantInput = ref(route.query.variant || route.params.variantInput || '');
+    const variantInput2 = ref(route.query.variant2 || route.params.variantInput2 || '');
+    const inheritance = ref(route.query.inheritance || route.params.inheritance || 'Unknown');
+    const segregation = ref(route.query.segregation || route.params.segregation || '1');
+    
+    // Log for debugging
+    console.log('ScoringSearch - Initializing with parameters:', { 
+      variant: variantInput.value, 
+      variant2: variantInput2.value,
+      inheritance: inheritance.value,
+      segregation: segregation.value
+    });
     
     // Validation rules
     const variantRules = [

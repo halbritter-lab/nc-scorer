@@ -68,6 +68,18 @@
               :gene-symbol="geneSymbol" 
               :variant-input="variantInput" 
             />
+            
+            <!-- Edit Search button -->
+            <v-btn
+              color="info"
+              prepend-icon="mdi-pencil"
+              size="small"
+              variant="tonal"
+              @click="navigateToEditSearch"
+              title="Modify your search parameters"
+            >
+              Edit Search
+            </v-btn>
           </div>
         </div>
       </v-col>
@@ -108,7 +120,7 @@
 
 <script>
 import { computed, provide, reactive } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import VariantCard from '@/components/VariantCard.vue';
 import GeneCard from '@/components/GeneCard.vue';
 import InheritanceCard from '@/components/InheritanceCard.vue';
@@ -132,6 +144,7 @@ export default {
   },
   setup() {
     const route = useRoute();
+    const router = useRouter();
 
     // Set up retry state for the API requests
     const { retryStates, showSnackbar, snackbar: retrySnackbar } = useRetryState();
@@ -414,6 +427,22 @@ export default {
       }
     }
     
+    /**
+     * Navigate back to the search page with current parameters pre-filled
+     */
+    function navigateToEditSearch() {
+      router.push({
+        name: 'SearchPage',
+        query: {
+          // Add all relevant search parameters to pre-fill the form
+          variant: variantInput,
+          variant2: variantInput2,
+          inheritance: inheritance,
+          segregation: segregation
+        }
+      });
+    }
+    
     return {
       variantInput,
       variantInput2,
@@ -430,7 +459,8 @@ export default {
       handleVariantScoreUpdate,
       handleGeneScoreUpdate,
       handleInheritanceScoreUpdate,
-      downloadResults, // Add the download function
+      downloadResults,
+      navigateToEditSearch
     };
   },
 };
