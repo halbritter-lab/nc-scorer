@@ -1,26 +1,156 @@
 {
-    "title": "Frequently Asked Questions",
-    "sections": [
-      {
-        "header": "What is NC-scorer?",
-        "content": "NC (Nephro Candidate) scorer is a web-based application designed to score genetic variants for their likelihood of being involved in kidney disease.",
-        "links": [
-          {
-            "title": "Learn More",
-            "url": "/about"
-          }
-        ]
-      },
-      {
-        "header": "How can I contribute?",
-        "content": "We welcome contributions from the community. Please visit our GitHub repository to get started.",
-        "links": [
-          {
-            "title": "GitHub Repository",
-            "url": "https://github.com/halbritter-lab/nc-scorer"
-          }
-        ]
-      }
-    ]
-  }
-  
+  "title": "Frequently Asked Questions",
+  "subtitle": "Find answers to common questions about NC-Scorer and how to use it effectively",
+  "categories": [
+    {
+      "id": "general",
+      "title": "General Information",
+      "icon": "mdi-information-outline",
+      "color": "primary",
+      "sections": [
+        {
+          "header": "What is NC-Scorer?",
+          "content": "NC-Scorer (Nephro Candidate Scorer) is a web-based application designed to help researchers evaluate genetic variants for their potential involvement in kidney disease. It uses a specialized scoring algorithm that combines multiple lines of evidence to prioritize variants and genes for further investigation.",
+          "links": [
+            {
+              "title": "About NC-Scorer",
+              "url": "/about",
+              "icon": "mdi-information"
+            },
+            {
+              "title": "Scoring Methodology",
+              "url": "/methodology",
+              "icon": "mdi-calculator"
+            }
+          ]
+        },
+        {
+          "header": "Who developed NC-Scorer?",
+          "content": "NC-Scorer was developed by the Halbritter Lab at Charité Berlin in collaboration with pediatric nephrology researchers worldwide. It's an open-source project designed to accelerate gene discovery in pediatric kidney disease.",
+          "links": [
+            {
+              "title": "Halbritter Lab",
+              "url": "https://www.halbritter-lab.org",
+              "icon": "mdi-flask",
+              "external": true
+            }
+          ]
+        },
+        {
+          "header": "Is NC-Scorer free to use?",
+          "content": "Yes, NC-Scorer is completely free and open-source. You can use it for academic and research purposes without any cost. The source code is available on GitHub under an MIT license."
+        }
+      ]
+    },
+    {
+      "id": "usage",
+      "title": "Using NC-Scorer",
+      "icon": "mdi-help-circle-outline",
+      "color": "secondary",
+      "sections": [
+        {
+          "header": "How do I input a variant for scoring?",
+          "content": "You can enter variants in standard HGVS notation (e.g., NM_033380.3:c.1871G>A) in the search box on the home page. You can also upload a VCF file for batch processing of multiple variants. The application supports GRCh37/hg19 and GRCh38/hg38 genome builds."
+        },
+        {
+          "header": "What do the scores mean?",
+          "content": "NC-Scorer generates three main scores that contribute to the overall assessment:\n\n1. **Nephro Candidate Gene Score**: Evaluates how likely a gene is involved in kidney disease (0-1)\n2. **Nephro Variant Score**: Assesses the potential pathogenicity of a specific variant (0-1)\n3. **Inheritance Score**: Evaluates the inheritance pattern compatibility with the disease model (0-1)\n\nHigher scores indicate greater confidence in the gene/variant's involvement in kidney disease."
+        },
+        {
+          "header": "Can I save my results?",
+          "content": "Yes, you can download your results in various formats including JSON, CSV, and PDF. The application does not store your data on our servers - all processing happens in your browser for privacy protection."
+        },
+        {
+          "header": "How are scores displayed visually?",
+          "content": "The three key sub-scores are visually highlighted throughout the application for easy identification:\n\n1. Each key score is displayed with a subtle background color and left border in the primary theme color\n2. Score chips have a slight elevation effect for a 3D appearance\n3. Higher scores are generally displayed in colors ranging from yellow (low) to green (high)\n4. Critical scores below certain thresholds may be highlighted in orange or red\n5. The most important scores (Nephro Candidate Gene Score, Nephro Variant Score, and Inheritance Score) are displayed with bold text and special visual treatment\n\nThis visual hierarchy helps you quickly identify the important values that contribute to the final assessment."
+        },
+        {
+          "header": "How do I interpret external database links?",
+          "content": "NC-Scorer provides links to external resources like Ensembl, HGNC, and gnomAD for each variant and gene. These links appear as clickable icons next to identifiers, allowing you to quickly access more information about a specific gene or variant in specialized databases."
+        }
+      ]
+    },
+    {
+      "id": "technical",
+      "title": "Technical Details",
+      "icon": "mdi-code-tags",
+      "color": "info",
+      "sections": [
+        {
+          "header": "What algorithms are used for scoring?",
+          "content": "NC-Scorer uses a combination of machine learning models trained on known kidney disease genes and variants, along with rule-based scoring derived from expert knowledge. The scoring system incorporates information from functional studies, expression data, conservation scores, and population databases."
+        },
+        {
+          "header": "Which genome builds are supported?",
+          "content": "NC-Scorer supports both GRCh37/hg19 and GRCh38/hg38 genome builds. The application automatically detects the build from your input or allows you to specify it manually."
+        },
+        {
+          "header": "Is the source code available?",
+          "content": "Yes, NC-Scorer is an open-source project. The source code is available on GitHub and contributions from the community are welcome.",
+          "links": [
+            {
+              "title": "GitHub Repository",
+              "url": "https://github.com/halbritter-lab/nc-scorer",
+              "icon": "mdi-github",
+              "external": true
+            },
+            {
+              "title": "How to Contribute",
+              "url": "https://github.com/halbritter-lab/nc-scorer/blob/main/CONTRIBUTING.md",
+              "icon": "mdi-source-branch",
+              "external": true
+            }
+          ]
+        },
+        {
+          "header": "What technologies does NC-Scorer use?",
+          "content": "NC-Scorer is built using Vue.js 3 with Vuetify for the frontend interface. It uses a combination of local processing in the browser and API calls to specialized bioinformatics services for variant annotation and scoring."
+        }
+      ]
+    },
+    {
+      "id": "troubleshooting",
+      "title": "Troubleshooting",
+      "icon": "mdi-alert-circle-outline",
+      "color": "warning",
+      "sections": [
+        {
+          "header": "My variant isn't recognized",
+          "content": "Ensure your variant is in the correct HGVS format (e.g., NM_033380.3:c.1871G>A). NC-Scorer works best with transcript-based variants. If using genomic coordinates, make sure to specify the correct genome build."
+        },
+        {
+          "header": "The application seems slow",
+          "content": "NC-Scorer performs complex calculations and queries multiple databases to generate accurate scores. This may take a few seconds, especially for the first variant you analyze. Subsequent analyses should be faster as some data is cached locally."
+        },
+        {
+          "header": "I found a bug or have a feature request",
+          "content": "We appreciate your feedback! Please report bugs or suggest new features on our GitHub issue tracker. Before submitting, check if the issue has already been reported.",
+          "links": [
+            {
+              "title": "Report an Issue",
+              "url": "https://github.com/halbritter-lab/nc-scorer/issues/new",
+              "icon": "mdi-bug",
+              "external": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "research",
+      "title": "Research & Publications",
+      "icon": "mdi-file-document-outline",
+      "color": "success",
+      "sections": [
+        {
+          "header": "How should I cite NC-Scorer?",
+          "content": "If you use NC-Scorer in your research, please cite our publication: [Citation details to be added after publication]. This helps us track the impact of our tool and secure continued funding for development."
+        },
+        {
+          "header": "Related publications",
+          "content": "The methodology behind NC-Scorer is based on several key publications in the field of kidney genetics."
+        }
+      ]
+    }
+  ]
+}
