@@ -1,7 +1,10 @@
 // config/geneDetailsConfig.js
 
+// Import external DB URLs from variant config to ensure consistency
+import { externalDbUrls } from './variantAnnotationConfig';
+
 // Define the version of the gene details configuration
-export const geneDetailsConfigVersion = '0.1.0';
+export const geneDetailsConfigVersion = '0.1.1';
 
 // Define the gene details configuration
 export const geneDetailsConfig = {
@@ -9,7 +12,8 @@ export const geneDetailsConfig = {
     label: 'HGNC ID',
     format: 'number',
     description: 'The unique identifier for the gene from the HGNC database.',
-    visibility: false,
+    visibility: true,
+    linkPattern: externalDbUrls.hgnc,
   },
   ngs: {
     label: 'Nephro Candidate Gene Score',
@@ -34,6 +38,7 @@ export const geneDetailsConfig = {
     visibility: true,
     style: 'chip',
     font: 'italic',
+    linkPattern: externalDbUrls.ensemblGene, // Uses ensembl gene ID which will be replaced with proper HGNC DB link in the component
   },
   geneSet: {
     label: 'Geneset',

@@ -3,7 +3,39 @@
   <v-card class="variant-card">
     <v-card-title class="d-flex flex-wrap align-center">
       <div class="variant-title text-truncate" :title="hasSecondVariant ? `Variants: ${variantInput}, ${variantInput2}` : variantInput">
-        {{ hasSecondVariant ? 'Compound Heterozygous Variants' : `Variant Details for "${variantInput}"` }}
+        <template v-if="hasSecondVariant">
+          Compound Heterozygous Variants
+        </template>
+        <template v-else>
+          <div class="d-flex align-center">
+            <span>Variant Details for "{{ variantInput }}"</span>
+            <v-menu v-if="variantLinks && Object.keys(variantLinks).length > 0">
+              <template v-slot:activator="{ props }">
+                <v-btn v-bind="props" icon="mdi-open-in-new" size="x-small" class="ml-1" variant="text" color="primary" title="View in external databases"></v-btn>
+              </template>
+              <v-list density="compact">
+                <v-list-item v-if="variantLinks.ensembl" :href="variantLinks.ensembl" target="_blank" rel="noopener noreferrer">
+                  <v-list-item-title class="d-flex align-center">
+                    <v-icon start size="small">mdi-dna</v-icon>
+                    View in Ensembl
+                  </v-list-item-title>
+                </v-list-item>
+                <v-list-item v-if="variantLinks.ucsc" :href="variantLinks.ucsc" target="_blank" rel="noopener noreferrer">
+                  <v-list-item-title class="d-flex align-center">
+                    <v-icon start size="small">mdi-chart-timeline-variant</v-icon>
+                    View in UCSC Browser
+                  </v-list-item-title>
+                </v-list-item>
+                <v-list-item v-if="variantLinks.gnomad" :href="variantLinks.gnomad" target="_blank" rel="noopener noreferrer">
+                  <v-list-item-title class="d-flex align-center">
+                    <v-icon start size="small">mdi-chart-bar</v-icon>
+                    View in gnomAD
+                  </v-list-item-title>
+                </v-list-item>
+              </v-list>
+            </v-menu>
+          </div>
+        </template>
       </div>
       
       <div class="d-flex flex-nowrap ml-auto">
@@ -118,6 +150,7 @@
                     description: 'Prioritized gene symbol based on MANE Select status and impact severity.',
                     style: 'chip',
                     font: 'italic',
+                    linkPattern: 'https://ensembl.org/Homo_sapiens/Gene/Summary?g=%s'
                   }"
                   :value="activeTab === 0 ? prioritizedGeneSymbol : prioritizedGeneSymbol2"
                   :title="activeTab === 0 ? annotationSummary.gene_symbol : annotationSummary2.gene_symbol"
@@ -137,19 +170,12 @@
                     label: 'All Gene Symbols',
                     description: 'All gene symbols associated with this variant.',
                     style: 'text',
-                    font: 'italic',
+                    font: 'italic'
                   }"
                   :value="activeTab === 0 ? annotationSummary.gene_symbol : annotationSummary2.gene_symbol"
                 />
 
-                <DataDisplayRow
-                  v-if="activeTab === 0 ? annotationSummary.hgnc_id : annotationSummary2.hgnc_id"
-                  :config="{
-                    label: 'HGNC ID',
-                    description: 'HGNC Identifier.',
-                  }"
-                  :value="activeTab === 0 ? annotationSummary.hgnc_id : annotationSummary2.hgnc_id"
-                />
+                <!-- HGNC ID removed per user request to declutter interface -->
               </tbody>
             </v-table>
           </v-card-text>
@@ -202,6 +228,21 @@
                     </v-icon>
                   </template>
                   
+                  <!-- Add external link to the title -->
+                  <template v-slot:title>
+                    <div class="d-flex align-center">
+                      <a 
+                        :href="generateExternalLink(item.raw.value, 'https://ensembl.org/Homo_sapiens/Transcript/Summary?t=%s')" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        class="external-link"
+                      >
+                        {{ item.raw.title }}
+                        <v-icon size="x-small" class="ml-1">mdi-open-in-new</v-icon>
+                      </a>
+                    </div>
+                  </template>
+                  
                   <!-- Add impact badges -->
                   <template v-slot:append>
                     <v-chip
@@ -220,43 +261,13 @@
             <div v-if="activeTab === 0 ? selectedTranscript : selectedTranscript2">
               <v-table class="annotation-table">
                 <tbody>
-                  <tr v-for="entry in visibleAnnotationConfig" :key="entry[0]">
-                    <td class="info-col">
-                      <span class="label-hover" :title="entry[1].description">
-                        {{ entry[1].label }}
-                      </span>
-                      <v-tooltip activator="parent" location="start">
-                        {{ entry[1].description }}
-                      </v-tooltip>
-                    </td>
-                    <td class="value-col">
-                      <template v-if="entry[1].format === 'array'">
-                        <v-chip
-                          v-for="(item, idx) in (activeTab === 0 ? selectedTranscript : selectedTranscript2)[entry[0]]"
-                          :key="idx"
-                          class="mr-1"
-                          small
-                        >
-                          {{ item }}
-                        </v-chip>
-                      </template>
-                      <template v-else>
-                        <v-chip
-                          v-if="entry[1].style === 'chip'"
-                          :class="{
-                            'italic-font': entry[1].font === 'italic',
-                            'bold-font': entry[1].font === 'bold',
-                          }"
-                          :color="getColor((activeTab === 0 ? selectedTranscript : selectedTranscript2)[entry[0]], entry[1])"
-                        >
-                          {{ formatValue((activeTab === 0 ? selectedTranscript : selectedTranscript2)[entry[0]], entry[1]) }}
-                        </v-chip>
-                        <span v-else>
-                          {{ formatValue((activeTab === 0 ? selectedTranscript : selectedTranscript2)[entry[0]], entry[1]) }}
-                        </span>
-                      </template>
-                    </td>
-                  </tr>
+                  <DataDisplayRow 
+                    v-for="entry in visibleAnnotationConfig" 
+                    :key="entry[0]"
+                    :config="entry[1]"
+                    :value="(activeTab === 0 ? selectedTranscript : selectedTranscript2)[entry[0]]"
+                    :defaultValue="'NA'"
+                  />
                 </tbody>
               </v-table>
             </div>
@@ -277,7 +288,8 @@
 import { ref, onMounted, computed, inject, watchEffect } from 'vue';
 import DataDisplayRow from '@/components/DataDisplayRow.vue';
 import { queryVariant } from '@/api/variantApi.js';
-import { variantAnnotationConfig } from '@/config/variantAnnotationConfig.js';
+import { parseVariantString, generateVariantLinks, generateExternalLink } from '@/utils/linkUtils';
+import { variantAnnotationConfig, externalDbUrls } from '@/config/variantAnnotationConfig.js';
 import { variantFrequencyConfig } from '@/config/variantFrequencyConfig.js';
 import { variantScoreConfig } from '@/config/variantScoreConfig.js';
 import { getColor, formatValue } from '@/utils/format.js';
@@ -325,6 +337,12 @@ export default {
     // Tab control for compound heterozygous display
     const activeTab = ref(0);
     const hasSecondVariant = computed(() => Boolean(props.variantInput2));
+
+    // Generate external links for variants if they match the expected format
+    const variantLinks = computed(() => {
+      if (!props.variantInput) return null;
+      return generateVariantLinks(props.variantInput, externalDbUrls);
+    });
 
     // Get shared retry state from parent or create a new one
     const { retryStates } = inject('retryState', useRetryState());
@@ -411,7 +429,16 @@ export default {
 
     // Compute a filtered array of [propKey, config] entries for annotation details.
     const visibleAnnotationConfig = computed(() => {
-      return Object.entries(variantAnnotationConfig).filter(([, config]) => config.visibility);
+      return Object.entries(variantAnnotationConfig).filter(([key, config]) => {
+        // Skip gene_symbol in transcript details as it's redundant with main display
+        if (key === 'gene_symbol') return false;
+        // Skip low-importance fields to reduce clutter
+        if (key === 'gene_symbol_source' || key === 'used_ref' || key === 'given_ref' || key === 'source') return false;
+        // Only show cadd_phred, not both cadd scores
+        if (key === 'cadd_raw' && variantAnnotationConfig.cadd_phred.visibility) return false;
+        
+        return config.visibility;
+      });
     });
 
     // VARIANT 1 - Compute summary data from the first annotation object.
@@ -752,6 +779,7 @@ export default {
       isMaxRetriesError,
       showCacheIndicator,
       fromCache,
+      variantLinks,
       
       // Second variant data
       loading2,
@@ -854,5 +882,26 @@ export default {
 
 .variant-title {
   max-width: calc(100% - 100px); /* Reserve space for indicators */
+}
+
+.external-link {
+  color: var(--v-theme-primary);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+.external-link:hover {
+  text-decoration: underline;
+  opacity: 0.9;
+}
+
+.link-icon {
+  margin-left: 4px;
+  opacity: 0.7;
+}
+
+.info-label {
+  cursor: help;
 }
 </style>

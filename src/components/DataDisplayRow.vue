@@ -9,8 +9,12 @@
     }"
   >
     <td class="info-col">
-      <strong>{{ config.label }}:</strong>
-      <v-tooltip activator="parent" location="start">
+      <v-tooltip location="start">
+        <template v-slot:activator="{ props }">
+          <span v-bind="props" class="info-label">
+            <strong>{{ config.label }}:</strong>
+          </span>
+        </template>
         {{ config.description }}
       </v-tooltip>
     </td>
@@ -29,9 +33,32 @@
         :size="config.isKeyScore ? 'large' : 'small'"
         :elevation="config.isKeyScore ? 2 : 0"
       >
-        {{ formattedValue }}
+        <a 
+          v-if="config.linkPattern && isValidLinkValue" 
+          :href="generatedLink" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          class="link-no-decoration"
+        >
+          {{ formattedValue }}
+          <v-icon size="x-small" class="link-icon">mdi-open-in-new</v-icon>
+        </a>
+        <template v-else>{{ formattedValue }}</template>
       </v-chip>
-      <span v-else>{{ formattedValue }}</span>
+      
+      <template v-else>
+        <a 
+          v-if="config.linkPattern && isValidLinkValue" 
+          :href="generatedLink" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          class="external-link"
+        >
+          {{ formattedValue }}
+          <v-icon size="x-small" class="link-icon">mdi-open-in-new</v-icon>
+        </a>
+        <span v-else>{{ formattedValue }}</span>
+      </template>
     </td>
   </tr>
 </template>
@@ -39,6 +66,7 @@
 <script>
 import { computed } from 'vue';
 import { formatValue, getColor } from '@/utils/format';
+import { generateExternalLink } from '@/utils/linkUtils';
 import { scoreInterpretationConfig } from '@/config/scoreInterpretationConfig';
 
 export default {
@@ -96,10 +124,26 @@ export default {
       return colorValue.value; // Use regular color logic for non-key scores
     });
 
+    // Generate an external link if link pattern is available
+    const generatedLink = computed(() => {
+      if (!props.config.linkPattern || !props.value) return '';
+      return generateExternalLink(props.value, props.config.linkPattern);
+    });
+    
+    // Check if we have a valid value for the link
+    const isValidLinkValue = computed(() => {
+      return props.value !== null && 
+             props.value !== undefined && 
+             props.value !== '' &&
+             formattedValue.value !== 'NA';
+    });
+
     return {
       formattedValue,
       colorValue,
       chipColor,
+      generatedLink,
+      isValidLinkValue,
     };
   },
 };
@@ -112,6 +156,30 @@ export default {
 
 .bold-font {
   font-weight: bold;
+}
+
+/* External link styling */
+.external-link {
+  color: var(--v-theme-primary);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+.external-link:hover {
+  text-decoration: underline;
+}
+
+.link-icon {
+  margin-left: 4px;
+  opacity: 0.7;
+}
+
+.link-no-decoration {
+  text-decoration: none;
+  color: inherit;
+  display: inline-flex;
+  align-items: center;
 }
 
 /* General key score styling */
