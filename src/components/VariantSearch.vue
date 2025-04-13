@@ -13,8 +13,9 @@
                 <v-text-field
                   v-model="variantInput"
                   label="Enter Variant (VCF or HGVS)"
+                  placeholder="e.g., 1-55051215-G-GA or NM_001009944.3:c.11935C>T"
                   variant="plain"
-                  hide-details
+                  :rules="variantRules"
                   @keyup.enter="searchVariant"
                   id="variant-search-input"
                   aria-label="Enter a genomic variant in VCF or HGVS format"
@@ -82,6 +83,7 @@
 <script>
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { validateVariant, normalizeVariant } from '@/utils/validationUtils';
 
 export default {
   name: 'VariantSearch',
@@ -89,21 +91,35 @@ export default {
     const variantInput = ref('');
     const error = ref(null);
     const router = useRouter();
+    
+    const variantRules = [
+      (value) => !!value || 'Variant is required',
+      validateVariant
+    ];
 
     const searchVariant = () => {
-      if (!variantInput.value) {
-        error.value = 'Please enter a variant.';
+      // Reset error state
+      error.value = null;
+      
+      // Validate variant input
+      const variantValidation = validateVariant(variantInput.value);
+      if (variantValidation !== true) {
+        error.value = variantValidation;
         return;
       }
-      error.value = null;
-      // Navigate to the VariantView page with the input as a route parameter.
-      router.push({ name: 'VariantView', params: { variantInput: variantInput.value } });
+      
+      // Normalize variant format to standard format before navigation
+      const normalizedVariant = normalizeVariant(variantInput.value);
+      
+      // Navigate to the VariantView page with the normalized input as a route parameter
+      router.push({ name: 'VariantView', params: { variantInput: normalizedVariant } });
     };
 
     return {
       variantInput,
       searchVariant,
       error,
+      variantRules,
     };
   },
 };

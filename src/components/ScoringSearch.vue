@@ -15,8 +15,9 @@
                 <v-text-field
                   v-model="variantInput"
                   label="Enter Variant (VCF or HGVS)"
+                  placeholder="e.g., 1-55051215-G-GA or NM_001009944.3:c.11935C>T"
                   variant="plain"
-                  hide-details
+                  :rules="variantRules"
                   @keyup.enter="searchScoring"
                   id="scoring-variant-input"
                   aria-label="Enter primary variant in VCF or HGVS format"
@@ -48,8 +49,9 @@
                 <v-text-field
                   v-model="variantInput2"
                   label="Second Variant (for Compound Heterozygous)"
+                  placeholder="e.g., 1-55051215-G-GA or NM_001009944.3:c.11935C>T"
                   variant="plain"
-                  hide-details
+                  :rules="variantRules"
                   @keyup.enter="searchScoring"
                   id="scoring-variant-input-2"
                   aria-label="Enter second variant for compound heterozygous analysis"
@@ -89,12 +91,13 @@
                     <v-text-field
                       v-model="segregation"
                       label="Segregation"
+                      placeholder="0.0 to 1.0 (e.g., 0.95)"
                       type="number"
                       min="0"
                       max="1"
                       step="0.01"
                       variant="plain"
-                      hide-details
+                      :rules="segregationRules"
                       density="comfortable"
                       class="option-input"
                       id="segregation-probability-input"
@@ -170,6 +173,7 @@
 import { ref, computed } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { noSegregationPatterns, requiresSecondVariant } from '@/config/inheritanceConfig';
+import { validateVariant, validateSegregation, normalizeVariant } from '@/utils/validationUtils';
 
 export default {
   name: 'ScoringSearch',
@@ -183,6 +187,17 @@ export default {
     const variantInput2 = ref(route.params.variantInput2 || '');
     const inheritance = ref(route.params.inheritance || 'Unknown');
     const segregation = ref(route.params.segregation || '1');
+    
+    // Validation rules
+    const variantRules = [
+      (value) => !!value || 'Variant is required',
+      validateVariant
+    ];
+    
+    const segregationRules = [
+      (value) => !showSegregationInput.value || !!value || 'Segregation is required when applicable',
+      validateSegregation
+    ];
 
     // Inheritance options for selection.
     const inheritanceOptions = [
@@ -270,32 +285,48 @@ export default {
      * @return {void}
      */
     const searchScoring = () => {
-      if (!variantInput.value) {
-        error.value = 'Please enter a variant.';
+      // Reset error state
+      error.value = null;
+      
+      // Validate primary variant
+      const variant1Validation = validateVariant(variantInput.value);
+      if (variant1Validation !== true) {
+        error.value = variant1Validation;
         return;
       }
-      // If second variant input is required but missing, show an error
-      if (showSecondVariantInput.value && !variantInput2.value) {
-        error.value = 'Please enter a second variant for compound heterozygous analysis.';
-        return;
+      
+      // If compound heterozygous is selected, validate second variant
+      if (showSecondVariantInput.value) {
+        const variant2Validation = validateVariant(variantInput2.value);
+        if (variant2Validation !== true) {
+          error.value = 'Second variant: ' + variant2Validation;
+          return;
+        }
       }
-      // If segregation input is active but missing, show an error.
-      if (showSegregationInput.value && !segregation.value) {
+      
+      // If segregation input is active, validate it
+      if (showSegregationInput.value && segregation.value) {
+        const segregationValidation = validateSegregation(segregation.value);
+        if (segregationValidation !== true) {
+          error.value = segregationValidation;
+          return;
+        }
+      } else if (showSegregationInput.value) {
         error.value = 'Please enter a segregation probability.';
         return;
       }
-      error.value = null;
 
       // Prepare route params - conditionally include variantInput2 only when needed
       const routeParams = {
-        variantInput: variantInput.value,
+        // Normalize variant format to standard format (hyphen-separated for VCF, no whitespace for HGVS)
+        variantInput: normalizeVariant(variantInput.value),
         inheritance: inheritance.value,
         segregation: segregation.value,
       };
 
       // Add second variant to params only if it exists and is needed
       if (showSecondVariantInput.value && variantInput2.value) {
-        routeParams.variantInput2 = variantInput2.value;
+        routeParams.variantInput2 = normalizeVariant(variantInput2.value);
       }
 
       router.push({
@@ -318,6 +349,8 @@ export default {
       exampleLinkOld2,
       exampleLinkPKD1,
       exampleLinkCOL4A5,
+      variantRules,
+      segregationRules,
     };
   },
 };
