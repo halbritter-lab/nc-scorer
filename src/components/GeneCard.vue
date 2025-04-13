@@ -72,7 +72,8 @@
                 style: item.style,
                 font: item.font,
                 colorThresholds: item.colorThresholds,
-                scoreType: item.scoreType, // Pass score type for consistent styling
+                isKeyScore: item.isKeyScore, // Pass isKeyScore flag for visual highlighting
+                scoreType: item.scoreType // Pass score type for consistent coloring
               }"
               :value="item.value"
               :defaultValue="'NA'"

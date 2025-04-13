@@ -12,7 +12,7 @@ export const geneDetailsConfig = {
     label: 'HGNC ID',
     format: 'number',
     description: 'The unique identifier for the gene from the HGNC database.',
-    visibility: true,
+    visibility: false, // Hidden per request to declutter the interface
     linkPattern: externalDbUrls.hgnc,
   },
   ngs: {

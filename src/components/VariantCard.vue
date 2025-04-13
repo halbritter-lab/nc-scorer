@@ -113,8 +113,8 @@
       
       <div v-else>
         <!-- Score Section -->
-        <v-card class="mb-4 score-section" v-if="activeTab === 0 ? Object.keys(scoreSummary).length > 0 : Object.keys(scoreSummary2).length > 0">
-          <v-card-text>
+        <v-card class="mb-2 score-section pa-2" v-if="activeTab === 0 ? Object.keys(scoreSummary).length > 0 : Object.keys(scoreSummary2).length > 0">
+          <v-card-text class="pa-0">
             <v-table class="summary-table">
               <tbody>
                 <DataDisplayRow
@@ -130,8 +130,8 @@
         </v-card>
 
         <!-- Overall Summary Section -->
-        <v-card class="mb-4 summary-section">
-          <v-card-text>
+        <v-card class="mb-2 summary-section pa-2">
+          <v-card-text class="pa-0">
             <v-table class="summary-table">
               <tbody>
                 <DataDisplayRow
@@ -183,7 +183,7 @@
 
         <!-- Frequency Section -->
         <v-card class="mb-4" v-if="activeTab === 0 ? frequencyExtracted : frequencyExtracted2">
-          <v-card-text>
+          <v-card-text class="pa-0">
             <v-table class="summary-table">
               <tbody>
                 <DataDisplayRow
@@ -200,7 +200,7 @@
 
         <!-- Transcript Consequences Section -->
         <v-card class="mb-4" v-if="activeTab === 0 ? transcriptIds.length : transcriptIds2.length">
-          <v-card-text>
+          <v-card-text class="pa-0">
             <v-select
               :model-value="activeTab === 0 ? selectedTranscriptId : selectedTranscriptId2"
               @update:model-value="value => activeTab === 0 ? selectedTranscriptId = value : selectedTranscriptId2 = value"
@@ -277,7 +277,7 @@
         <!-- Final Score Section (unchanged) -->
         <v-card v-if="result && result.finalScore !== undefined" class="mt-4">
           <v-card-title>Final Score</v-card-title>
-          <v-card-text>{{ result.finalScore }}</v-card-text>
+          <v-card-text class="pa-0">{{ result.finalScore }}</v-card-text>
         </v-card>
       </div>
     </v-card-text>
@@ -848,12 +848,11 @@ export default {
   margin-top: 16px;
 }
 .summary-section {
-  margin-bottom: 16px;
-  padding: 8px;
+  margin-bottom: 8px;
   border-radius: 4px;
 }
 .summary-item {
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
 
 @keyframes spin {
