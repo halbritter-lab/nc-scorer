@@ -158,9 +158,45 @@
           <v-card-text>
             <v-select
               v-model="selectedTranscriptId"
-              :items="transcriptIds"
-              label="Select Transcript ID"
-            ></v-select>
+              :items="formattedTranscriptOptions"
+              item-title="title"
+              item-value="value"
+              label="Select Transcript"
+              return-object
+            >
+              <template v-slot:item="{ item, props }">
+                <v-list-item
+                  v-bind="props"
+                  :title="item.raw.title"
+                  :class="{'font-weight-bold': item.raw.mane}"
+                >
+                  <!-- Add visual indicator for MANE Select transcripts -->
+                  <template v-slot:prepend="{ isActive }">
+                    <v-icon
+                      v-if="item.raw.mane"
+                      color="primary"
+                      size="small"
+                      class="mr-2"
+                    >
+                      mdi-check-decagram
+                    </v-icon>
+                  </template>
+                  
+                  <!-- Add impact badges -->
+                  <template v-slot:append>
+                    <v-chip
+                      v-if="item.raw.impact"
+                      size="x-small"
+                      :color="getImpactColor(item.raw.impact)"
+                      class="ml-2"
+                      density="compact"
+                    >
+                      {{ item.raw.impact }}
+                    </v-chip>
+                  </template>
+                </v-list-item>
+              </template>
+            </v-select>
             <div v-if="selectedTranscript">
               <v-table class="annotation-table">
                 <tbody>
@@ -227,6 +263,7 @@ import { variantScoreConfig } from '@/config/variantScoreConfig.js';
 import { getColor, formatValue } from '@/utils/format.js';
 import useRetryState from '@/composables/useRetryState.js';
 import { getPrioritizedGeneSymbol } from '@/utils/geneSymbolUtils.js';
+import { prioritizeTranscript, formatTranscriptOptions } from '@/utils/transcriptUtils.js';
 import { scoreInterpretationConfig } from '@/config/scoreInterpretationConfig.js';
 
 export default {
@@ -264,12 +301,40 @@ export default {
       return [];
     });
 
-    // Compute a list of transcript IDs.
+    // Find the prioritized transcript based on MANE status and impact
+    const prioritizedTranscript = computed(() => {
+      return prioritizeTranscript(transcriptOptions.value);
+    });
+    
+    // Format transcript options for the dropdown with MANE indicators
+    const formattedTranscriptOptions = computed(() => {
+      return formatTranscriptOptions(transcriptOptions.value);
+    });
+
+    // Maintain a list of transcript IDs for backward compatibility
     const transcriptIds = computed(() => transcriptOptions.value.map((tc) => tc.transcript_id));
+    
+    // Track selected transcript ID object
     const selectedTranscriptId = ref(null);
-    const selectedTranscript = computed(() =>
-      transcriptOptions.value.find((tc) => tc.transcript_id === selectedTranscriptId.value)
-    );
+    
+    // Find the currently selected transcript detail
+    const selectedTranscript = computed(() => {
+      if (!selectedTranscriptId.value) return null;
+      const transcriptId = typeof selectedTranscriptId.value === 'object' ? 
+        selectedTranscriptId.value.value : selectedTranscriptId.value;
+      return transcriptOptions.value.find((tc) => tc.transcript_id === transcriptId);
+    });
+    
+    // Function to get color for impact badges
+    const getImpactColor = (impact) => {
+      const impactColors = {
+        'HIGH': 'error',
+        'MODERATE': 'warning',
+        'LOW': 'info',
+        'MODIFIER': 'grey'
+      };
+      return impactColors[impact] || 'grey';
+    };
 
     // Compute a filtered array of [propKey, config] entries for annotation details.
     const visibleAnnotationConfig = computed(() => {
@@ -395,8 +460,17 @@ export default {
           }, 3000);
         }
 
-        if (transcriptIds.value.length > 0) {
-          selectedTranscriptId.value = transcriptIds.value[0];
+        // Pre-select prioritized transcript when data loads
+        if (formattedTranscriptOptions.value.length > 0) {
+          // Find the option that corresponds to prioritized transcript
+          if (prioritizedTranscript.value) {
+            const prioritizedOption = formattedTranscriptOptions.value.find(
+              option => option.value === prioritizedTranscript.value.transcript_id
+            );
+            selectedTranscriptId.value = prioritizedOption || formattedTranscriptOptions.value[0];
+          } else {
+            selectedTranscriptId.value = formattedTranscriptOptions.value[0];
+          }
         }
       } catch (err) {
         retryStates.variant.inProgress = false;
@@ -432,8 +506,11 @@ export default {
       transcriptIds,
       selectedTranscriptId,
       selectedTranscript,
+      formattedTranscriptOptions,
+      prioritizedTranscript,
       visibleAnnotationConfig,
       getColor,
+      getImpactColor,
       formatValue,
       formatOrDefault,
       result,
