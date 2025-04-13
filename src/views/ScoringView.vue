@@ -58,19 +58,12 @@
         </v-card>
       </v-col>
 
-      <!-- Variant Card(s) -->
+      <!-- Variant Card with tabs when in compound heterozygous mode -->
       <v-col cols="12" md="6" class="pl-md-2">
         <VariantCard
           :variantInput="variantInput"
+          :variantInput2="isCompoundHet ? variantInput2 : ''"
           @variant-score-updated="handleVariantScoreUpdate"
-        />
-
-        <!-- Second Variant Card (only for compound heterozygous variants) -->
-        <VariantCard
-          v-if="isCompoundHet && variantInput2"
-          :variantInput="variantInput2"
-          class="mt-4"
-          @variant-score-updated="handleSecondVariantScoreUpdate"
         />
       </v-col>
     </v-row>
@@ -160,24 +153,31 @@ export default {
 
     // Event handlers for component events
     function handleVariantScoreUpdate(data) {
+      // Store the score and variant data
       scoreState.variantScore = Number(data.score) || 0;
       scoreState.variantData = data;
-
-      // If we have the prioritized gene symbol from VariantCard, use it directly
+      
+      // Handle compound heterozygous data (from a single VariantCard with both variants)
+      if (data.isCompoundHet) {
+        // Store both individual scores for potential display
+        scoreState.variant1Score = Number(data.score1) || 0;
+        scoreState.variant2Score = Number(data.score2) || 0;
+        
+        // Keep track of both variants
+        scoreState.variant1 = data.variant1;
+        scoreState.variant2 = data.variant2;
+        
+        // The main variantScore is already set to the averaged/combined score
+      }
+      
+      // Set gene symbol for gene card component
       if (data.prioritizedGeneSymbol) {
         scoreState.geneSymbol = data.prioritizedGeneSymbol;
-      }
-      // Fallback to the old method if prioritizedGeneSymbol is not available
-      else if (data.geneSummary && data.geneSummary.gene_symbol) {
+      } else if (data.geneSummary && data.geneSummary.gene_symbol) {
         scoreState.geneSymbol = Array.isArray(data.geneSummary.gene_symbol)
           ? data.geneSummary.gene_symbol[0]
           : data.geneSummary.gene_symbol;
       }
-    }
-
-    function handleSecondVariantScoreUpdate(data) {
-      // Store the second variant data but don't override the main variant score
-      scoreState.secondVariantData = data;
     }
 
     function handleGeneScoreUpdate(data) {
@@ -203,7 +203,6 @@ export default {
       isCompoundHet,
       retrySnackbar,
       handleVariantScoreUpdate,
-      handleSecondVariantScoreUpdate,
       handleGeneScoreUpdate,
       handleInheritanceScoreUpdate,
     };
