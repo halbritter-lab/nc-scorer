@@ -26,12 +26,42 @@
         </v-card>
 
         <!-- Actual score card when data is available -->
-        <CombinedScoreCard
-          v-else
-          :geneScore="geneScore"
-          :variantScore="variantScore"
-          :inheritanceScore="inheritanceScore"
-        />
+        <div v-else class="d-flex flex-column">
+          <CombinedScoreCard
+            :geneScore="geneScore"
+            :variantScore="variantScore"
+            :inheritanceScore="inheritanceScore"
+          />
+          
+          <!-- Download menu for exporting results -->
+          <v-menu>
+            <template v-slot:activator="{ props }">
+              <v-btn
+                color="primary"
+                prepend-icon="mdi-download"
+                class="mt-2 align-self-end"
+                v-bind="props"
+                :disabled="!combinedScoreAvailable"
+                size="small"
+                variant="tonal"
+              >
+                Download Results
+              </v-btn>
+            </template>
+            <v-list density="compact">
+              <v-list-item
+                @click="downloadResults('csv')"
+                prepend-icon="mdi-file-delimited"
+                title="Download as CSV"
+              />
+              <v-list-item
+                @click="downloadResults('excel')"
+                prepend-icon="mdi-file-excel"
+                title="Download as Excel"
+              />
+            </v-list>
+          </v-menu>
+        </div>
       </v-col>
     </v-row>
 
@@ -79,6 +109,7 @@ import ContentContainer from '@/components/ContentContainer.vue';
 import useRetryState from '@/composables/useRetryState.js';
 import { requiresSecondVariant } from '@/config/inheritanceConfig';
 import { scoreInterpretationConfig } from '@/config/scoreInterpretationConfig';
+import { generateCSV, downloadFile, sanitizeFilename, generateExcel } from '@/utils/exportUtils';
 
 export default {
   name: 'ScoringView',
@@ -189,6 +220,190 @@ export default {
       scoreState.inheritanceData = data;
     }
 
+    /**
+     * Generate a filename for the downloaded results
+     * @returns {string} - Sanitized filename
+     */
+    /**
+     * Generate a filename for the downloaded results
+     * @param {string} format - The file format ('csv' or 'excel')
+     * @returns {string} - Sanitized filename with appropriate extension
+     */
+    function generateFilename(format = 'csv') {
+      // Make sure we're passing string values to sanitizeFilename, not ref objects
+      const variant = sanitizeFilename(variantInput || '');
+      const gene = sanitizeFilename(geneSymbol.value || '');
+      const dateStr = new Date().toISOString().substring(0, 10); // YYYY-MM-DD format
+      const extension = format === 'excel' ? '.xlsx' : '.csv';
+      
+      return `nc_scorer_${dateStr}_${gene}_${variant}${extension}`;
+    }
+    
+    /**
+     * Download scoring results as CSV or Excel file
+     * @param {string} format - Format to download ('csv' or 'excel')
+     */
+    function downloadResults(format = 'csv') {
+      if (!combinedScoreAvailable.value) return;
+      
+      // Define headers for the export
+      const headers = [
+        // Input parameters
+        'Input_Variant1',
+        'Input_Variant2',
+        'Inheritance_Pattern',
+        'Segregation_Probability',
+        
+        // Scores
+        'NCS_Combined_Score',
+        'Gene_Score',
+        'Variant_Score',
+        'Inheritance_Score',
+        
+        // Gene details
+        'Gene_Symbol',
+      ];
+      
+      // Add base data values
+      let data = [
+        variantInput,
+        variantInput2 || '',
+        inheritance,
+        segregation,
+        
+        // Format scores to 2 decimal places
+        (geneScore.value * 4 + variantScore.value * 4 + inheritanceScore.value * 2).toFixed(2),
+        geneScore.value.toFixed(2),
+        variantScore.value.toFixed(2),
+        inheritanceScore.value.toFixed(2),
+        
+        geneSymbol.value,
+      ];
+      
+      // Add gene data if available
+      if (scoreState.geneData && scoreState.geneData.formattedData) {
+        const geneData = scoreState.geneData.formattedData;
+        
+        // Add gene-specific headers and data
+        if (geneData.evidenceCount) {
+          headers.push('Evidence_Count');
+          data.push(geneData.evidenceCount.value);
+        }
+        
+        if (geneData.geneSet) {
+          headers.push('Gene_Set');
+          data.push(geneData.geneSet.value);
+        }
+      }
+      
+      // Add variant data if available
+      if (scoreState.variantData) {
+        const variantData = scoreState.variantData;
+        
+        // Add common variant data headers
+        if (variantData.geneSummary && variantData.geneSummary.most_severe_consequence) {
+          headers.push('Most_Severe_Consequence');
+          data.push(variantData.geneSummary.most_severe_consequence);
+        }
+        
+        if (variantData.geneSummary && variantData.geneSummary.hgnc_id) {
+          headers.push('HGNC_ID');
+          data.push(variantData.geneSummary.hgnc_id);
+        }
+        
+        // Add gnomAD frequency if available
+        if (variantData.frequencyExtracted && variantData.frequencyExtracted.gnomade) {
+          headers.push('gnomADe_Frequency');
+          data.push(variantData.frequencyExtracted.gnomade);
+        }
+        
+        if (variantData.frequencyExtracted && variantData.frequencyExtracted.gnomadg) {
+          headers.push('gnomADg_Frequency');
+          data.push(variantData.frequencyExtracted.gnomadg);
+        }
+        
+        // Add transcript information if available
+        if (variantData.selectedTranscript) {
+          const transcript = variantData.selectedTranscript;
+          
+          headers.push('Transcript_ID');
+          data.push(transcript.transcript_id || '');
+          
+          if (transcript.cadd_phred) {
+            headers.push('CADD_Phred');
+            data.push(transcript.cadd_phred);
+          }
+          
+          if (transcript.hgvsc) {
+            headers.push('HGVSc');
+            data.push(transcript.hgvsc);
+          }
+          
+          if (transcript.mane) {
+            headers.push('MANE_Status');
+            data.push(transcript.mane);
+          }
+        }
+      }
+      
+      // Add second variant data if this is a compound heterozygous case
+      if (isCompoundHet.value && scoreState.variantData && scoreState.variantData.secondVariantData) {
+        const variant2Data = scoreState.variantData.secondVariantData;
+        
+        // Add V2 prefix to distinguish second variant data
+        if (variant2Data.geneSummary && variant2Data.geneSummary.most_severe_consequence) {
+          headers.push('V2_Most_Severe_Consequence');
+          data.push(variant2Data.geneSummary.most_severe_consequence);
+        }
+        
+        // Add transcript information for second variant if available
+        if (variant2Data.selectedTranscript) {
+          const transcript = variant2Data.selectedTranscript;
+          
+          headers.push('V2_Transcript_ID');
+          data.push(transcript.transcript_id || '');
+          
+          if (transcript.cadd_phred) {
+            headers.push('V2_CADD_Phred');
+            data.push(transcript.cadd_phred);
+          }
+          
+          if (transcript.hgvsc) {
+            headers.push('V2_HGVSc');
+            data.push(transcript.hgvsc);
+          }
+          
+          if (transcript.mane) {
+            headers.push('V2_MANE_Status');
+            data.push(transcript.mane);
+          }
+        }
+        
+        // Add frequency data for second variant
+        if (variant2Data.frequencyExtracted) {
+          if (variant2Data.frequencyExtracted.gnomade) {
+            headers.push('V2_gnomADe_Frequency');
+            data.push(variant2Data.frequencyExtracted.gnomade);
+          }
+          
+          if (variant2Data.frequencyExtracted.gnomadg) {
+            headers.push('V2_gnomADg_Frequency');
+            data.push(variant2Data.frequencyExtracted.gnomadg);
+          }
+        }
+      }
+      
+      // Generate file based on format selection
+      if (format === 'excel') {
+        // Generate Excel file
+        generateExcel(headers, data, generateFilename('excel'));
+      } else {
+        // Generate CSV and trigger download
+        const csvContent = generateCSV(headers, data);
+        downloadFile(csvContent, generateFilename('csv'));
+      }
+    }
+    
     return {
       variantInput,
       variantInput2,
@@ -205,6 +420,7 @@ export default {
       handleVariantScoreUpdate,
       handleGeneScoreUpdate,
       handleInheritanceScoreUpdate,
+      downloadResults, // Add the download function
     };
   },
 };

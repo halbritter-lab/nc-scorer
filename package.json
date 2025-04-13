@@ -17,7 +17,8 @@
     "variant-linker": "^1.0.0",
     "vue": "^3.2.13",
     "vue-router": "^4.2.5",
-    "vuetify": "^3.7.11"
+    "vuetify": "^3.7.11",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@babel/core": "^7.26.10",
