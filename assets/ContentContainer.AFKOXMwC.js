@@ -1,0 +1,1 @@
+import{_ as n}from"./index.DyFves6V.js";import{R as t,ae as o,V as a}from"./vue-core.C1nElU--.js";const s={name:"ContentContainer"},r={class:"content-container"};function c(e,_,d,i,p,f){return a(),t("div",r,[o(e.$slots,"default",{},void 0)])}const u=n(s,[["render",c],["__scopeId","data-v-a73b3f80"]]);export{u as C};
