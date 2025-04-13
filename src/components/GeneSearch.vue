@@ -11,17 +11,25 @@
               <v-icon class="search-icon ml-3 mr-2">mdi-magnify</v-icon>
               <v-autocomplete
                 v-model="searchQuery"
-                :items="symbols"
+                :items="filteredItems"
                 label="Search genes"
                 :loading="isLoading"
                 variant="plain"
                 hide-details
                 @keyup.enter="search"
+                @update:search="onTextInput"
                 id="gene-search-input"
-                aria-label="Search for a gene by symbol"
+                aria-label="Search for a gene by symbol or HGNC ID"
                 density="comfortable"
                 class="google-search-input"
                 style="width: 100%;"
+                clearable
+                item-title="title"
+                item-value="value"
+                auto-select-first
+                no-filter
+                autocomplete="off"
+                :menu-props="{ maxHeight: '300px' }"
               ></v-autocomplete>
             </div>
             
@@ -43,7 +51,7 @@
         
         <!-- Hint text below search box -->
         <div class="mt-1 text-caption hint-text">
-          Enter a gene symbol (e.g. PKD1)
+          Search by gene symbol or HGNC ID (e.g. PKD1, HGNC:9008, or just 9008)
         </div>
       </div>
 
@@ -51,60 +59,155 @@
       <v-alert v-if="error" type="error" dismissible>
         {{ error.message }}
       </v-alert>
-
-      <!-- Search Button (replaced by the one in the search bar) -->
     </v-card-text>
   </v-card>
 </template>
 
 <script>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
-import { fetchSymbolsIndex } from '@/api/geneApi.js'; // Use the new API module
+import { fetchGeneSearchIndices } from '@/api/geneApi.js';
 
 export default {
   name: 'GeneSearch',
   setup() {
     const searchQuery = ref('');
     const router = useRouter();
-    const symbols = ref([]);
+    const autocompleteItems = ref([]);
     const isLoading = ref(false);
     const error = ref(null);
+    const hgncToSymbolMap = ref({});
 
-    const loadSymbols = async () => {
+    // Store the current filter text for manual filtering
+    const filterText = ref('');
+    
+    // Handle manual text input for filtering
+    const onTextInput = (text) => {
+      filterText.value = text;
+    };
+    
+    // Filtered items based on current search query - limited to 10 suggestions
+    const filteredItems = computed(() => {
+      if (!filterText.value) return [];
+      
+      const query = filterText.value.toLowerCase();
+      return autocompleteItems.value.filter(item => {
+        // Match against symbol
+        if (item.symbol && item.symbol.toLowerCase().includes(query)) return true;
+        
+        // Match against HGNC ID
+        if (item.hgncId) {
+          const hgncIdStr = String(item.hgncId);
+          if (query.includes(hgncIdStr)) return true;
+          if (hgncIdStr.includes(query)) return true;
+        }
+        
+        // Match against display string
+        if (item.display && item.display.toLowerCase().includes(query)) return true;
+        
+        return false;
+      }).slice(0, 10); // Limited to 10 suggestions for better UX
+    });
+
+    // Load both symbol and HGNC indices
+    const loadIndices = async () => {
       isLoading.value = true;
       try {
-        symbols.value = await fetchSymbolsIndex();
+        const result = await fetchGeneSearchIndices();
+        
+        hgncToSymbolMap.value = result.hgncToSymbolMap || {};
+        
+        // Create properly validated items
+        autocompleteItems.value = result.combinedItems.map(item => ({
+          symbol: item.symbol || '',
+          hgncId: item.hgncId || '',
+          display: item.display || item.symbol || '',
+          value: item.symbol || '',
+          title: item.display || item.symbol || ''
+        }));
+        
+        console.info(`Loaded ${result.symbolsIndex.length} gene symbols and ${result.hgncIndex.length} HGNC IDs for search`);
       } catch (err) {
+        console.error('Error loading gene search indices:', err);
         error.value = err;
       } finally {
         isLoading.value = false;
       }
     };
 
-    onMounted(loadSymbols);
+    // Extract gene symbol from user input
+    const getGeneSymbolFromInput = (input) => {
+      if (!input) return null;
+      
+      // Handle case when v-autocomplete returns an object
+      if (typeof input === 'object' && input !== null) {
+        // If it's an autocomplete item object, extract the symbol directly
+        if (input.symbol) {
+          return input.symbol;
+        }
+        // If for some reason we have an object without a symbol, try to stringify it
+        input = String(input);
+      }
+      
+      const query = String(input).trim();
+      
+      // Check if it's a display format like "PKD1 (HGNC:9008)"
+      const displayMatch = query.match(/^([A-Za-z0-9]+)\s+\(HGNC:[0-9]+\)$/);
+      if (displayMatch) {
+        return displayMatch[1]; // Return the symbol part
+      }
+      
+      // Check if it's an HGNC ID with prefix
+      if (query.startsWith('HGNC:')) {
+        const hgncId = query.substring(5);
+        return hgncToSymbolMap.value[hgncId] || query;
+      }
+      
+      // Check if it's a numeric HGNC ID
+      if (/^\d+$/.test(query)) {
+        return hgncToSymbolMap.value[query] || query;
+      }
+      
+      // Otherwise, use as-is (likely a gene symbol)
+      return query;
+    };
 
+    // Perform search
     const search = () => {
-      if (searchQuery.value) {
-        router.push({ path: `/symbols/${searchQuery.value}` });
+      if (!searchQuery.value) return;
+      
+      try {
+        const symbol = getGeneSymbolFromInput(searchQuery.value);
+        if (symbol) {
+          console.log(`Navigating to gene: ${symbol}`);
+          router.push({ path: `/symbols/${symbol}` });
+        }
+      } catch (err) {
+        console.error('Error performing search:', err);
+        error.value = new Error('An error occurred while searching');
       }
     };
+
+    // Initialize on component mount
+    onMounted(loadIndices);
 
     return {
       searchQuery,
       search,
-      symbols,
+      autocompleteItems,
+      filteredItems,
       isLoading,
       error,
+      onTextInput
     };
-  },
+  }
 };
 </script>
 
 <style scoped>
 .search-card {
-  max-width: 900px; /* Adjust this value as needed */
-  margin: auto; /* Centers the input if it's smaller than the container */
+  max-width: 900px;
+  margin: auto;
   padding: 16px;
 }
 
@@ -162,39 +265,6 @@ export default {
 
 .v-theme--dark .search-icon {
   color: rgba(255, 255, 255, 0.7);
-}
-
-.full-width {
-  width: 100%;
-  flex: 1 1 auto;
-}
-
-.full-width .v-field {
-  width: 100%;
-}
-
-/* Force autocomplete to use available width */
-.v-autocomplete.full-width {
-  width: 100% !important;
-  min-width: 100%;
-}
-
-.v-autocomplete.full-width .v-field__input {
-  width: 100% !important;
-}
-
-.v-autocomplete.full-width .v-field__field {
-  width: 100% !important;
-}
-
-.vertical-divider {
-  border-left: 1px solid #dfe1e5;
-  height: 24px;
-}
-
-.v-theme--dark .vertical-divider {
-  border-left-color: #666;
-  border-left-width: 1.5px;
 }
 
 /* Hint text styling with theme support */

@@ -1,5 +1,6 @@
 {
-  "symbolsIndexUrl": "https://raw.githubusercontent.com/halbritter-lab/nephro_candidate_score/refs/heads/main/gene_score/predictions/results/json/symbols_index.json",
+  "symbolsIndexUrl": "https://raw.githubusercontent.com/halbritter-lab/nephro_candidate_score/main/gene_score/predictions/results/json/symbols_index.json",
+  "hgncIndexUrl": "https://raw.githubusercontent.com/halbritter-lab/nephro_candidate_score/main/gene_score/predictions/results/json/hgnc_index.json",
   "geneDetailsBaseUrl": "https://raw.githubusercontent.com/halbritter-lab/nephro_candidate_score/refs/heads/main/gene_score/predictions/results/json/symbols/",
   "geneInfoSummaryUrl": "https://raw.githubusercontent.com/halbritter-lab/nephro_candidate_score/main/gene_score/predictions/results/json/gene_info_summary.json"
 }

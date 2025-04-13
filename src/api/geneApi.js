@@ -16,6 +16,87 @@ export async function fetchSymbolsIndex() {
 }
 
 /**
+ * Fetch the index of HGNC IDs.
+ * @returns {Promise<Array>} The HGNC ID index.
+ */
+export async function fetchHgncIndex() {
+  return retryWithBackoff(async () => {
+    const response = await axios.get(geneApiConfig.hgncIndexUrl);
+    return response.data;
+  });
+}
+
+/**
+ * Fetch both symbol and HGNC indices for gene search.
+ * This function retrieves both indices in parallel and returns them together.
+ * @param {Object} [options={}] - Options for fetching indices.
+ * @param {boolean} [options.skipCache=false] - If true, bypasses cache.
+ * @returns {Promise<Object>} Object containing both symbol and HGNC indices.
+ */
+export async function fetchGeneSearchIndices(options = {}) {
+  const { skipCache = false } = options;
+  
+  // Initialize the API cache
+  const apiCache = useApiCache();
+  
+  // Create cache key
+  const cacheKey = apiCache.generateCacheKey('gene-search-indices');
+  
+  // Check cache first if not explicitly skipping
+  if (!skipCache) {
+    const cachedResult = apiCache.getCachedItem(cacheKey);
+    if (cachedResult) {
+      return cachedResult.data;
+    }
+  }
+  
+  try {
+    // Fetch both indices in parallel
+    const [symbolsIndex, hgncIndex] = await Promise.all([
+      fetchSymbolsIndex(),
+      fetchHgncIndex()
+    ]);
+    
+    // Create a mapping from HGNC ID to symbol
+    const hgncToSymbolMap = {};
+    hgncIndex.forEach((hgncItem, index) => {
+      // Assuming the indices are aligned (same order)
+      if (index < symbolsIndex.length) {
+        const symbol = symbolsIndex[index];
+        hgncToSymbolMap[hgncItem] = symbol;
+      }
+    });
+    
+    // Create the combined list for autocomplete
+    const combinedItems = symbolsIndex.map((symbol, index) => {
+      const hgncId = index < hgncIndex.length ? hgncIndex[index] : null;
+      return {
+        symbol,
+        hgncId,
+        display: hgncId ? `${symbol} (HGNC:${hgncId})` : symbol
+      };
+    });
+    
+    const result = {
+      symbolsIndex,
+      hgncIndex,
+      hgncToSymbolMap,
+      combinedItems
+    };
+    
+    // Cache the result
+    if (!skipCache) {
+      apiCache.setCachedItem(cacheKey, result, 24 * 60 * 60 * 1000); // 24 hours
+    }
+    
+    return result;
+  } catch (error) {
+    console.error('Error fetching gene search indices:', error);
+    throw error;
+  }
+}
+
+/**
  * Fetch detailed gene data for a given symbol.
  * @param {string} symbol - The gene symbol.
  * @param {Object} [options={}] - Options for fetching gene details.
