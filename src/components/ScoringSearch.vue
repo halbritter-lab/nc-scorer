@@ -122,44 +122,62 @@
       </v-card-text>
       <v-card-actions>
         <div class="example-text">
-          <!-- Previous Examples -->
-          <p>
+          <div class="example-grid">
+            <!-- Examples heading -->
+            <div class="example-heading mb-1">Examples to try:</div>
+
+            <!-- VCF format example -->
             <router-link
               :to="exampleLinkOld1"
               class="example-link"
               aria-label="Example with VCF format 1-55051215-G-GA, Inherited dominant pattern, segregation 0.95"
             >
-              Example: "1-55051215-G-GA", Inherited dominant, Segregation 0.95
+              <v-icon size="x-small" class="mr-1" color="primary">mdi-dna</v-icon>
+              <div class="example-content">
+                <div class="example-title">1-55051215-G-GA</div>
+                <div class="example-details">Inherited dominant, Segregation: 0.95</div>
+              </div>
             </router-link>
-          </p>
-          <p>
-            <router-link
-              :to="exampleLinkOld2"
-              class="example-link"
-              aria-label="Example with HGVS format ENST00000302118:c.524-1063_524-1062insA, Denovo pattern"
-            >
-              Example: "ENST00000302118:c.524-1063_524-1062insA", Denovo (no segregation)
-            </router-link>
-          </p>
-          <!-- New Coding Variant Examples -->
-          <p>
+
+            <!-- NM format, PKD1 example -->
             <router-link
               :to="exampleLinkPKD1"
               class="example-link"
               aria-label="Example with PKD1 gene variant NM_001009944.3:c.11935C>T, Inherited dominant, segregation 0.95"
             >
-              Example: NM_001009944.3:c.11935C>T in PKD1, Inherited dominant, Segregation 0.95
+              <v-icon size="x-small" class="mr-1" color="primary">mdi-dna</v-icon>
+              <div class="example-content">
+                <div class="example-title">NM_001009944.3:c.11935C>T (PKD1)</div>
+                <div class="example-details">Inherited dominant, Segregation: 0.95</div>
+              </div>
             </router-link>
-          </p>
-          <p>
+            
+            <!-- NM format, COL4A5 example -->
             <router-link
               :to="exampleLinkCOL4A5"
               class="example-link"
               aria-label="Example with COL4A5 gene variant NM_033380.3:c.1871G>A, Denovo pattern"
             >
-              Example: NM_033380.3:c.1871G>A in COL4A5, Denovo (no segregation)
+              <v-icon size="x-small" class="mr-1" color="primary">mdi-dna</v-icon>
+              <div class="example-content">
+                <div class="example-title">NM_033380.3:c.1871G>A (COL4A5)</div>
+                <div class="example-details">Denovo, No segregation</div>
+              </div>
             </router-link>
-          </p>
+
+            <!-- CEP290 compound heterozygous example -->
+            <router-link
+              :to="exampleLinkCEP290"
+              class="example-link example-highlight"
+              aria-label="Compound heterozygous example with CEP290 gene variants using genomic coordinates"
+            >
+              <v-icon size="x-small" class="mr-1" color="secondary">mdi-dna</v-icon>
+              <div class="example-content">
+                <div class="example-title">12-88101183-A-G (CEP290)</div>
+                <div class="example-details">Compound heterozygous, Segregation: 1.0</div>
+              </div>
+            </router-link>
+          </div>
         </div>
       </v-card-actions>
       <v-alert v-if="error" type="error" dismissible>
@@ -228,6 +246,12 @@ export default {
     const showSecondVariantInput = computed(() => {
       return requiresSecondVariant.includes(inheritance.value);
     });
+    
+    // Auto-show second variant input if variantInput2 has a value (for example links)
+    if (variantInput2.value) {
+      // Force a pattern that shows the second variant input
+      inheritance.value = 'Compound heterozygous (confirmed)';
+    }
 
     /**
      * Computed router-link for the first (previous) example.
@@ -281,6 +305,23 @@ export default {
       params: {
         variantInput: 'NM_033380.3:c.1871G>A',
         inheritance: 'Denovo',
+        segregation: '1',
+      },
+    }));
+    
+    /**
+     * Computed router-link for a CEP290 compound heterozygous example.
+     * These are real-world variants associated with nephronophthisis and Senior-Loken syndrome.
+     * Using genomic positions (GRCh37/hg19).
+     *
+     * @return {object} The route object for the CEP290 compound heterozygous example.
+     */
+    const exampleLinkCEP290 = computed(() => ({
+      name: 'ScoringView',
+      params: {
+        variantInput: '12-88101183-A-G',  // Deep intronic variant (common in CEP290, c.2991+1655A>G)
+        variantInput2: '12-88077263-G-T', // Second variant on other allele (c.5668G>T)
+        inheritance: 'Compound heterozygous (confirmed)',
         segregation: '1',
       },
     }));
@@ -358,6 +399,7 @@ export default {
       exampleLinkOld2,
       exampleLinkPKD1,
       exampleLinkCOL4A5,
+      exampleLinkCEP290,
       variantRules,
       segregationRules,
     };
@@ -519,18 +561,79 @@ export default {
 }
 
 .example-text {
-  margin-top: 16px;
+  margin-top: 8px;
   font-size: 0.9rem;
   color: #666;
+  width: 100%;
 }
 
 .v-theme--dark .example-text {
   color: rgba(255, 255, 255, 0.6);
 }
 
+.example-heading {
+  font-weight: 500;
+  color: #444;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.v-theme--dark .example-heading {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.example-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
 .example-link {
-  padding: 6px;
-  display: inline-block; /* Ensures the padding is applied effectively */
-  margin: 2px 0;
+  padding: 4px 6px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: start;
+  font-size: 0.85rem;
+  transition: background-color 0.2s ease;
+  text-decoration: none;
+  margin-bottom: 2px;
+}
+
+.example-link:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  text-decoration: none;
+}
+
+.v-theme--dark .example-link:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.example-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.example-title {
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.example-details {
+  font-size: 0.75rem;
+  color: rgba(0, 0, 0, 0.6);
+  line-height: 1.2;
+}
+
+.v-theme--dark .example-details {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.example-link:hover .example-title {
+  text-decoration: underline;
+}
+
+.example-highlight {
+  border-left: 2px solid var(--v-theme-secondary);
+  background-color: rgba(var(--v-theme-secondary), 0.05);
 }
 </style>
