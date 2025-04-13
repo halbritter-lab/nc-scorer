@@ -22,7 +22,10 @@ Here's a breakdown of the main pages and the typical user flow:
     *   `GeneCard`: Uses the gene symbol from `VariantCard` to fetch gene-specific data and calculate a gene score (`ngs`).
     *   `InheritanceCard`: Calculates an inheritance-based score using the URL parameters.
     *   `CombinedScoreCard`: Shows the individual gene, variant, and inheritance scores and calculates/displays the final combined NCS score.
-*   **Workflow:** Users typically arrive here from the "Scoring Search." The page automatically fetches necessary data, calculates component scores, and presents the detailed breakdown and final score.
+*   **Additional Features:**
+    *   **Download Results:** A button to export all scoring data and variant/gene details as either CSV or Excel format.
+    *   **Find Collaborators:** Access to research collaboration platforms to connect with other researchers studying the same gene. This feature becomes available once gene data is loaded.
+*   **Workflow:** Users typically arrive here from the "Scoring Search." The page automatically fetches necessary data, calculates component scores, and presents the detailed breakdown and final score. After reviewing the results, users can download the data or find potential research collaborators.
 
 ### 3. Variant View (`/variant/:variantInput`)
 

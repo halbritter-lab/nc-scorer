@@ -33,34 +33,42 @@
             :inheritanceScore="inheritanceScore"
           />
           
-          <!-- Download menu for exporting results -->
-          <v-menu>
-            <template v-slot:activator="{ props }">
-              <v-btn
-                color="primary"
-                prepend-icon="mdi-download"
-                class="mt-2 align-self-end"
-                v-bind="props"
-                :disabled="!combinedScoreAvailable"
-                size="small"
-                variant="tonal"
-              >
-                Download Results
-              </v-btn>
-            </template>
-            <v-list density="compact">
-              <v-list-item
-                @click="downloadResults('csv')"
-                prepend-icon="mdi-file-delimited"
-                title="Download as CSV"
-              />
-              <v-list-item
-                @click="downloadResults('excel')"
-                prepend-icon="mdi-file-excel"
-                title="Download as Excel"
-              />
-            </v-list>
-          </v-menu>
+          <!-- Action buttons group -->
+          <div class="mt-2 align-self-end d-flex gap-2">
+            <!-- Download menu for exporting results -->
+            <v-menu>
+              <template v-slot:activator="{ props }">
+                <v-btn
+                  color="primary"
+                  prepend-icon="mdi-download"
+                  v-bind="props"
+                  :disabled="!combinedScoreAvailable"
+                  size="small"
+                  variant="tonal"
+                >
+                  Download Results
+                </v-btn>
+              </template>
+              <v-list density="compact">
+                <v-list-item
+                  @click="downloadResults('csv')"
+                  prepend-icon="mdi-file-delimited"
+                  title="Download as CSV"
+                />
+                <v-list-item
+                  @click="downloadResults('excel')"
+                  prepend-icon="mdi-file-excel"
+                  title="Download as Excel"
+                />
+              </v-list>
+            </v-menu>
+            
+            <!-- Collaboration links -->
+            <CollaborationLinks 
+              :gene-symbol="geneSymbol" 
+              :variant-input="variantInput" 
+            />
+          </div>
         </div>
       </v-col>
     </v-row>
@@ -106,6 +114,7 @@ import GeneCard from '@/components/GeneCard.vue';
 import InheritanceCard from '@/components/InheritanceCard.vue';
 import CombinedScoreCard from '@/components/CombinedScoreCard.vue';
 import ContentContainer from '@/components/ContentContainer.vue';
+import CollaborationLinks from '@/components/CollaborationLinks.vue';
 import useRetryState from '@/composables/useRetryState.js';
 import { requiresSecondVariant } from '@/config/inheritanceConfig';
 import { scoreInterpretationConfig } from '@/config/scoreInterpretationConfig';
@@ -119,6 +128,7 @@ export default {
     InheritanceCard,
     CombinedScoreCard,
     ContentContainer,
+    CollaborationLinks,
   },
   setup() {
     const route = useRoute();
