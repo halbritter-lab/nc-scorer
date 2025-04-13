@@ -3,78 +3,119 @@
   <v-container class="pa-4">
     <v-card class="scoring-search-card">
       <v-card-text>
-        <!-- Arrange inputs horizontally in a single row -->
-        <v-row>
-          <!-- Input 1: Variant (wider) -->
-          <v-col cols="12" md="6">
-            <v-text-field
-              v-model="variantInput"
-              label="1a. Enter Variant (VCF or HGVS)"
-              outlined
-              @keyup.enter="searchScoring"
-              id="scoring-variant-input"
-              aria-label="Enter primary variant in VCF or HGVS format"
-              density="comfortable"
-              hint="Format examples: '1-55051215-G-GA' or 'NM_001009944.3:c.11935C>T'"
-              persistent-hint
-            ></v-text-field>
-            <!-- Input 1b: Second Variant for Compound Heterozygous -->
-            <v-text-field
-              v-if="showSecondVariantInput"
-              v-model="variantInput2"
-              label="1b. Second Variant (for Compound Het)"
-              outlined
-              @keyup.enter="searchScoring"
-              class="mt-2"
-              id="scoring-variant-input-2"
-              aria-label="Enter second variant for compound heterozygous analysis"
-              density="comfortable"
-              hint="Enter the second variant for compound heterozygous inheritance"
-              persistent-hint
-            ></v-text-field>
-          </v-col>
-          <!-- Input 2: Inheritance Options -->
-          <v-col cols="12" md="3">
-            <v-select
-              v-model="inheritance"
-              :items="inheritanceOptions"
-              label="2. Inheritance Pattern"
-              outlined
-              id="inheritance-pattern-select"
-              aria-label="Select inheritance pattern"
-              density="comfortable"
-              menu-props="{ maxHeight: '300px' }"
-            ></v-select>
-          </v-col>
-          <!-- Input 3: Segregation Probability -->
-          <v-col cols="12" md="3">
-            <v-text-field
-              v-model="segregation"
-              label="3. Segregation Probability"
-              type="number"
-              min="0"
-              max="1"
-              step="0.01"
-              outlined
-              :disabled="!showSegregationInput"
-              id="segregation-probability-input"
-              aria-label="Enter segregation probability value between 0 and 1"
-              density="comfortable"
-              hint="Value between 0 and 1, representing segregation probability"
-              persistent-hint
-            ></v-text-field>
-          </v-col>
-        </v-row>
-        <v-btn
-          color="primary"
-          @click="searchScoring"
-          class="mx-auto d-block mt-4"
-          min-width="120px"
-          min-height="44px"
-          aria-label="Calculate variant scores"
-        >
-          Search
-        </v-btn>
+        <!-- Google-like search container -->
+        <div class="search-container mx-auto mb-4">
+          <!-- Main search area with integrated components on a single line -->
+          <div class="google-search-wrapper">
+            <!-- Main inputs section with search button -->
+            <div class="search-inputs-row d-flex align-center" @keyup.enter="searchScoring">
+              <!-- Primary input with search icon -->
+              <div class="search-input-area d-flex align-center" style="width: calc(100% - 56px);">
+                <v-icon class="search-icon ml-3 mr-2">mdi-magnify</v-icon>
+                <v-text-field
+                  v-model="variantInput"
+                  label="Enter Variant (VCF or HGVS)"
+                  variant="plain"
+                  hide-details
+                  @keyup.enter="searchScoring"
+                  id="scoring-variant-input"
+                  aria-label="Enter primary variant in VCF or HGVS format"
+                  class="google-search-input"
+                  style="width: 100%;"
+                  density="comfortable"
+                ></v-text-field>
+              </div>
+              
+              <!-- Simple search button -->
+              <div class="search-button-area d-flex align-center px-2" style="width: 56px;">
+                <v-btn
+                  color="primary"
+                  variant="text"
+                  icon
+                  @click="searchScoring"
+                  aria-label="Search"
+                  size="large"
+                >
+                  <v-icon>mdi-arrow-right</v-icon>
+                </v-btn>
+              </div>
+            </div>
+            
+            <!-- Second variant row (conditionally shown) -->
+            <div v-if="showSecondVariantInput" class="search-inputs-row second-variant-row d-flex align-center border-top pt-2" @keyup.enter="searchScoring">
+              <div class="search-input-area d-flex align-center flex-grow-1">
+                <v-icon class="option-icon ml-3 mr-2">mdi-plus-circle-outline</v-icon>
+                <v-text-field
+                  v-model="variantInput2"
+                  label="Second Variant (for Compound Heterozygous)"
+                  variant="plain"
+                  hide-details
+                  @keyup.enter="searchScoring"
+                  id="scoring-variant-input-2"
+                  aria-label="Enter second variant for compound heterozygous analysis"
+                  class="google-search-input"
+                  density="comfortable"
+                ></v-text-field>
+              </div>
+            </div>
+            
+            <!-- Options row with search button on right -->
+            <div class="search-inputs-row options-row d-flex align-center border-top pt-2" @keyup.enter="searchScoring">
+              <!-- Equal width inputs layout -->
+              <div class="filter-row d-flex">
+                <!-- Left side: Inheritance -->
+                <div class="filter-cell">
+                  <div class="d-flex align-center pl-3 pr-2">
+                    <v-icon class="option-icon mr-2">mdi-dna</v-icon>
+                    <v-select
+                      v-model="inheritance"
+                      :items="inheritanceOptions"
+                      label="Inheritance"
+                      variant="plain"
+                      hide-details
+                      density="comfortable"
+                      class="option-select"
+                      id="inheritance-pattern-select"
+                      aria-label="Select inheritance pattern"
+                      @keydown.enter="searchScoring"
+                    ></v-select>
+                  </div>
+                </div>
+                
+                <!-- Right side: Segregation -->
+                <div class="filter-cell vertical-divider">
+                  <div class="d-flex align-center pl-3 pr-2">
+                    <v-icon class="option-icon mr-2" :class="{'text-disabled': !showSegregationInput}">mdi-percent</v-icon>
+                    <v-text-field
+                      v-model="segregation"
+                      label="Segregation"
+                      type="number"
+                      min="0"
+                      max="1"
+                      step="0.01"
+                      variant="plain"
+                      hide-details
+                      density="comfortable"
+                      class="option-input"
+                      id="segregation-probability-input"
+                      aria-label="Enter segregation probability value between 0 and 1"
+                      @keyup.enter="searchScoring"
+                      :disabled="!showSegregationInput"
+                    ></v-text-field>
+                  </div>
+                </div>
+              </div>
+              
+
+            </div>
+          </div>
+          
+          <!-- Hint text below search box -->
+          <div class="mt-1 text-caption hint-text">
+            Format examples: '1-55051215-G-GA' or 'NM_001009944.3:c.11935C>T'
+          </div>
+        </div>
+        <!-- Main search button (below) has been replaced by the one in the search bar -->
       </v-card-text>
       <v-card-actions>
         <div class="example-text">
@@ -289,10 +330,160 @@ export default {
   padding: 16px;
 }
 
+.search-container {
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.google-search-wrapper {
+  border: 1px solid #dfe1e5;
+  border-radius: 24px;
+  padding: 8px 0;
+  overflow: hidden;
+  background: white;
+}
+
+/* Dark mode adjustments */
+.v-theme--dark .google-search-wrapper {
+  background: #1e1e1e;
+  border-color: #666;
+  border-width: 1.5px;
+}
+
+.google-search-wrapper:hover {
+  box-shadow: 0 1px 6px rgba(32, 33, 36, 0.28);
+  border-color: rgba(223, 225, 229, 0);
+}
+
+.v-theme--dark .google-search-wrapper:hover {
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.4);
+  border-color: rgba(50, 50, 50, 0.8);
+}
+
+.search-inputs-row {
+  min-height: 44px;
+}
+
+.google-search-input {
+  border: none !important;
+  font-size: 16px;
+}
+
+/* Dark mode input text */
+.v-theme--dark .google-search-input {
+  color: rgba(255, 255, 255, 0.87) !important;
+}
+
+.v-theme--dark .google-search-input .v-field__input {
+  color: rgba(255, 255, 255, 0.87) !important;
+}
+
+.search-icon {
+  color: #9aa0a6;
+}
+
+.v-theme--dark .search-icon {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.option-icon {
+  color: #5f6368;
+  font-size: 18px;
+}
+
+.v-theme--dark .option-icon {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.text-disabled {
+  opacity: 0.5;
+}
+
+.option-select, .option-input {
+  font-size: 14px;
+}
+
+.vertical-divider {
+  border-left: 1px solid #dfe1e5;
+  height: 24px;
+}
+
+.v-theme--dark .vertical-divider {
+  border-left-color: #666;
+  border-left-width: 1.5px;
+}
+
+.border-top {
+  border-top: 1px solid #dfe1e5;
+}
+
+.v-theme--dark .border-top {
+  border-top-color: #666;
+  border-top-width: 1.5px;
+}
+
+.second-variant-row,
+.options-row {
+  margin-top: 2px;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+}
+
+/* Fixed width containers for form fields */
+.filter-row {
+  display: flex;
+  width: 100%;
+}
+
+.filter-cell {
+  width: 50%;
+  max-width: 50%;
+}
+
+.filter-cell .v-input {
+  width: 100%;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.full-width .v-field {
+  width: 100%;
+}
+
+/* Make search box more attractive in both themes */
+.google-search-wrapper .search-inputs-row:first-child {
+  padding-top: 4px;
+}
+
+.google-search-wrapper .search-inputs-row:last-child {
+  padding-bottom: 4px;
+}
+
+/* Make the divider lines only appear for each middle element */
+.vertical-divider:first-of-type {
+  border-left: none;
+}
+
+/* Hint text styling with theme support */
+.hint-text {
+  color: #666;
+}
+
+.v-theme--dark .hint-text {
+  color: rgba(255, 255, 255, 0.6);
+}
+
 .example-text {
   margin-top: 16px;
   font-size: 0.9rem;
   color: #666;
+}
+
+.v-theme--dark .example-text {
+  color: rgba(255, 255, 255, 0.6);
 }
 
 .example-link {
