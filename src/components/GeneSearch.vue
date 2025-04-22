@@ -65,6 +65,7 @@
 
 <script>
 import { ref, onMounted, computed } from 'vue';
+import { logService } from '@/services/logService';
 import { useRouter } from 'vue-router';
 import { fetchGeneSearchIndices } from '@/api/geneApi.js';
 
@@ -126,9 +127,9 @@ export default {
           title: item.display || item.symbol || ''
         }));
         
-        console.info(`Loaded ${result.symbolsIndex.length} gene symbols and ${result.hgncIndex.length} HGNC IDs for search`);
+        logService.info(`Loaded ${result.symbolsIndex.length} gene symbols and ${result.hgncIndex.length} HGNC IDs for search`);
       } catch (err) {
-        console.error('Error loading gene search indices:', err);
+        logService.error('Error loading gene search indices:', err);
         error.value = err;
       } finally {
         isLoading.value = false;
@@ -179,11 +180,11 @@ export default {
       try {
         const symbol = getGeneSymbolFromInput(searchQuery.value);
         if (symbol) {
-          console.log(`Navigating to gene: ${symbol}`);
+          logService.info(`Navigating to gene: ${symbol}`);
           router.push({ path: `/symbols/${symbol}` });
         }
       } catch (err) {
-        console.error('Error performing search:', err);
+        logService.error('Error performing search:', err);
         error.value = new Error('An error occurred while searching');
       }
     };

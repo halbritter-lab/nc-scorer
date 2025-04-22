@@ -4,9 +4,10 @@
   <v-footer app padless class="elevation-3">
     <div class="footer-content-wrapper">
       <v-row justify="center" no-gutters align="center">
-        <!-- Combined Disclaimer Button -->
-        <v-col cols="auto" class="disclaimer-info mr-auto" v-if="formattedAcknowledgmentDate">
-          <v-tooltip location="top">
+        <!-- Left side controls group -->
+        <v-col cols="auto" class="footer-controls-left mr-auto">
+          <!-- Disclaimer Button -->
+          <v-tooltip location="top" v-if="formattedAcknowledgmentDate">
             <template v-slot:activator="{ props }">
               <v-btn
                 v-bind="props"
@@ -16,7 +17,7 @@
                 :color="formattedAcknowledgmentDate ? 'success' : 'grey-darken-1'"
                 @click="showDisclaimer"
                 aria-label="View disclaimer information"
-                class="pa-1"
+                class="pa-1 mr-2"
               >
                 <v-icon
                   start
@@ -32,6 +33,30 @@
                  ? `Research disclaimer acknowledged: ${formattedAcknowledgmentDate}. Click to view again.`
                  : 'View the research disclaimer.' }}
             </span>
+          </v-tooltip>
+
+          <!-- Log Viewer Toggle Button -->
+          <v-tooltip location="top">
+            <template v-slot:activator="{ props }">
+              <v-btn
+                v-bind="props"
+                variant="text"
+                density="compact"
+                size="small"
+                :color="showLogViewer ? 'primary' : 'grey-darken-1'"
+                @click="toggleLogViewer"
+                aria-label="Show/Hide Application Logs"
+                class="pa-1"
+              >
+                <v-icon
+                  start
+                  icon="mdi-text-box-outline"
+                  class="mr-1"
+                ></v-icon>
+                <span class="text-caption">Logs</span>
+              </v-btn>
+            </template>
+            <span>{{ showLogViewer ? 'Hide application logs' : 'Show application logs' }}</span>
           </v-tooltip>
         </v-col>
         <!-- Spacer to push other icons right -->
@@ -99,9 +124,10 @@
 </template>
 
 <script>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import footerConfig from '../config/footerConfig.json';
 import { useDisclaimer } from '@/composables/useDisclaimer';
+import { useUiStore } from '@/stores/uiStore';
 
 export default {
   name: 'FooterBar',
@@ -111,6 +137,11 @@ export default {
 
     const { getFormattedAcknowledgmentDate, saveDisclaimerAcknowledgment } = useDisclaimer();
     const formattedAcknowledgmentDate = ref(getFormattedAcknowledgmentDate());
+    
+    // UI store integration for log viewer
+    const uiStore = useUiStore();
+    const showLogViewer = computed(() => uiStore.showLogViewer);
+    const toggleLogViewer = () => uiStore.toggleLogViewer();
 
     const showDisclaimer = () => {
       disclaimerDialogVisible.value = true;
@@ -132,7 +163,10 @@ export default {
       disclaimerDialogVisible,
       formattedAcknowledgmentDate,
       showDisclaimer,
-      acknowledgeAgain
+      acknowledgeAgain,
+      // Log viewer
+      showLogViewer,
+      toggleLogViewer
     };
   },
 };
@@ -167,9 +201,10 @@ export default {
   font-size: 24px;
 }
 
-/* Original disclaimer-info class can be simplified or removed if not needed elsewhere */
-.disclaimer-info {
-  /* Styles here apply to the v-col wrapper */
+/* Left controls group styling */
+.footer-controls-left {
+  display: flex;
+  align-items: center;
 }
 
 </style>

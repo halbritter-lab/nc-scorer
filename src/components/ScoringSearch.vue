@@ -207,13 +207,7 @@ export default {
     const inheritance = ref(route.query.inheritance || route.params.inheritance || 'Unknown');
     const segregation = ref(route.query.segregation || route.params.segregation || '1');
     
-    // Log for debugging
-    console.log('ScoringSearch - Initializing with parameters:', { 
-      variant: variantInput.value, 
-      variant2: variantInput2.value,
-      inheritance: inheritance.value,
-      segregation: segregation.value
-    });
+    // No debug logging to prevent circular references
     
     // Validation rules
     const variantRules = [

@@ -117,7 +117,8 @@
 </template>
 
 <script>
-import { ref, computed, reactive, onMounted } from 'vue';
+import { ref, onMounted, computed, reactive } from 'vue';
+import { logService } from '@/services/logService';
 import { fetchAllGeneScores } from '@/api/geneApi';
 import ContentContainer from '@/components/ContentContainer.vue';
 
@@ -162,12 +163,12 @@ export default {
         
         if (response.data) {
           allGenes.value = response.data;
-          console.log(`Loaded ${allGenes.value.length} genes from ${response.source?.fromCache ? 'cache' : 'API'}`);
+          logService.info(`Loaded ${allGenes.value.length} genes from ${response.source?.fromCache ? 'cache' : 'API'}`);
         } else {
           throw new Error('No data received');
         }
       } catch (error) {
-        console.error('Failed to fetch gene scores:', error);
+        logService.error('Failed to fetch gene scores:', error);
         loadingState.error = true;
         loadingState.errorMessage = error.message || 'Unknown error';
       } finally {
@@ -287,7 +288,7 @@ export default {
         const excelBlob = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
         triggerDownload(new Blob([excelBlob], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), filename);
       } catch (error) {
-        console.error('Error generating Excel file:', error);
+        logService.error('Error generating Excel file:', error);
         alert('Failed to generate Excel file. CSV download will be attempted instead.');
         
         // Fallback to CSV download
@@ -304,7 +305,7 @@ export default {
       const genesToDownload = filteredGenes.value;
       
       if (genesToDownload.length === 0) {
-        console.warn('No data to download');
+        logService.warn('No data to download');
         return;
       }
       

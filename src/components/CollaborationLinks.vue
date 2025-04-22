@@ -77,6 +77,7 @@
 
 <script>
 import { computed, watch } from 'vue';
+import { logService } from '@/services/logService';
 import { collaborationPlatformsConfig } from '@/config/collaborationPlatformsConfig';
 
 export default {
@@ -107,13 +108,13 @@ export default {
     // Reactive ref to track if button should be active
     const isActive = computed(() => {
       // Debug the value to help diagnose issues
-      console.log('CollaborationLinks - geneSymbol computed check:', props.geneSymbol);
+      logService.debug('CollaborationLinks - geneSymbol computed check:', props.geneSymbol);
       return !!props.geneSymbol && typeof props.geneSymbol === 'string' && props.geneSymbol.trim().length > 0;
     });
     
     // Watch for changes to geneSymbol prop for debugging
     watch(() => props.geneSymbol, (newValue) => {
-      console.log('CollaborationLinks - geneSymbol changed:', newValue);
+      logService.debug('CollaborationLinks - geneSymbol changed:', newValue);
     });
     
     /**
@@ -141,7 +142,7 @@ export default {
         // Default to the basic URL if no special handling is needed
         return platform.url;
       } catch (error) {
-        console.error('Error generating platform URL:', error);
+        logService.error('Error generating platform URL:', error);
         return platform.url;
       }
     };

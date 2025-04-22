@@ -304,6 +304,7 @@
 
 <script>
 import { ref, onMounted, computed, inject, watchEffect } from 'vue';
+import { logService } from '@/services/logService';
 import DataDisplayRow from '@/components/DataDisplayRow.vue';
 import { queryVariant } from '@/api/variantApi.js';
 import { generateVariantLinks, generateExternalLink, parseVariantString } from '@/utils/linkUtils.js';
@@ -377,7 +378,7 @@ export default {
 
     // Helper function to extract annotation summary including genomic position
     const getAnnotationSummary = (apiResult) => {
-      console.log('getAnnotationSummary input:', JSON.stringify(apiResult, null, 2));
+      logService.debug('getAnnotationSummary input:', apiResult);
 
       const summary = {
         most_severe_consequence: 'N/A',
@@ -393,7 +394,7 @@ export default {
          const anno = apiResult.annotationData[0]; // Use first annotation entry
          const topLevel = apiResult; // Also check top-level response data
 
-         console.log('Processing annotation:', {
+         logService.debug('Processing annotation:', {
            anno_data: anno,
            top_level: topLevel,
            has_variant_key: !!topLevel.variantKey,
@@ -417,7 +418,7 @@ export default {
            assembly: assembly
          };
 
-         console.log('Position data extracted:', positionData);
+         logService.debug('Position data extracted:', positionData);
 
          if (positionData.variantKey) { // Prioritize variantKey
             const variantKeyWithoutAssembly = positionData.variantKey;
@@ -434,7 +435,7 @@ export default {
             summary.genomicRegion = `${chr}:${pos}`;
          }
 
-         console.log('Final genomic data:', {
+         logService.debug('Final genomic data:', {
            position: summary.genomicPosition,
            region: summary.genomicRegion
          });
@@ -684,30 +685,32 @@ export default {
           retryState,
           onRetry: (err, attempt) => {
             retryState.inProgress = true;
-            console.warn(`Retry attempt ${attempt} for ${retryStateKey}: ${err.message}`);
+            logService.warn(`Retry attempt ${attempt} for ${retryStateKey}: ${err.message}`);
           },
           onSuccess: (attempts) => {
             retryState.inProgress = false;
              if (attempts > 0) {
-                console.info(`Successfully fetched ${retryStateKey} after ${attempts} retries.`);
+                logService.info(`Successfully fetched ${retryStateKey} after ${attempts} retries.`);
              }
           },
         });
 
         // Handle the response
-        console.log('API Response:', response);
+        logService.debug('API Response:', response);
         
         // Ensure we have a properly structured response
         let responseData = response.data;
         
         // Handle case where response.data might be an array
         if (Array.isArray(responseData)) {
+          // Avoid reactive logging that might cause infinite loops
           console.log('Response data is an array, taking first item');
           responseData = responseData[0];
         }
 
         // Ensure we have an annotationData array
         if (!responseData.annotationData) {
+          // Avoid reactive logging that might cause infinite loops
           console.log('No annotationData found in response, restructuring...');
           // If the response itself looks like annotation data, wrap it
           if (responseData.most_severe_consequence || responseData.gene_symbol) {
@@ -717,7 +720,7 @@ export default {
           }
         }
 
-        console.log('Final structured response:', responseData);
+        logService.debug('Final structured response:', responseData);
         resultRef.value = responseData;
 
         // Set cache indicator if data was from cache
@@ -746,7 +749,7 @@ export default {
         return true;
       } catch (err) {
         retryStates[retryStateKey].inProgress = false;
-        console.error(`Error fetching ${retryStateKey}:`, err);
+        logService.error(`Error fetching ${retryStateKey}:`, err);
         // Check if we've exhausted retry attempts
         if (retryStates[retryStateKey].attempts >= 4) {
           isMaxRetriesErrorRef.value = true;

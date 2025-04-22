@@ -3,6 +3,7 @@
  * Provides reactive state for cache enabled/disabled and persists user preferences
  */
 import { ref, watchEffect } from 'vue';
+import { logService } from '@/services/logService';
 
 export function useCacheSettings() {
   // Default to enabled
@@ -25,7 +26,7 @@ export function useCacheSettings() {
       const saved = localStorage.getItem(STORAGE_KEY);
       return saved !== null ? JSON.parse(saved) : defaultEnabled;
     } catch (e) {
-      console.warn('Error loading cache settings from localStorage', e);
+      logService.warn('Error loading cache settings from localStorage', e);
       return defaultEnabled;
     }
   }

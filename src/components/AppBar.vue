@@ -169,6 +169,7 @@
 <script>
 import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
+import { logService } from '@/services/logService';
 import packageInfo from '../../package.json';
 import appConfig from '../config/appConfig.json';
 import menuConfig from '../config/menuConfig.json';
@@ -211,7 +212,7 @@ export default {
           snackbarVisible.value = true;
         })
         .catch((error) => {
-          console.error('Error copying citation:', error);
+          logService.error('Error copying citation:', error);
           snackbarMessage.value = 'Error copying citation!';
           snackbarVisible.value = true;
         });
@@ -222,7 +223,7 @@ export default {
       try {
         lastCommitHash.value = await fetchLastCommit(appConfig.repoName);
       } catch (error) {
-        console.error('Error fetching last commit:', error);
+        logService.error('Error fetching last commit:', error);
         fetchError.value = true;
         lastCommitHash.value = 'offline';
       }

@@ -1,5 +1,6 @@
 // src/api/geneApi.js
 import axios from 'axios';
+import { logService } from '@/services/logService';
 import geneApiConfig from '@/config/geneApiConfig.json';
 import { retryWithBackoff } from '@/utils/retry.js';
 import { useApiCache } from '@/composables/useApiCache';
@@ -91,7 +92,7 @@ export async function fetchGeneSearchIndices(options = {}) {
     
     return result;
   } catch (error) {
-    console.error('Error fetching gene search indices:', error);
+    logService.error('Error fetching gene search indices:', error);
     throw error;
   }
 }
@@ -162,12 +163,12 @@ export async function fetchAllGeneScores(options = {}) {
       initialDelay: 500,
       maxDelay: 5000,
       onRetry: (error, attempt) => {
-        console.warn(`Retry attempt ${attempt} for gene scores summary after error: ${error.message}`);
+        logService.warn(`Retry attempt ${attempt} for gene scores summary after error: ${error.message}`);
         if (onRetry) onRetry(error, attempt);
       },
       onSuccess: (attempts) => {
         if (attempts > 0) {
-          console.info(`Successfully fetched gene scores summary after ${attempts} retries`);
+          logService.info(`Successfully fetched gene scores summary after ${attempts} retries`);
         }
         if (onSuccess) onSuccess(attempts);
       },
@@ -238,19 +239,19 @@ export async function fetchGeneDetails(symbol, options = {}) {
       shouldRetry: (error) => {
         // Don't retry 404 errors for genes - likely the gene symbol doesn't exist
         if (error.response && error.response.status === 404) {
-          console.debug(`Gene symbol '${symbol}' not found (404)`);
+          logService.debug(`Gene symbol '${symbol}' not found (404)`);
           return false;
         }
         // Default retry logic will handle other error types
         return undefined; // Use the default logic from retry.js
       },
       onRetry: (error, attempt) => {
-        console.warn(`Retry attempt ${attempt} for gene ${symbol} after error: ${error.message}`);
+        logService.warn(`Retry attempt ${attempt} for gene ${symbol} after error: ${error.message}`);
         if (onRetry) onRetry(error, attempt);
       },
       onSuccess: (attempts) => {
         if (attempts > 0) {
-          console.info(`Successfully fetched gene ${symbol} after ${attempts} retries`);
+          logService.info(`Successfully fetched gene ${symbol} after ${attempts} retries`);
         }
         if (onSuccess) onSuccess(attempts);
       },

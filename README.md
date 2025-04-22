@@ -10,6 +10,15 @@ This application is part of a broader research initiative that aims to apply the
 
 The application has been migrated from Vue CLI to Vite for improved development experience and build performance. This migration brings faster hot module replacement, better dependency optimization, and improved ESM support.
 
+### Version 0.3.0 Update
+
+A comprehensive logging system has been added to the application for improved debugging and monitoring. The logging system includes:
+
+- Centralized log management with different log levels (DEBUG, INFO, WARN, ERROR)
+- Interactive log viewer with filtering capabilities
+- Log export functionality
+- Custom log level configuration
+
 ## Installation
 
 To set up the NCScorer for development or deployment, follow these steps:
@@ -52,6 +61,41 @@ To set up the NCScorer for development or deployment, follow these steps:
    ```sh
    npm run preview
    ```
+
+## Logging System
+
+NC-Scorer includes a centralized logging system to capture application events and errors, providing valuable debugging information during development and usage.
+
+### Using the Logging System
+
+1. **Viewing Logs**: Click the log icon in the footer to open the log viewer
+2. **Filtering Logs**: Use the filter dropdown to view specific log levels (DEBUG, INFO, WARN, ERROR)
+3. **Searching Logs**: Use the search box to find specific log entries
+4. **Exporting Logs**: Click the download button to export logs as a JSON file
+5. **Clearing Logs**: Click the delete button to clear the current log entries
+
+### For Developers
+
+The logging system can be accessed programmatically:
+
+```js
+import { logService } from '@/services/logService';
+
+// Log at different levels
+logService.debug('Debug message', { additionalData: 'example' });
+logService.info('Info message');
+logService.warn('Warning message');
+logService.error('Error message', errorObj);
+
+// Configure log level
+logService.setLevel(LogLevel.DEBUG); // Show all logs
+logService.setLevel(LogLevel.INFO);  // Only show INFO and above
+
+// Control console output
+logService.setConsoleEcho(true);  // Show logs in browser console
+```
+
+For more details, see the [Developer Wiki](docs/wiki/logging-system.md) and [FAQ](docs/wiki/faq.md#logging).
 
 ## Usage
 

@@ -2,6 +2,7 @@
 import { createApp } from 'vue';
 import App from './App.vue';
 import router from './router';
+import { createPinia } from 'pinia';
 
 // Vuetify - Manual style imports to avoid sass-embedded dependency issues
 import 'vuetify/styles';
@@ -33,22 +34,29 @@ const vuetify = createVuetify({
   },
 });
 
+// Create Pinia instance
+const pinia = createPinia();
+
 // Create and mount the app
 const app = createApp(App);
 
 // Register plugins
 app.use(vuetify);
 app.use(router);
+app.use(pinia);
 
 // Mount the app
 app.mount('#app');
 
 // Performance monitoring (only in development)
 if (import.meta.env.DEV && ENABLE_PERFORMANCE_HINTS) {
+  // Import logService directly to avoid circular import issues
+  const { logService } = await import('./services/logService');
+  
   // Monitor for Largest Contentful Paint
   new PerformanceObserver((entryList) => {
     for (const entry of entryList.getEntries()) {
-      console.info(`LCP: ${entry.startTime}ms - ${entry.element?.tagName || 'unknown element'}`);
+      logService.debug(`LCP: ${entry.startTime}ms - ${entry.element?.tagName || 'unknown element'}`);
     }
   }).observe({ type: 'largest-contentful-paint', buffered: true });
 
@@ -56,7 +64,7 @@ if (import.meta.env.DEV && ENABLE_PERFORMANCE_HINTS) {
   new PerformanceObserver((entryList) => {
     for (const entry of entryList.getEntries()) {
       const delay = entry.processingStart - entry.startTime;
-      console.info(`FID: ${Math.round(delay)}ms`);
+      logService.debug(`FID: ${Math.round(delay)}ms`);
     }
   }).observe({ type: 'first-input', buffered: true });
 }

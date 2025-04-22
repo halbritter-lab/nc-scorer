@@ -2,6 +2,7 @@
  * Utilities for exporting data from the application
  */
 import * as XLSX from 'xlsx';
+import { logService } from '@/services/logService';
 
 /**
  * Generate a CSV string from header and data arrays
@@ -85,7 +86,7 @@ export function generateExcel(headers, data, filename) {
     // Generate the Excel file and trigger download
     XLSX.writeFile(wb, filename);
   } catch (error) {
-    console.error('Error generating Excel file:', error);
+    logService.error('Error generating Excel file:', error);
   }
 }
 
@@ -106,7 +107,7 @@ export function sanitizeFilename(input) {
   try {
     str = String(input);
   } catch (e) {
-    console.error('Failed to convert input to string:', e);
+    logService.error('Failed to convert input to string:', e);
     return 'unnamed';
   }
   
@@ -121,7 +122,7 @@ export function sanitizeFilename(input) {
       .replace(/_+/g, '_')           // Collapse multiple underscores
       .slice(0, 50);                 // Limit length
   } catch (e) {
-    console.error('Error sanitizing filename:', e);
+    logService.error('Error sanitizing filename:', e);
     return 'unnamed';
   }
 }

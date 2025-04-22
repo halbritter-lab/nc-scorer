@@ -98,6 +98,7 @@
 // Script section remains unchanged - no logic changes needed for styling
 import { ref, onMounted, computed, inject, watchEffect } from 'vue';
 import { fetchGeneDetails } from '@/api/geneApi.js';
+import { logService } from '@/services/logService';
 import { geneDetailsConfig } from '@/config/geneDetailsConfig.js';
 import { getColor, formatValue } from '@/utils/format.js';
 import useRetryState from '@/composables/useRetryState.js';
@@ -164,12 +165,12 @@ export default {
           retryState,
           onRetry: (err, attempt) => { // Add params to onRetry
              retryState.inProgress = true;
-             console.warn(`Retry attempt ${attempt} for gene ${props.symbol}: ${err.message}`);
+             logService.warn(`Retry attempt ${attempt} for gene ${props.symbol}: ${err.message}`);
           },
           onSuccess: (attempts) => { // Add params to onSuccess
             retryState.inProgress = false;
             if (attempts > 0) {
-               console.info(`Successfully fetched gene ${props.symbol} after ${attempts} retries.`);
+               logService.info(`Successfully fetched gene ${props.symbol} after ${attempts} retries.`);
             }
           },
         });
@@ -189,7 +190,7 @@ export default {
         }
       } catch (err) {
         retryStates.gene.inProgress = false;
-        console.error(`Error fetching gene ${props.symbol}:`, err); // Log error
+        logService.error(`Error fetching gene ${props.symbol}:`, err); // Log error
         // Check if we've exhausted retry attempts
         if (retryStates.gene.attempts >= 4) { // Using default maxRetries value from retryWithBackoff
           isMaxRetriesError.value = true;

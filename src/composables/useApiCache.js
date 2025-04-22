@@ -3,6 +3,7 @@
  * Uses sessionStorage to persist during browser session
  */
 import { inject, reactive, readonly } from 'vue';
+import { logService } from '@/services/logService';
 import { useCacheSettings } from '@/composables/useCacheSettings';
 
 // Symbol for providing/injecting cache instance throughout the app
@@ -153,7 +154,7 @@ export function useApiCache() {
     try {
       sessionStorage.setItem(STORAGE_KEY, JSON.stringify(cacheState.cache));
     } catch (e) {
-      console.warn('Failed to save API cache to sessionStorage', e);
+      logService.warn('Failed to save API cache to sessionStorage', e);
     }
   }
   
@@ -166,7 +167,7 @@ export function useApiCache() {
       const saved = sessionStorage.getItem(STORAGE_KEY);
       return saved ? JSON.parse(saved) : {};
     } catch (e) {
-      console.warn('Failed to load API cache from sessionStorage', e);
+      logService.warn('Failed to load API cache from sessionStorage', e);
       return {};
     }
   }
