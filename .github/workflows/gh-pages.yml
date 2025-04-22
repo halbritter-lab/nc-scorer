@@ -1,43 +1,73 @@
-# based on https://github.com/horosin/pages-deploy
-name: github pages
+# .github/workflows/gh-pages.yml
+# Workflow to build and deploy the application to GitHub Pages
 
+name: Deploy to GitHub Pages
+
+# Trigger deployment only when a version tag (e.g., v1.2.3) is pushed
 on:
   push:
-    branches:
-      - main
-  pull_request:
+    tags:
+      - 'v*.*.*' # Matches tags like v1.0.0, v1.2.3 etc., created by semantic-release
 
 jobs:
-  deploy:
-    runs-on: ubuntu-20.04
-    concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}
+  # Build job: Install dependencies, build the application, and upload the artifact
+  build:
+    name: Build Application
+    runs-on: ubuntu-latest # Use the latest available Ubuntu runner
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4 # Checks out your repository code
 
-      - name: Setup Node
-        uses: actions/setup-node@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: '20.x'
+          node-version: '20.x' # Specify your project's Node.js version
+          cache: 'npm' # Enable caching for npm dependencies
 
-      - name: Cache dependencies
-        uses: actions/cache@v3
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
+      - name: Install Dependencies
+        run: npm ci # Use 'ci' for faster, deterministic installs in CI environments
 
-      - run: npm install
-      - name: Build
+      - name: Build Project
         env:
-          NODE_OPTIONS: --no-experimental-fetch --openssl-legacy-provider
-        run: NODE_ENV=production npm run build
-      - run: cp dist/index.html dist/404.html
+          NODE_OPTIONS: --no-experimental-fetch --openssl-legacy-provider # Keep if your build process requires these Node options
+        run: npm run build # Assumes your build script outputs the site to './dist'
 
-      - name: Deploy
-        uses: peaceiris/actions-gh-pages@v3
-        if: ${{ github.ref == 'refs/heads/main' }}
+      - name: Prepare 404 page for SPA routing
+        # Copies index.html to 404.html for GitHub Pages SPA handling
+        run: cp dist/index.html dist/404.html
+
+      - name: Setup GitHub Pages
+        # Configures GitHub Pages for deployment via Actions
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        # Uploads the built site ('./dist' directory) as a Pages artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist
+          path: ./dist # Specify the directory containing the built site
+
+  # Deploy job: Deploy the uploaded artifact to GitHub Pages
+  deploy:
+    name: Deploy to Pages
+    needs: build # Ensure the build job completes successfully first
+    runs-on: ubuntu-latest
+    # Define necessary permissions for the GitHub token used by the deployment action
+    permissions:
+      contents: read # Read repository content
+      pages: write # Write to GitHub Pages
+      id-token: write # Required for OIDC token authentication if used by deploy-pages action
+    # Specify the deployment environment (enables features like protection rules)
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }} # Output the deployment URL
+    # Define concurrency rules for deployments
+    concurrency:
+      # Group runs by tag reference to avoid multiple deploys for the same tag
+      group: "pages-${{ github.ref }}"
+      # Prevent cancelling in-progress deployments for tags
+      cancel-in-progress: false
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        # Uses the official GitHub action to deploy the artifact to Pages
+        uses: actions/deploy-pages@v4

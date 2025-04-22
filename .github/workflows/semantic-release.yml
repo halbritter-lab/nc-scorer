@@ -1,3 +1,4 @@
+# .github/workflows/semantic-release.yml
 name: Semantic Release
 
 on:
@@ -8,22 +9,32 @@ jobs:
   release:
     name: Semantic Release
     runs-on: ubuntu-latest
+    # Prevent release runs from cancelling pages deploy runs if triggered close together (optional but safe)
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: false
+    # Add permissions needed by semantic-release plugins
+    permissions:
+      contents: write # Allow @semantic-release/git to push new commits and tags
+      issues: write # Allow @semantic-release/github to comment on issues/PRs
+      pull-requests: write # Allow @semantic-release/github to comment on issues/PRs
+      id-token: write # Needed for some conditions/plugins potentially
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
-          persist-credentials: false
+          fetch-depth: 0 # Important for semantic-release to analyze history
+          # persist-credentials: false # Generally okay with GITHUB_TOKEN
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4 # <-- UPDATE: Use v4
         with:
           node-version: '20.x'
           cache: 'npm'
-          
+
       - name: Install dependencies
-        run: npm install
-        
+        run: npm ci # <-- CHANGE: Use 'ci'
+
       - name: Semantic Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
