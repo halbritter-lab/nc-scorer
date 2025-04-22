@@ -1,10 +1,17 @@
 {
   "items": [
     {
-      "text": "Gene Scores",
+      "text": "Genes",
       "icon": "mdi-database-search",
       "to": "/genes",
       "tooltip": "Browse all gene scores",
+      "visibility": "all"
+    },
+    {
+      "text": "Batch",
+      "icon": "mdi-format-list-bulleted-square",
+      "to": "/batch",
+      "tooltip": "Process multiple variants",
       "visibility": "all"
     },
     {

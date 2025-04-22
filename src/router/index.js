@@ -11,6 +11,7 @@ const PageNotFound = () => import(/* webpackChunkName: "404" */ '@/views/PageNot
 const VariantView = () => import(/* webpackChunkName: "variant" */ '@/views/VariantView.vue');
 const ScoringView = () => import(/* webpackChunkName: "scoring" */ '@/views/ScoringView.vue');
 const GeneScoresTableView = () => import(/* webpackChunkName: "gene-scores" */ '@/views/GeneScoresTableView.vue');
+const BatchView = () => import(/* webpackChunkName: "batch" */ '@/views/BatchView.vue');
 
 const routes = [
   {
@@ -45,6 +46,11 @@ const routes = [
     path: '/genes',
     name: 'GeneScoresTableView',
     component: GeneScoresTableView,
+  },
+  {
+    path: '/batch',
+    name: 'BatchView',
+    component: BatchView,
   },
   {
     path: '/about',

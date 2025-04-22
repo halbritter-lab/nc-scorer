@@ -101,6 +101,17 @@ For more details, see the [Developer Wiki](docs/wiki/logging-system.md) and [FAQ
 
 After starting the application, navigate to `http://localhost:5173` (or the URL shown in your terminal) in your web browser to begin using NCScorer. The interface allows users to search and score genetic variants based on predefined criteria.
 
+### Batch Variant Processing
+
+NC-Scorer includes a batch processing feature to analyze multiple variants at once:
+
+1. Click the "Batch" item in the main navigation menu
+2. Enter variants in the text area (one variant per line), or click "Fill with Examples" to populate with sample variants
+3. Select your desired output format (CSV, TSV, JSON, or VCF)
+4. Click "Process & Download" to analyze all variants and download the results
+
+Batch processing supports up to 200 variants at once and provides results in your chosen format for easy integration with other tools or spreadsheet applications.
+
 ## Contributing
 
 Contributions to NCScorer are welcome! Please read our [Contributing Guidelines](CONTRIBUTING.md) for more information on how to report bugs, make feature requests, and submit pull requests.
@@ -152,7 +163,7 @@ NC-Scorer uses automated semantic versioning to streamline the release process:
 
 The project follows the [Conventional Commits](https://www.conventionalcommits.org/) specification for commit messages:
 
-```
+```text
 <type>(<scope>): <description>
 
 [optional body]
