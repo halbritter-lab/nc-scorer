@@ -1,3 +1,10 @@
+## [1.2.1](https://github.com/halbritter-lab/nc-scorer/compare/v1.2.0...v1.2.1) (2025-04-22)
+
+
+### Bug Fixes
+
+* **content:** add About and Methodology pages ([4c26e2b](https://github.com/halbritter-lab/nc-scorer/commit/4c26e2b8e10ea8741fb0b9ea722447648ef183fd))
+
 # [1.2.0](https://github.com/halbritter-lab/nc-scorer/compare/v1.1.1...v1.2.0) (2025-04-22)
 
 
