@@ -1,3 +1,10 @@
+## [1.0.5](https://github.com/halbritter-lab/nc-scorer/compare/v1.0.4...v1.0.5) (2025-04-22)
+
+
+### Bug Fixes
+
+* **footer:** improve disclaimer display for clarity and style ([233d019](https://github.com/halbritter-lab/nc-scorer/commit/233d0192143127f5bc7c95d01969b0457f5b6327))
+
 ## [1.0.4](https://github.com/halbritter-lab/nc-scorer/compare/v1.0.3...v1.0.4) (2025-04-22)
 
 
