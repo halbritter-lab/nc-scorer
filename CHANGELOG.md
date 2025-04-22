@@ -1,3 +1,10 @@
+## [1.0.4](https://github.com/halbritter-lab/nc-scorer/compare/v1.0.3...v1.0.4) (2025-04-22)
+
+
+### Bug Fixes
+
+* remove unused parseVariantString import in VariantCard ([6b319ca](https://github.com/halbritter-lab/nc-scorer/commit/6b319ca072e30458bee9422f61ee51c6b7e2c145))
+
 ## [1.0.3](https://github.com/halbritter-lab/nc-scorer/compare/v1.0.2...v1.0.3) (2025-04-22)
 
 
