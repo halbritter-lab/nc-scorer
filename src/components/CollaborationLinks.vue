@@ -76,7 +76,7 @@
 </template>
 
 <script>
-import { computed, watch, ref } from 'vue';
+import { computed, watch } from 'vue';
 import { collaborationPlatformsConfig } from '@/config/collaborationPlatformsConfig';
 
 export default {
