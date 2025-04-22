@@ -1,3 +1,10 @@
+# [1.4.0](https://github.com/halbritter-lab/nc-scorer/compare/v1.3.0...v1.4.0) (2025-04-22)
+
+
+### Features
+
+* **api:** implement batch variant processing mode ([b836d35](https://github.com/halbritter-lab/nc-scorer/commit/b836d350887c296dbe41205c234de9b10e923a8a)), closes [#30](https://github.com/halbritter-lab/nc-scorer/issues/30)
+
 # [1.3.0](https://github.com/halbritter-lab/nc-scorer/compare/v1.2.2...v1.3.0) (2025-04-22)
 
 
