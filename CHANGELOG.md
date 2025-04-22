@@ -1,3 +1,10 @@
+## [1.4.1](https://github.com/halbritter-lab/nc-scorer/compare/v1.4.0...v1.4.1) (2025-04-22)
+
+
+### Bug Fixes
+
+* resolve Vue inject warning and improve documentation ([8bc0495](https://github.com/halbritter-lab/nc-scorer/commit/8bc0495881976ffe004dfd71da46bee3ff263f0c))
+
 # [1.4.0](https://github.com/halbritter-lab/nc-scorer/compare/v1.3.0...v1.4.0) (2025-04-22)
 
 
