@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/halbritter-lab/nc-scorer/compare/v1.0.5...v1.1.0) (2025-04-22)
+
+
+### Features
+
+* **deps:** upgrade variant-linker to v2.0.0 and adapt scoring ([b7352ba](https://github.com/halbritter-lab/nc-scorer/commit/b7352ba7d1c7fed9d0360c31696b11937e191533))
+
 ## [1.0.5](https://github.com/halbritter-lab/nc-scorer/compare/v1.0.4...v1.0.5) (2025-04-22)
 
 
