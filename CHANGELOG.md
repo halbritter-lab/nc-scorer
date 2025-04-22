@@ -1,3 +1,10 @@
+## [1.2.2](https://github.com/halbritter-lab/nc-scorer/compare/v1.2.1...v1.2.2) (2025-04-22)
+
+
+### Bug Fixes
+
+* **variant-card:** display genomic position and link to genome browser ([0acc10c](https://github.com/halbritter-lab/nc-scorer/commit/0acc10c201f74b00629036141ad4201956b9eb1b)), closes [#58](https://github.com/halbritter-lab/nc-scorer/issues/58)
+
 ## [1.2.1](https://github.com/halbritter-lab/nc-scorer/compare/v1.2.0...v1.2.1) (2025-04-22)
 
 
