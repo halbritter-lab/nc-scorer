@@ -53,9 +53,10 @@ export async function queryVariant(variantInput, options = {}) {
     onSuccess = null, // Add callback for success after retries
   } = options;
 
-  // Initialize the API cache and notifications system
-  const apiCache = useApiCache();
+  // Initialize notifications system
   const { notifyRetry, notifySuccess } = useNotifications();
+  
+  // We'll dynamically get the apiCache later during execution when needed
 
   // Determine if this is a batch request
   const isBatchRequest = Array.isArray(variantInput);
@@ -76,12 +77,19 @@ export async function queryVariant(variantInput, options = {}) {
     filter,
   };
 
-  // Generate a unique cache key for this request
-  const cacheKey = apiCache.generateCacheKey('variant', normalizedInput, cacheParams);
+  // Initialize cache key and cached result (only for single variant requests)
+  let cacheKey = null;
+  let cachedResult = null;
   
-  // Check cache first if not explicitly skipping
-  if (!skipCache) {
-    const cachedResult = apiCache.getCachedItem(cacheKey);
+  // Check cache first if not explicitly skipping and not a batch request
+  if (!skipCache && !isBatchRequest) {
+    // Get the apiCache inside the execution context where inject() is valid
+    const apiCache = useApiCache();
+    
+    // Generate cache key and check for cached result
+    cacheKey = apiCache.generateCacheKey('variant', normalizedInput, cacheParams);
+    cachedResult = apiCache.getCachedItem(cacheKey);
+    
     if (cachedResult) {
       return cachedResult; // Returns {data, source} object
     }
@@ -128,6 +136,8 @@ export async function queryVariant(variantInput, options = {}) {
       
       // Store successful result in cache and get response with source info (only for single variants)
       if (result && !skipCache && !isBatchRequest) {
+        // Get the apiCache inside the execution context where inject() is valid
+        const apiCache = useApiCache();
         return apiCache.setCachedItem(cacheKey, result, cacheTTL); // Returns {data, source} object
       }
 
