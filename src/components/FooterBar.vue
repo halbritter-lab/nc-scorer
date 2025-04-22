@@ -100,7 +100,7 @@ export default {
     const disclaimerDialogVisible = ref(false);
     
     // Get disclaimer information from the composable
-    const { isAcknowledged, getFormattedAcknowledgmentDate, saveDisclaimerAcknowledgment } = useDisclaimer();
+    const { getFormattedAcknowledgmentDate, saveDisclaimerAcknowledgment } = useDisclaimer();
     const formattedAcknowledgmentDate = ref(getFormattedAcknowledgmentDate());
 
     // Function to open the disclaimer dialog
