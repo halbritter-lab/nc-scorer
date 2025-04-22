@@ -22,8 +22,8 @@ if (variantLinker.config && typeof variantLinker.config.setBaseUrl === 'function
     variantLinker.config.setBaseUrl('https://rest.ensembl.org');
   }
 }
-import variableAssignmentConfig from '@/config/scoring/nephro_variant_score_gnomadg_missing/variable_assignment_config.json';
-import formulaConfig from '@/config/scoring/nephro_variant_score_gnomadg_missing/formula_config.json';
+import variableAssignmentConfig from '@/config/scoring/nephro_variant_score/variable_assignment_config.json';
+import formulaConfig from '@/config/scoring/nephro_variant_score/formula_config.json';
 
 /**
  * Query variant-linker to analyze a genetic variant.

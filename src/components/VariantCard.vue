@@ -516,10 +516,10 @@ export default {
         result.value &&
         result.value.annotationData &&
         result.value.annotationData.length > 0 &&
-        result.value.annotationData[0].nephro_variant_score_gnomadg_missing !== undefined
+        result.value.annotationData[0].nephro_variant_score !== undefined
       ) {
         return {
-          nephro_variant_score: result.value.annotationData[0].nephro_variant_score_gnomadg_missing,
+          nephro_variant_score: result.value.annotationData[0].nephro_variant_score,
         };
       }
       return {};
@@ -576,10 +576,10 @@ export default {
         result2.value &&
         result2.value.annotationData &&
         result2.value.annotationData.length > 0 &&
-        result2.value.annotationData[0].nephro_variant_score_gnomadg_missing !== undefined
+        result2.value.annotationData[0].nephro_variant_score !== undefined
       ) {
         return {
-          nephro_variant_score: result2.value.annotationData[0].nephro_variant_score_gnomadg_missing,
+          nephro_variant_score: result2.value.annotationData[0].nephro_variant_score,
         };
       }
       return {};
