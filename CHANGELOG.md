@@ -1,3 +1,10 @@
+## [1.0.2](https://github.com/halbritter-lab/nc-scorer/compare/v1.0.1...v1.0.2) (2025-04-22)
+
+
+### Bug Fixes
+
+* remove unused ref import in CollaborationLinks ([c1df484](https://github.com/halbritter-lab/nc-scorer/commit/c1df4849819f72bc94f11188144e3a66171dd5bd))
+
 ## [1.0.1](https://github.com/halbritter-lab/nc-scorer/compare/v1.0.0...v1.0.1) (2025-04-22)
 
 
