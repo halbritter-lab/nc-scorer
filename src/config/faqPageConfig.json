@@ -26,11 +26,11 @@
         },
         {
           "header": "Who developed NC-Scorer?",
-          "content": "NC-Scorer was developed by the Halbritter Lab at Charité Berlin in collaboration with pediatric nephrology researchers worldwide. It's an open-source project designed to accelerate gene discovery in pediatric kidney disease.",
+          "content": "NC-Scorer was developed by the <a href='https://mrc.charite.de/forschung/ag_halbritter_nephrogenetik' target='_blank' rel='noopener noreferrer'>Halbritter Lab</a>. Learn more about our team on the <a href='/about'>About page</a>.",
           "links": [
             {
               "title": "Halbritter Lab",
-              "url": "https://www.halbritter-lab.org",
+              "url": "https://mrc.charite.de/forschung/ag_halbritter_nephrogenetik",
               "icon": "mdi-flask",
               "external": true
             }

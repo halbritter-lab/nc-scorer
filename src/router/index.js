@@ -36,7 +36,6 @@ const routes = [
     props: true,
   },
   {
-    // The ScoringView route now accepts additional optional parameters including a second variant for compound heterozygous variants.
     path: '/scoring/:variantInput/:inheritance?/:segregation?/:variantInput2?',
     name: 'ScoringView',
     component: ScoringView,
@@ -46,6 +45,16 @@ const routes = [
     path: '/genes',
     name: 'GeneScoresTableView',
     component: GeneScoresTableView,
+  },
+  {
+    path: '/about',
+    name: 'AboutPage',
+    component: () => import('@/views/AboutPage.vue'),
+  },
+  {
+    path: '/methodology',
+    name: 'MethodologyPage',
+    component: () => import('@/views/MethodologyPage.vue'),
   },
   {
     path: '/:catchAll(.*)',
