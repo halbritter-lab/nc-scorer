@@ -1,3 +1,10 @@
+## [1.1.1](https://github.com/halbritter-lab/nc-scorer/compare/v1.1.0...v1.1.1) (2025-04-22)
+
+
+### Bug Fixes
+
+* **ci:** ensure pages deploy builds correct version after release ([ddbfb97](https://github.com/halbritter-lab/nc-scorer/commit/ddbfb97914d51b5cc83cd117fa4368c48abd8968)), closes [#56](https://github.com/halbritter-lab/nc-scorer/issues/56)
+
 # [1.1.0](https://github.com/halbritter-lab/nc-scorer/compare/v1.0.5...v1.1.0) (2025-04-22)
 
 
