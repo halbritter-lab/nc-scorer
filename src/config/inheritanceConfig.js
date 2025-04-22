@@ -11,7 +11,8 @@ export const baseScores = {
   Denovo: 0.95, // Highest - Strongest signal for sporadic cases
   'Homozygous recessive': 0.8, // High - Confirmed Biallelic
   'Compound heterozygous (confirmed)': 0.8, // High - Confirmed Biallelic (Equal to Homozygous)
-  'X-linked': 0.6, // Moderate - Positioned below confirmed biallelic
+  'X-linked recessive': 0.7, // Higher - Strong evidence for X-linked inheritance
+  'X-linked dominant': 0.5, // Lower - Requires more evidence from other sources
   'Inherited dominant': 0.4, // Lowered Significantly - Requires more evidence from other sources
   'Compound heterozygous (suspected)': 0.4, // Low - Reflects phase uncertainty
   Unknown: 0.1, // Lowest - Baseline
