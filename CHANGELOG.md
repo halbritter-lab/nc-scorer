@@ -1,3 +1,12 @@
+## [1.0.1](https://github.com/halbritter-lab/nc-scorer/compare/v1.0.0...v1.0.1) (2025-04-22)
+
+
+### Bug Fixes
+
+* remove unused isAcknowledged variable in App.vue ([9518563](https://github.com/halbritter-lab/nc-scorer/commit/9518563126867bdedd3a67627cd3e29d0b349183))
+* **update node.js version and fix package sync:** update Node.js version and fix package sync ([aad9f30](https://github.com/halbritter-lab/nc-scorer/commit/aad9f30d2599da268c36462e9896784583cfae9f))
+* **variant-card:** resolve TypeError in transcript select item rendering ([fb97448](https://github.com/halbritter-lab/nc-scorer/commit/fb97448ebc785cbe68d58876be9b64844e4e9202))
+
 # 1.0.0 (2025-04-13)
 
 
