@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/halbritter-lab/nc-scorer/compare/v1.1.1...v1.2.0) (2025-04-22)
+
+
+### Features
+
+* **scoring:** differentiate X-linked inheritance into dominant/recessive ([c910c95](https://github.com/halbritter-lab/nc-scorer/commit/c910c95a645600c4873f2bf2d05fc2eb9975bcf8)), closes [#55](https://github.com/halbritter-lab/nc-scorer/issues/55)
+
 ## [1.1.1](https://github.com/halbritter-lab/nc-scorer/compare/v1.1.0...v1.1.1) (2025-04-22)
 
 
