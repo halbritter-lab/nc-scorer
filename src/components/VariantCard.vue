@@ -143,6 +143,18 @@
                 />
 
                 <DataDisplayRow
+                  :config="{
+                    label: 'Genomic Position',
+                    description: 'Genomic position based on GRCh38 assembly.',
+                    style: 'text',
+                    linkPattern: externalDbUrls.ucscGenome
+                  }"
+                  :value="activeTab === 0 ? annotationSummary.genomicPosition : annotationSummary2.genomicPosition"
+                  :linkValue="activeTab === 0 ? annotationSummary.genomicRegion : annotationSummary2.genomicRegion"
+                  :defaultValue="'N/A'"
+                />
+
+                <DataDisplayRow
                   v-if="activeTab === 0 ? prioritizedGeneSymbol : prioritizedGeneSymbol2"
                   :config="{
                     label: 'Gene Symbol',
@@ -294,7 +306,7 @@
 import { ref, onMounted, computed, inject, watchEffect } from 'vue';
 import DataDisplayRow from '@/components/DataDisplayRow.vue';
 import { queryVariant } from '@/api/variantApi.js';
-import { generateVariantLinks, generateExternalLink } from '@/utils/linkUtils';
+import { generateVariantLinks, generateExternalLink, parseVariantString } from '@/utils/linkUtils.js';
 import { variantAnnotationConfig, externalDbUrls } from '@/config/variantAnnotationConfig.js';
 import { variantFrequencyConfig } from '@/config/variantFrequencyConfig.js';
 import { variantScoreConfig } from '@/config/variantScoreConfig.js';
@@ -362,6 +374,73 @@ export default {
           reset: function() { this.attempts = 0; this.inProgress = false; }
        };
     }
+
+    // Helper function to extract annotation summary including genomic position
+    const getAnnotationSummary = (apiResult) => {
+      console.log('getAnnotationSummary input:', JSON.stringify(apiResult, null, 2));
+
+      const summary = {
+        most_severe_consequence: 'N/A',
+        gene_symbol: 'N/A',
+        hgnc_id: 'N/A',
+        fullAnnotation: null,
+        genomicPosition: 'N/A',
+        genomicRegion: null, // For linking
+      };
+
+      // Check if apiResult and annotationData exist
+      if (apiResult && apiResult.annotationData && apiResult.annotationData.length > 0) {
+         const anno = apiResult.annotationData[0]; // Use first annotation entry
+         const topLevel = apiResult; // Also check top-level response data
+
+         console.log('Processing annotation:', {
+           anno_data: anno,
+           top_level: topLevel,
+           has_variant_key: !!topLevel.variantKey,
+           has_region: !!(topLevel.seq_region_name && topLevel.start)
+         });
+
+         summary.most_severe_consequence = anno.most_severe_consequence || 'N/A';
+         summary.gene_symbol = Array.isArray(anno.gene_symbol) ? anno.gene_symbol.join(', ') : anno.gene_symbol || 'N/A';
+         summary.hgnc_id = Array.isArray(anno.hgnc_id) ? anno.hgnc_id.join(', ') : anno.hgnc_id || 'N/A';
+         summary.fullAnnotation = anno; // Keep full annotation
+
+         // Extract Genomic Position
+         const assembly = topLevel.assembly_name || 'GRCh38'; // Default to GRCh38 if missing
+         
+         // Look for position data in both top level and annotation
+         const positionData = {
+           variantKey: topLevel.variantKey || anno.variantKey,
+           seq_region_name: topLevel.seq_region_name || anno.seq_region_name,
+           start: topLevel.start || anno.start,
+           end: topLevel.end || anno.end || topLevel.start || anno.start,
+           assembly: assembly
+         };
+
+         console.log('Position data extracted:', positionData);
+
+         if (positionData.variantKey) { // Prioritize variantKey
+            const variantKeyWithoutAssembly = positionData.variantKey;
+            summary.genomicPosition = `${variantKeyWithoutAssembly} (${assembly})`;
+            // Use parseVariantString for proper UCSC region formatting
+            const parsed = parseVariantString(variantKeyWithoutAssembly);
+            if (parsed) {
+                summary.genomicRegion = parsed.ucscRegion;
+            }
+         } else if (positionData.seq_region_name && positionData.start) { // Fallback
+            const chr = positionData.seq_region_name.startsWith('chr') ? positionData.seq_region_name : `chr${positionData.seq_region_name}`;
+            const pos = positionData.start;
+            summary.genomicPosition = `${chr}-${pos} (${assembly})`;
+            summary.genomicRegion = `${chr}:${pos}`;
+         }
+
+         console.log('Final genomic data:', {
+           position: summary.genomicPosition,
+           region: summary.genomicRegion
+         });
+      }
+      return summary;
+    };
 
     // Compute transcript consequences from the first annotationData object.
     const transcriptOptions = computed(() => {
@@ -458,20 +537,7 @@ export default {
     });
 
     // VARIANT 1 - Compute summary data from the first annotation object.
-    const annotationSummary = computed(() => {
-      if (result.value && result.value.annotationData && result.value.annotationData.length > 0) {
-        const anno = result.value.annotationData[0];
-        return {
-          most_severe_consequence: anno.most_severe_consequence,
-          gene_symbol: Array.isArray(anno.gene_symbol)
-            ? anno.gene_symbol.join(', ')
-            : anno.gene_symbol,
-          hgnc_id: Array.isArray(anno.hgnc_id) ? anno.hgnc_id.join(', ') : anno.hgnc_id,
-          fullAnnotation: anno, // Store full annotation for prioritization
-        };
-      }
-      return {};
-    });
+    const annotationSummary = computed(() => getAnnotationSummary(result.value));
     // Prioritized single gene symbol based on MANE Select and impact severity
     const prioritizedGeneSymbol = computed(() => {
       if (!annotationSummary.value.fullAnnotation) {
@@ -526,20 +592,7 @@ export default {
     });
 
     // VARIANT 2 - Compute summary data from the second annotation object
-    const annotationSummary2 = computed(() => {
-      if (result2.value && result2.value.annotationData && result2.value.annotationData.length > 0) {
-        const anno = result2.value.annotationData[0];
-        return {
-          most_severe_consequence: anno.most_severe_consequence,
-          gene_symbol: Array.isArray(anno.gene_symbol)
-            ? anno.gene_symbol.join(', ')
-            : anno.gene_symbol,
-          hgnc_id: Array.isArray(anno.hgnc_id) ? anno.hgnc_id.join(', ') : anno.hgnc_id,
-          fullAnnotation: anno,
-        };
-      }
-      return {};
-    });
+    const annotationSummary2 = computed(() => getAnnotationSummary(result2.value));
 
     const prioritizedGeneSymbol2 = computed(() => {
       if (!annotationSummary2.value.fullAnnotation) {
@@ -642,7 +695,30 @@ export default {
         });
 
         // Handle the response
-        resultRef.value = response.data;
+        console.log('API Response:', response);
+        
+        // Ensure we have a properly structured response
+        let responseData = response.data;
+        
+        // Handle case where response.data might be an array
+        if (Array.isArray(responseData)) {
+          console.log('Response data is an array, taking first item');
+          responseData = responseData[0];
+        }
+
+        // Ensure we have an annotationData array
+        if (!responseData.annotationData) {
+          console.log('No annotationData found in response, restructuring...');
+          // If the response itself looks like annotation data, wrap it
+          if (responseData.most_severe_consequence || responseData.gene_symbol) {
+            responseData = { annotationData: [responseData] };
+          } else {
+            responseData = { annotationData: [] };
+          }
+        }
+
+        console.log('Final structured response:', responseData);
+        resultRef.value = responseData;
 
         // Set cache indicator if data was from cache
         if (response.source && response.source.fromCache) {
@@ -846,9 +922,9 @@ export default {
 
 <style scoped>
 .variant-card {
-  max-width: 600px;
+  /* max-width: 600px; <-- Can be removed if parent container controls width */
   margin: auto;
-  padding: 16px;
+  /* padding: 16px; <-- Padding handled by v-card-text */
 }
 .summary-table {
   width: 100%;
@@ -877,11 +953,20 @@ export default {
   margin-top: 16px;
 }
 .summary-section {
-  margin-bottom: 8px;
+  margin-bottom: 12px;
   border-radius: 4px;
+  background-color: var(--v-theme-surface);
+  padding: 12px;
 }
 .summary-item {
-  margin-bottom: 2px;
+  margin-bottom: 4px;
+  padding: 4px 0;
+}
+
+.summary-item.key-score {
+  background-color: var(--v-theme-surface-variant);
+  border-left: 4px solid var(--v-theme-primary);
+  padding-left: 8px;
 }
 
 @keyframes spin {
@@ -898,7 +983,7 @@ export default {
 }
 
 .loading-container {
-  min-height: 240px;
+  min-height: 240px; /* Or adjust based on content */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -910,6 +995,9 @@ export default {
 
 .variant-title {
   max-width: calc(100% - 100px); /* Reserve space for indicators */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .external-link {
@@ -917,6 +1005,8 @@ export default {
   text-decoration: none;
   display: inline-flex;
   align-items: center;
+  gap: 4px;
+  transition: opacity 0.2s ease;
 }
 
 .external-link:hover {
