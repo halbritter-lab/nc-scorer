@@ -44,14 +44,14 @@
 </template>
 
 <script>
-import { ref, computed } from 'vue';
+import { ref } from 'vue';
 import { useDisclaimer } from '@/composables/useDisclaimer';
 
 export default {
   name: 'DisclaimerDialog',
 
   setup(props, { emit }) {
-    const { checkDisclaimerStatus, saveDisclaimerAcknowledgment } = useDisclaimer();
+    const { saveDisclaimerAcknowledgment } = useDisclaimer();
     const dialogVisible = ref(true);
 
     // Method to handle user acknowledgment

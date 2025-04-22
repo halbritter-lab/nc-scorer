@@ -37,15 +37,19 @@ export async function fetchHgncIndex() {
 export async function fetchGeneSearchIndices(options = {}) {
   const { skipCache = false } = options;
   
-  // Initialize the API cache
-  const apiCache = useApiCache();
-  
-  // Create cache key
-  const cacheKey = apiCache.generateCacheKey('gene-search-indices');
+  // Create cache variables
+  let cacheKey = null;
+  let cachedResult = null;
   
   // Check cache first if not explicitly skipping
   if (!skipCache) {
-    const cachedResult = apiCache.getCachedItem(cacheKey);
+    // Get the apiCache inside the execution context where inject() is valid
+    const apiCache = useApiCache();
+    
+    // Create cache key
+    cacheKey = apiCache.generateCacheKey('gene-search-indices');
+    
+    cachedResult = apiCache.getCachedItem(cacheKey);
     if (cachedResult) {
       return cachedResult.data;
     }
@@ -86,7 +90,9 @@ export async function fetchGeneSearchIndices(options = {}) {
     };
     
     // Cache the result
-    if (!skipCache) {
+    if (!skipCache && cacheKey) {
+      // Get the apiCache inside the execution context where inject() is valid
+      const apiCache = useApiCache();
       apiCache.setCachedItem(cacheKey, result, 24 * 60 * 60 * 1000); // 24 hours
     }
     
@@ -127,14 +133,19 @@ export async function fetchAllGeneScores(options = {}) {
     cacheTTL = 12 * 60 * 60 * 1000 // 12 hours default
   } = options;
   
-  // Initialize the API cache
-  const apiCache = useApiCache();
+  // Cache variables at the top function scope
+  let cacheKey = null;
+  let apiCache = null;
   
-  // Create cache key
-  const cacheKey = apiCache.generateCacheKey('all-gene-scores');
-  
-  // Check cache first if not explicitly skipping
+  // Prepare cache if not skipping
   if (!skipCache) {
+    // Get the apiCache inside the execution context where inject() is valid
+    apiCache = useApiCache();
+    
+    // Create cache key for all gene scores
+    cacheKey = apiCache.generateCacheKey('gene-scores-all', 'summary');
+    
+    // Check cache first
     const cachedResult = apiCache.getCachedItem(cacheKey);
     if (cachedResult) {
       return cachedResult; // Returns {data, source} object
@@ -148,7 +159,7 @@ export async function fetchAllGeneScores(options = {}) {
       const result = response.data;
       
       // Store successful result in cache and get response with source info
-      if (result && !skipCache) {
+      if (result && !skipCache && cacheKey && apiCache) {
         return apiCache.setCachedItem(cacheKey, result, cacheTTL); // Returns {data, source} object
       }
       
@@ -197,15 +208,20 @@ export async function fetchGeneDetails(symbol, options = {}) {
     cacheTTL = 30 * 60 * 1000 // 30 minutes default
   } = options;
   
-  // Initialize the API cache
-  const apiCache = useApiCache();
+  // Cache variables at the top function scope
+  let cacheKey = null;
+  let apiCache = null;
   
-  // Normalize symbol and create cache parameters
-  const normalizedSymbol = symbol.trim().toUpperCase();
-  const cacheKey = apiCache.generateCacheKey('gene', normalizedSymbol);
-  
-  // Check cache first if not explicitly skipping
+  // Prepare cache if not skipping
   if (!skipCache) {
+    // Get the apiCache inside the execution context where inject() is valid
+    apiCache = useApiCache();
+    
+    // Normalize symbol and create cache key
+    const normalizedSymbol = symbol.trim().toUpperCase();
+    cacheKey = apiCache.generateCacheKey('gene', normalizedSymbol);
+    
+    // Check cache first
     const cachedResult = apiCache.getCachedItem(cacheKey);
     if (cachedResult) {
       return cachedResult; // Returns {data, source} object
@@ -213,14 +229,14 @@ export async function fetchGeneDetails(symbol, options = {}) {
   }
   
   return retryWithBackoff(
-    async () => {
+    async () => {  
       // Construct the URL using the base URL from config and the symbol.
       const url = `${geneApiConfig.geneDetailsBaseUrl}${symbol}.json`;
       const response = await axios.get(url);
       const result = response.data;
       
       // Store successful result in cache and get response with source info
-      if (result && !skipCache) {
+      if (result && !skipCache && cacheKey && apiCache) {
         return apiCache.setCachedItem(cacheKey, result, cacheTTL); // Returns {data, source} object
       }
       

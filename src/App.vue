@@ -1,5 +1,7 @@
 <template>
-  <v-app>
+  <!-- Wrap entire app in API cache provider to ensure inject() is always used within proper context -->
+  <ApiCacheProvider>
+    <v-app>
     <!-- Include the AppBar component -->
     <AppBar />
 
@@ -48,6 +50,7 @@
     <!-- Disclaimer dialog -->
     <DisclaimerDialog v-if="!isDisclaimerAcknowledged" @acknowledged="onDisclaimerAcknowledged" />
   </v-app>
+  </ApiCacheProvider>
 </template>
 
 <script>
@@ -55,6 +58,7 @@ import AppBar from './components/AppBar.vue';
 import FooterBar from './components/FooterBar.vue';
 import GlobalNotification from './components/GlobalNotification.vue';
 import DisclaimerDialog from './components/DisclaimerDialog.vue';
+import ApiCacheProvider from './components/ApiCacheProvider.vue';
 import useTour from '@/composables/useTour.js';
 import { useDisclaimer } from '@/composables/useDisclaimer.js';
 import { onMounted, ref, defineAsyncComponent, computed } from 'vue';
@@ -72,6 +76,7 @@ export default {
     GlobalNotification,
     DisclaimerDialog,
     LogViewer,
+    ApiCacheProvider,
   },
   setup() {
     const { startTour, shouldShowTour } = useTour();

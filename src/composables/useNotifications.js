@@ -1,7 +1,7 @@
 /**
  * Composable for managing global notifications via snackbars
  */
-import { ref, reactive } from 'vue';
+import { reactive } from 'vue';
 
 // Create a singleton notification state
 const snackbar = reactive({
@@ -24,7 +24,7 @@ export function useNotifications() {
       message,
       color: options.color || 'info',
       timeout: options.timeout || 5000,
-      closeButton: options.hasOwnProperty('closeButton') ? options.closeButton : true
+      closeButton: Object.prototype.hasOwnProperty.call(options, 'closeButton') ? options.closeButton : true
     };
     
     // If another notification is visible, queue this one

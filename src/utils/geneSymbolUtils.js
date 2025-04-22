@@ -64,7 +64,7 @@ export function getPrioritizedGeneSymbol(annotation) {
         return prioritizeGeneSymbol(parsedAnnotation[0]);
       }
       return prioritizeGeneSymbol(parsedAnnotation);
-    } catch (e) {
+    } catch {
       // If it's a comma-separated string of gene symbols, take the first one
       if (annotation.includes(',')) {
         return annotation.split(',')[0].trim();

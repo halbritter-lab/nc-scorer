@@ -64,7 +64,7 @@
 <script>
 // Script section remains unchanged - no logic changes needed for styling
 import { computed, watchEffect, ref, onMounted } from 'vue';
-import { baseScores, scoringParameters, noSegregationPatterns, requiresSecondVariant } from '@/config/inheritanceConfig'; // Import all needed
+import { baseScores, scoringParameters, noSegregationPatterns } from '@/config/inheritanceConfig'; // Import all needed
 import DataDisplayRow from '@/components/DataDisplayRow.vue';
 import { formatValue } from '@/utils/format';
 import { scoreInterpretationConfig } from '@/config/scoreInterpretationConfig.js';
@@ -174,7 +174,7 @@ export default {
       loading,
       finalScore,
       finalScoreFormatted,
-      inheritance: props.inheritance, // Make prop available for template
+      // Removed duplicate inheritance key - we don't need to return props.inheritance as it's directly accessible in template
       segregationProb, // Make computed prob available for template
       scoreInterpretationConfig, // Expose config for skeleton loader
     };

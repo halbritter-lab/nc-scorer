@@ -8,7 +8,10 @@
         <v-card>
           <v-img v-if="section.image" :src="section.image" class="section-image"></v-img>
           <v-card-title>{{ section.header }}</v-card-title>
-          <v-card-text v-html="section.content"></v-card-text>
+          <v-card-text>
+            <!-- Use a div instead of directly on the component -->
+            <div v-html="section.content"></div>
+          </v-card-text>
           <!-- Only display the card actions if there are links -->
           <v-card-actions v-if="section.links && section.links.length > 0">
             <v-btn v-for="link in section.links" :key="link.title" :to="link.url" text>{{
