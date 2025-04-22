@@ -1,3 +1,10 @@
+## [1.0.3](https://github.com/halbritter-lab/nc-scorer/compare/v1.0.2...v1.0.3) (2025-04-22)
+
+
+### Bug Fixes
+
+* remove unused isAcknowledged variable in FooterBar ([cade7e4](https://github.com/halbritter-lab/nc-scorer/commit/cade7e490811e3728a97ec94378ba45a878fc089))
+
 ## [1.0.2](https://github.com/halbritter-lab/nc-scorer/compare/v1.0.1...v1.0.2) (2025-04-22)
 
 
