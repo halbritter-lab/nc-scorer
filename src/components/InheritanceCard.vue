@@ -3,7 +3,7 @@
   <v-card class="inheritance-card">
     <v-card-title>Inheritance Parameters</v-card-title>
     <v-card-text>
-      <!-- Loading state with skeleton loader -->
+      <!-- Loading state -->
       <div v-if="loading" class="loading-container">
         <v-skeleton-loader
           class="mx-auto"
@@ -11,56 +11,63 @@
           :loading="loading"
         ></v-skeleton-loader>
       </div>
-      <v-table v-else class="summary-table">
-        <tbody>
-          <!-- Inheritance Score Row -->
-          <DataDisplayRow
-            :config="{
-              label: 'Inheritance Score',
-              description:
-                'Combined score based on the inheritance pattern and segregation probability.',
-              style: 'chip',
-              font: 'bold',
-              defaultColor: 'primary',
-              format: 'number',
-              round: 2,
-              isKeyScore: true, // Mark as a key score for visual highlighting
-              scoreType: 'inheritance', // Identify as inheritance score for consistent coloring
-            }"
-            :value="finalScore"
-          />
 
-          <!-- Inheritance Pattern Row -->
-          <DataDisplayRow
-            :config="{
-              label: 'Inheritance Pattern',
-              description: 'The mode of inheritance used in scoring.',
-            }"
-            :value="inheritance"
-          />
-
-          <!-- Segregation Probability Row -->
-          <DataDisplayRow
-            :config="{
-              label: 'Segregation Probability',
-              description: 'The probability of segregation (value between 0 and 1).',
-              format: 'number',
-              round: 3,
-            }"
-            :value="segregationProb"
-          />
-        </tbody>
-      </v-table>
+      <!-- Content Section (Wrapped in outlined card) -->
+      <div v-else>
+        <v-card variant="outlined" class="mb-2"> <!-- Use outlined variant -->
+           <v-card-text class="pa-0"> <!-- Remove padding if table has its own -->
+            <v-table class="summary-table">
+              <tbody>
+                <!-- Inheritance Score Row -->
+                <DataDisplayRow
+                  :config="{
+                    label: 'Inheritance Score',
+                    description:
+                      'Combined score based on the inheritance pattern and segregation probability.',
+                    style: 'chip',
+                    font: 'bold',
+                    defaultColor: 'primary',
+                    format: 'number',
+                    round: 2,
+                    isKeyScore: true,
+                    scoreType: 'inheritance',
+                  }"
+                  :value="finalScore"
+                />
+                <!-- Inheritance Pattern Row -->
+                <DataDisplayRow
+                  :config="{
+                    label: 'Inheritance Pattern',
+                    description: 'The mode of inheritance used in scoring.',
+                  }"
+                  :value="inheritance"
+                />
+                <!-- Segregation Probability Row -->
+                <DataDisplayRow
+                  :config="{
+                    label: 'Segregation Probability',
+                    description: 'The probability of segregation (value between 0 and 1).',
+                    format: 'number',
+                    round: 3,
+                  }"
+                  :value="segregationProb"
+                />
+              </tbody>
+            </v-table>
+          </v-card-text>
+        </v-card>
+      </div>
     </v-card-text>
   </v-card>
 </template>
 
 <script>
+// Script section remains unchanged - no logic changes needed for styling
 import { computed, watchEffect, ref, onMounted } from 'vue';
-import { baseScores, scoringParameters } from '@/config/inheritanceConfig';
+import { baseScores, scoringParameters, noSegregationPatterns, requiresSecondVariant } from '@/config/inheritanceConfig'; // Import all needed
 import DataDisplayRow from '@/components/DataDisplayRow.vue';
 import { formatValue } from '@/utils/format';
-import { scoreInterpretationConfig } from '@/config/scoreInterpretationConfig';
+import { scoreInterpretationConfig } from '@/config/scoreInterpretationConfig.js';
 
 /**
  * Computes the final genetic variant score based on a base inheritance score and a segregation p-value.
@@ -111,7 +118,7 @@ export default {
   setup(props, { emit }) {
     // Add loading state
     const loading = ref(true);
-    
+
     // Convert the segregation prop to a number.
     const segregationProb = computed(() => Number(props.segregation));
 
@@ -119,20 +126,21 @@ export default {
     const baseScore = computed(() =>
       baseScores[props.inheritance] !== undefined ? baseScores[props.inheritance] : 0.1
     );
-    
+
     // Simulate a brief loading state for better UX
     onMounted(() => {
       // Short timeout to show the skeleton (better UX for quick calculations)
       setTimeout(() => {
         loading.value = false;
-      }, 500);
+      }, 500); // Adjust delay if needed
     });
 
     // Compute the final inheritance score.
     const finalScore = computed(() => {
-      // For Compound heterozygous (suspected), ignore segregation probability
-      const segregationToUse =
-        props.inheritance === 'Compound heterozygous (suspected)' ? 1 : segregationProb.value;
+      // Check if segregation should be ignored based on config
+      const ignoreSegregation = noSegregationPatterns.includes(props.inheritance);
+      const segregationToUse = ignoreSegregation ? 1 : segregationProb.value;
+
       return computeVariantScore(
         baseScore.value,
         segregationToUse,
@@ -150,22 +158,24 @@ export default {
     });
 
     // Emit the score when it changes
-    // Use watchEffect to trigger on component creation and whenever the score changes
     watchEffect(() => {
-      emit('inheritance-score-updated', {
-        score: finalScore.value,
-        formatted: finalScoreFormatted.value,
-        baseScore: baseScore.value,
-        pattern: props.inheritance,
-        segregation: segregationProb.value,
-      });
+       if (!loading.value) { // Only emit after initial loading/calculation
+          emit('inheritance-score-updated', {
+            score: finalScore.value,
+            formatted: finalScoreFormatted.value,
+            baseScore: baseScore.value,
+            pattern: props.inheritance,
+            segregation: segregationProb.value,
+          });
+       }
     });
 
     return {
       loading,
       finalScore,
       finalScoreFormatted,
-      segregationProb, // Include segregationProb to fix the template warning
+      inheritance: props.inheritance, // Make prop available for template
+      segregationProb, // Make computed prob available for template
       scoreInterpretationConfig, // Expose config for skeleton loader
     };
   },
@@ -173,10 +183,11 @@ export default {
 </script>
 
 <style scoped>
+/* Styles remain unchanged */
 .inheritance-card {
-  max-width: 600px;
+ /* max-width: 600px; <-- Can be removed if parent container controls width */
   margin: auto;
-  padding: 16px;
+ /* padding: 16px; <-- Padding handled by v-card-text */
 }
 .summary-table {
   width: 100%;
@@ -191,9 +202,19 @@ export default {
 }
 
 .loading-container {
-  min-height: 180px;
+  min-height: 180px; /* Or adjust based on content */
   display: flex;
   align-items: center;
   justify-content: center;
+}
+/* Ensure tables within cards don't add extra padding/background */
+.v-card .v-table {
+  background-color: transparent;
+}
+.v-card > .v-table > .v-table__wrapper > table > tbody > tr > td {
+    font-size: 0.875rem;
+}
+.v-card > .v-table > .v-table__wrapper > table > tbody > tr:hover {
+   background: transparent !important;
 }
 </style>

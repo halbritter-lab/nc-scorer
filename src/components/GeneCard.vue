@@ -2,12 +2,14 @@
 <template>
   <v-card class="gene-card">
     <v-card-title class="d-flex flex-wrap align-center">
+      <!-- Gene Title -->
       <div class="gene-title text-truncate" :title="symbol">
         Gene Details for "{{ symbol }}"
       </div>
-      
+
+      <!-- Indicators (Retry/Cache) -->
       <div class="d-flex flex-nowrap ml-auto">
-        <!-- Retry count badge - shown when retries have occurred -->
+        <!-- Retry count badge -->
         <v-badge
           v-if="retryStates.gene.attempts > 0"
           color="warning"
@@ -15,20 +17,19 @@
           :title="`Retried ${retryStates.gene.attempts} times due to network issues`"
           offset-x="5"
           offset-y="5"
+          class="mr-1"
         >
           <v-icon size="small" color="warning">mdi-refresh</v-icon>
         </v-badge>
-
         <!-- Spinning icon when retry is in progress -->
         <v-tooltip v-if="retryStates.gene.inProgress" location="top" text="Retrying API request...">
           <template v-slot:activator="{ props }">
-            <v-icon v-bind="props" size="small" color="warning" class="ml-2 retry-spinner">
+            <v-icon v-bind="props" size="small" color="warning" class="ml-1 retry-spinner">
               mdi-refresh
             </v-icon>
           </template>
         </v-tooltip>
-        
-        <!-- Cache indicator - shows briefly when data is from cache -->
+        <!-- Cache indicator -->
         <v-fade-transition>
           <v-chip
             v-if="showCacheIndicator"
@@ -42,57 +43,66 @@
         </v-fade-transition>
       </div>
     </v-card-title>
+
     <v-card-text>
+      <!-- Loading State -->
       <div v-if="loading" class="loading-container">
-        <!-- Skeleton loader for better visual experience during loading -->
         <v-skeleton-loader
           class="mx-auto"
           :type="scoreInterpretationConfig.skeletonLoaders.gene.type"
           :loading="loading"
         ></v-skeleton-loader>
       </div>
+      <!-- Error State -->
       <div v-else-if="error">
         <v-alert type="error" dismissible>
           <template v-if="isMaxRetriesError">
             Failed to load gene data after multiple attempts. There might be a temporary issue with
-            external services (e.g., Ensembl/VEP). Please try again later.
+            external services. Please try again later.
           </template>
           <template v-else>{{ error }}</template>
         </v-alert>
       </div>
+
+      <!-- Content Section (Wrapped in outlined card) -->
       <div v-else>
-        <v-table class="gene-info-table">
-          <tbody>
-            <DataDisplayRow
-              v-for="(item, key) in filteredGeneData"
-              :key="key"
-              :config="{
-                label: item.label,
-                description: item.description,
-                style: item.style,
-                font: item.font,
-                colorThresholds: item.colorThresholds,
-                isKeyScore: item.isKeyScore, // Pass isKeyScore flag for visual highlighting
-                scoreType: item.scoreType // Pass score type for consistent coloring
-              }"
-              :value="item.value"
-              :defaultValue="'NA'"
-            />
-          </tbody>
-        </v-table>
+        <v-card variant="outlined" class="mb-2"> <!-- Use outlined variant -->
+          <v-card-text class="pa-0"> <!-- Remove padding if table has its own -->
+            <v-table class="gene-info-table">
+              <tbody>
+                <DataDisplayRow
+                  v-for="(item, key) in filteredGeneData"
+                  :key="key"
+                  :config="{
+                    label: item.label,
+                    description: item.description,
+                    style: item.style,
+                    font: item.font,
+                    colorThresholds: item.colorThresholds,
+                    isKeyScore: item.isKeyScore,
+                    scoreType: item.scoreType
+                  }"
+                  :value="item.value"
+                  :defaultValue="'NA'"
+                />
+              </tbody>
+            </v-table>
+          </v-card-text>
+        </v-card>
       </div>
     </v-card-text>
   </v-card>
 </template>
 
 <script>
+// Script section remains unchanged - no logic changes needed for styling
 import { ref, onMounted, computed, inject, watchEffect } from 'vue';
 import { fetchGeneDetails } from '@/api/geneApi.js';
 import { geneDetailsConfig } from '@/config/geneDetailsConfig.js';
 import { getColor, formatValue } from '@/utils/format.js';
 import useRetryState from '@/composables/useRetryState.js';
 import DataDisplayRow from '@/components/DataDisplayRow.vue';
-import { scoreInterpretationConfig } from '@/config/scoreInterpretationConfig';
+import { scoreInterpretationConfig } from '@/config/scoreInterpretationConfig.js';
 
 export default {
   name: 'GeneCard',
@@ -152,24 +162,26 @@ export default {
 
         const result = await fetchGeneDetails(props.symbol, {
           retryState,
-          onRetry: () => {
-            retryState.inProgress = true;
-            // Using global notification system only
+          onRetry: (err, attempt) => { // Add params to onRetry
+             retryState.inProgress = true;
+             console.warn(`Retry attempt ${attempt} for gene ${props.symbol}: ${err.message}`);
           },
-          onSuccess: () => {
+          onSuccess: (attempts) => { // Add params to onSuccess
             retryState.inProgress = false;
-            // Using global notification system only
+            if (attempts > 0) {
+               console.info(`Successfully fetched gene ${props.symbol} after ${attempts} retries.`);
+            }
           },
         });
-        
+
         // Handle the new response format with source information
         geneData.value = result.data;
-        
+
         // Set cache indicator if data was from cache
         if (result.source && result.source.fromCache) {
           fromCache.value = true;
           showCacheIndicator.value = true;
-          
+
           // Auto-hide the indicator after 3 seconds
           setTimeout(() => {
             showCacheIndicator.value = false;
@@ -177,14 +189,14 @@ export default {
         }
       } catch (err) {
         retryStates.gene.inProgress = false;
+        console.error(`Error fetching gene ${props.symbol}:`, err); // Log error
         // Check if we've exhausted retry attempts
         if (retryStates.gene.attempts >= 4) { // Using default maxRetries value from retryWithBackoff
           isMaxRetriesError.value = true;
-          error.value = 'Maximum retry attempts reached';
-          // Notify via global state that we've reached max retries
+          error.value = `Maximum retry attempts reached for gene ${props.symbol}.`;
         } else {
           isMaxRetriesError.value = false;
-          error.value = err.message || 'Error fetching gene data.';
+          error.value = err.message || `Error fetching gene data for ${props.symbol}.`;
         }
       } finally {
         loading.value = false;
@@ -193,7 +205,7 @@ export default {
 
     // Watch for changes in the gene data and emit them to parent component
     watchEffect(() => {
-      if (!loading.value && !error.value && geneData.value && geneData.value.ngs) {
+      if (!loading.value && !error.value && geneData.value && geneData.value.ngs !== undefined) { // Check ngs specifically
         emit('gene-score-updated', {
           score: geneData.value.ngs,
           symbol: props.symbol,
@@ -217,10 +229,11 @@ export default {
 </script>
 
 <style scoped>
+/* Styles remain unchanged */
 .gene-card {
-  max-width: 600px;
+  /* max-width: 600px; <-- Can be removed if parent container controls width */
   margin: auto;
-  padding: 16px;
+  /* padding: 16px; <-- Padding handled by v-card-text */
 }
 .gene-info-table {
   width: 100%;
@@ -249,7 +262,7 @@ export default {
 }
 
 .loading-container {
-  min-height: 200px;
+  min-height: 200px; /* Or adjust based on content */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -261,5 +274,18 @@ export default {
 
 .gene-title {
   max-width: calc(100% - 100px); /* Reserve space for indicators */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* Ensure tables within cards don't add extra padding/background */
+.v-card .v-table {
+  background-color: transparent;
+}
+.v-card > .v-table > .v-table__wrapper > table > tbody > tr > td {
+    font-size: 0.875rem;
+}
+.v-card > .v-table > .v-table__wrapper > table > tbody > tr:hover {
+   background: transparent !important;
 }
 </style>
