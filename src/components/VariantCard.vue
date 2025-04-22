@@ -294,7 +294,7 @@
 import { ref, onMounted, computed, inject, watchEffect } from 'vue';
 import DataDisplayRow from '@/components/DataDisplayRow.vue';
 import { queryVariant } from '@/api/variantApi.js';
-import { parseVariantString, generateVariantLinks, generateExternalLink } from '@/utils/linkUtils';
+import { generateVariantLinks, generateExternalLink } from '@/utils/linkUtils';
 import { variantAnnotationConfig, externalDbUrls } from '@/config/variantAnnotationConfig.js';
 import { variantFrequencyConfig } from '@/config/variantFrequencyConfig.js';
 import { variantScoreConfig } from '@/config/variantScoreConfig.js';
