@@ -1,3 +1,10 @@
+# [1.3.0](https://github.com/halbritter-lab/nc-scorer/compare/v1.2.2...v1.3.0) (2025-04-22)
+
+
+### Features
+
+* **logging:** implement app-wide logging service with UI viewer ([97cf1d7](https://github.com/halbritter-lab/nc-scorer/commit/97cf1d7753524ee5feaa0e88431681dd335608c7)), closes [#60](https://github.com/halbritter-lab/nc-scorer/issues/60)
+
 ## [1.2.2](https://github.com/halbritter-lab/nc-scorer/compare/v1.2.1...v1.2.2) (2025-04-22)
 
 
