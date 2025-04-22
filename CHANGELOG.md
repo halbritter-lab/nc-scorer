@@ -1,3 +1,10 @@
+## [1.4.2](https://github.com/halbritter-lab/nc-scorer/compare/v1.4.1...v1.4.2) (2025-04-22)
+
+
+### Bug Fixes
+
+* resolve Vue warnings and linting issues ([ca69070](https://github.com/halbritter-lab/nc-scorer/commit/ca690705621333e85669b03fd7c2c384a661e684))
+
 ## [1.4.1](https://github.com/halbritter-lab/nc-scorer/compare/v1.4.0...v1.4.1) (2025-04-22)
 
 
