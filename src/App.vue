@@ -38,7 +38,7 @@ export default {
   },
   setup() {
     const { startTour, shouldShowTour } = useTour();
-    const { isAcknowledged, checkDisclaimerStatus } = useDisclaimer();
+    const { checkDisclaimerStatus } = useDisclaimer();
     
     const isDisclaimerAcknowledged = ref(checkDisclaimerStatus());
 
