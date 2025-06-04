@@ -1,3 +1,10 @@
+## [1.4.3](https://github.com/halbritter-lab/nc-scorer/compare/v1.4.2...v1.4.3) (2025-06-04)
+
+
+### Bug Fixes
+
+* add default values in configuration ([1aa8bfc](https://github.com/halbritter-lab/nc-scorer/commit/1aa8bfcfb703ce2a49ce20169803085eb5246252))
+
 ## [1.4.2](https://github.com/halbritter-lab/nc-scorer/compare/v1.4.1...v1.4.2) (2025-04-22)
 
 
