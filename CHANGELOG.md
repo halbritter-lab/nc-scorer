@@ -1,3 +1,10 @@
+## [1.4.4](https://github.com/halbritter-lab/nc-scorer/compare/v1.4.3...v1.4.4) (2025-06-22)
+
+
+### Bug Fixes
+
+* remove conditional rendering that hid disclaimer button for new users ([1fc5fa0](https://github.com/halbritter-lab/nc-scorer/commit/1fc5fa0c11cd61a2924b9f966986cef27e73fe4a))
+
 ## [1.4.3](https://github.com/halbritter-lab/nc-scorer/compare/v1.4.2...v1.4.3) (2025-06-04)
 
 
