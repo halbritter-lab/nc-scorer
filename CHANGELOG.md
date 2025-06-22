@@ -1,3 +1,10 @@
+# [1.5.0](https://github.com/halbritter-lab/nc-scorer/compare/v1.4.4...v1.5.0) (2025-06-22)
+
+
+### Features
+
+* **batch:** add example variant lists with prefill buttons ([c90f3b2](https://github.com/halbritter-lab/nc-scorer/commit/c90f3b2c3dac3488093da0c381bbf7971d9f3cc1)), closes [#61](https://github.com/halbritter-lab/nc-scorer/issues/61)
+
 ## [1.4.4](https://github.com/halbritter-lab/nc-scorer/compare/v1.4.3...v1.4.4) (2025-06-22)
 
 
