@@ -19,6 +19,23 @@
           class="mb-4"
         ></v-textarea>
         
+        <!-- Example Prefill Buttons -->
+        <div class="mb-4">
+          <p class="text-subtitle-1 mb-2">Or use an example list:</p>
+          <div class="d-flex flex-wrap" style="gap: 8px;">
+            <v-btn
+              v-for="example in exampleLists"
+              :key="example.name"
+              @click="prefillTextArea(example.variants)"
+              variant="tonal"
+              size="small"
+              :title="example.description"
+            >
+              {{ example.name }}
+            </v-btn>
+          </div>
+        </div>
+        
         <v-select
           v-model="outputFormat"
           :items="['JSON', 'CSV', 'TSV', 'VCF']"
@@ -56,6 +73,7 @@ import ContentContainer from '@/components/ContentContainer.vue';
 import { queryVariant } from '@/api/variantApi.js';
 import { downloadFile } from '@/utils/exportUtils.js';
 import { logService } from '@/services/logService.js';
+import { exampleLists } from '@/config/batchViewConfig.js';
 
 // Constants
 const MAX_VARIANTS = 200;
@@ -75,6 +93,14 @@ const hasValidInput = computed(() => {
   
   return lines.length > 0 && lines.length <= MAX_VARIANTS;
 });
+
+// Method to prefill the textarea with an example list
+function prefillTextArea(variants) {
+  if (Array.isArray(variants)) {
+    variantsInput.value = variants.join('\n');
+    logService.info(`Prefilled batch input with "${exampleLists.find(e => e.variants === variants)?.name}" example.`);
+  }
+}
 
 // Methods
 async function processAndDownload() {
