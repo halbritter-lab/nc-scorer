@@ -25,3 +25,7 @@ pnpm-debug.log*
 # Windsurf
 .windsurf
 .windsurfrules
+
+# Claude Code guidance file
+CLAUDE.md
+.claude/
