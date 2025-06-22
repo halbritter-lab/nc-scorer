@@ -50,27 +50,39 @@
       </v-card-text>
       <v-card-actions>
         <div class="example-text">
-          <p>
+          <div class="example-grid">
+            <!-- Examples heading -->
+            <div class="example-heading mb-1">Examples to try:</div>
+
+            <!-- VCF format example -->
             <router-link
               :to="{ name: 'VariantView', params: { variantInput: '1-55051215-G-GA' } }"
               class="example-link"
-              aria-label="Example VCF format variant: 1-55051215-G-GA"
+              aria-label="Example with VCF format 1-55051215-G-GA"
             >
-              Example (VCF): "1-55051215-G-GA"
+              <v-icon size="x-small" class="mr-1" color="primary">mdi-dna</v-icon>
+              <div class="example-content">
+                <div class="example-title">1-55051215-G-GA</div>
+                <div class="example-details">VCF format example</div>
+              </div>
             </router-link>
-          </p>
-          <p>
+
+            <!-- HGVS format example -->
             <router-link
               :to="{
                 name: 'VariantView',
                 params: { variantInput: 'ENST00000302118:c.524-1063_524-1062insA' },
               }"
               class="example-link"
-              aria-label="Example HGVS format variant: ENST00000302118:c.524-1063_524-1062insA"
+              aria-label="Example with HGVS format ENST00000302118:c.524-1063_524-1062insA"
             >
-              Example (HGVS): "ENST00000302118:c.524-1063_524-1062insA"
+              <v-icon size="x-small" class="mr-1" color="primary">mdi-dna</v-icon>
+              <div class="example-content">
+                <div class="example-title">ENST00000302118:c.524-1063_524-1062insA</div>
+                <div class="example-details">HGVS format example</div>
+              </div>
             </router-link>
-          </p>
+          </div>
         </div>
       </v-card-actions>
       <v-alert v-if="error" type="error" dismissible>
@@ -218,15 +230,76 @@ export default {
   margin-top: 16px;
   font-size: 0.9rem;
   color: #666;
+  width: 100%;
 }
 
 .v-theme--dark .example-text {
   color: rgba(255, 255, 255, 0.6);
 }
 
+.example-heading {
+  font-weight: 500;
+  color: #444;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.v-theme--dark .example-heading {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.example-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
 .example-link {
-  padding: 6px;
-  display: inline-block; /* Ensures the padding is applied effectively */
-  margin: 2px 0;
+  padding: 4px 6px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: start;
+  font-size: 0.85rem;
+  transition: background-color 0.2s ease;
+  text-decoration: none;
+  color: inherit;
+}
+
+.example-link:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  text-decoration: none;
+}
+
+.v-theme--dark .example-link:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.example-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.example-title {
+  font-weight: 500;
+  line-height: 1.2;
+  color: #1976d2; /* Primary color for link-like appearance */
+}
+
+.v-theme--dark .example-title {
+  color: #64b5f6; /* Lighter blue for dark theme */
+}
+
+.example-details {
+  font-size: 0.75rem;
+  color: rgba(0, 0, 0, 0.6);
+  line-height: 1.2;
+}
+
+.v-theme--dark .example-details {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.example-link:hover .example-title {
+  text-decoration: underline;
 }
 </style>
