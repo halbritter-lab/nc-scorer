@@ -7,7 +7,7 @@
         <!-- Left side controls group -->
         <v-col cols="auto" class="footer-controls-left mr-auto">
           <!-- Disclaimer Button -->
-          <v-tooltip location="top" v-if="formattedAcknowledgmentDate">
+          <v-tooltip location="top">
             <template v-slot:activator="{ props }">
               <v-btn
                 v-bind="props"
