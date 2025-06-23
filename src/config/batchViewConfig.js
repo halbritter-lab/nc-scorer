@@ -34,4 +34,15 @@ export const exampleLists = [
       '11-64354518-G-A',
     ],
   },
+  {
+    name: 'With Inheritance Data',
+    description: 'Variants with inheritance and segregation information using tab separation.',
+    variants: [
+      'NM_004380.3:c.589G>T\tDenovo\t0.95',
+      'NPHS1:c.340C>T\tInherited dominant\t0.8',
+      'WT1:c.1180C>T\tHomozygous recessive\t1.0',
+      '17-41197799-A-G\tX-linked recessive\t0.9',
+      'ACTN4:c.311C>T\tUnknown\t1.0',
+    ],
+  },
 ];
