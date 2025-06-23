@@ -1,3 +1,15 @@
+# [2.0.0](https://github.com/halbritter-lab/nc-scorer/compare/v1.5.0...v2.0.0) (2025-06-23)
+
+
+### Features
+
+* **batch:** add interactive results table for batch variant processing ([3f1577e](https://github.com/halbritter-lab/nc-scorer/commit/3f1577eb87d9dfc071f7349bc0fcaeb18c7f2574))
+
+
+### BREAKING CHANGES
+
+* **batch:** Batch processing now displays results in a table instead of immediate download. Users must click download button after processing to export results.
+
 # [1.5.0](https://github.com/halbritter-lab/nc-scorer/compare/v1.4.4...v1.5.0) (2025-06-22)
 
 
