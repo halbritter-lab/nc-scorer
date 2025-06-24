@@ -1,3 +1,10 @@
+# [2.1.0](https://github.com/halbritter-lab/nc-scorer/compare/v2.0.0...v2.1.0) (2025-06-24)
+
+
+### Features
+
+* **api:** add genome assembly selection for GRCh37/GRCh38 support ([b2cb565](https://github.com/halbritter-lab/nc-scorer/commit/b2cb5655447d4ac88855da5af60cdc5e4c23ddb2))
+
 # [2.0.0](https://github.com/halbritter-lab/nc-scorer/compare/v1.5.0...v2.0.0) (2025-06-23)
 
 
