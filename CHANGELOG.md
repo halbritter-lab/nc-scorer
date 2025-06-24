@@ -1,3 +1,10 @@
+# [2.3.0](https://github.com/halbritter-lab/nc-scorer/compare/v2.2.0...v2.3.0) (2025-06-24)
+
+
+### Features
+
+* **batch:** add inheritance/segregation input and calculate scores ([44f7126](https://github.com/halbritter-lab/nc-scorer/commit/44f71266f127877b1e71bb0aedb1eb25a11c59c1)), closes [#62](https://github.com/halbritter-lab/nc-scorer/issues/62)
+
 # [2.2.0](https://github.com/halbritter-lab/nc-scorer/compare/v2.1.1...v2.2.0) (2025-06-24)
 
 
