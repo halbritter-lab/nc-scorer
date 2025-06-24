@@ -91,6 +91,7 @@
                 <v-list-item @click="downloadResults('CSV')" title="Download as CSV" />
                 <v-list-item @click="downloadResults('TSV')" title="Download as TSV" />
                 <v-list-item @click="downloadResults('JSON')" title="Download as JSON" />
+                <v-list-item @click="downloadResults('VCF')" title="Download as VCF" />
               </v-list>
             </v-menu>
         </div>
@@ -224,30 +225,84 @@ async function processSingleVariant(line, index, total) {
     };
 
     try {
-      const variantResult = await queryVariant(variant, { skipCache: true, assembly: assembly.value });
-      const annotation = variantResult.data?.[0] || variantResult.data;
-      if (!annotation) throw new Error('No annotation data returned');
-
+      logService.info(`Processing variant ${index + 1}/${total}: "${variant}"`);
+      
+      // Call queryVariant with batch-specific options
+      const variantResult = await queryVariant(variant, { 
+        skipCache: true, 
+        assembly: assembly.value 
+      });
+      
+      logService.debug('Raw variant result:', variantResult);
+      
+      // Handle the response data structure
+      let responseData = variantResult.data;
+      
+      // Handle case where response.data might be an array
+      if (Array.isArray(responseData)) {
+        logService.debug('Response data is an array, taking first item');
+        responseData = responseData[0];
+      }
+      
+      if (!responseData) {
+        throw new Error('No response data returned from variant API');
+      }
+      
+      // Ensure we have annotationData array structure
+      if (!responseData.annotationData) {
+        logService.debug('No annotationData found in response, restructuring...');
+        // If the response itself looks like annotation data, wrap it
+        if (responseData.most_severe_consequence || responseData.gene_symbol) {
+          responseData = { annotationData: [responseData] };
+        } else {
+          responseData = { annotationData: [] };
+        }
+      }
+      
+      // Extract annotation from the first item in annotationData
+      const annotation = responseData.annotationData?.[0];
+      if (!annotation) {
+        throw new Error('No annotation data found in response');
+      }
+      
+      logService.debug('Extracted annotation:', annotation);
+      
+      // Extract variant score
       resultRow.variantScore = annotation.nephro_variant_score ?? 0;
+      logService.debug(`Variant score: ${resultRow.variantScore}`);
+      
+      // Extract gene symbol using prioritization logic
       resultRow.geneSymbol = getPrioritizedGeneSymbol(annotation) || 'N/A';
+      logService.debug(`Gene symbol: ${resultRow.geneSymbol}`);
 
+      // Get gene score if we have a valid gene symbol
       if (resultRow.geneSymbol !== 'N/A') {
+        logService.debug(`Fetching gene details for: ${resultRow.geneSymbol}`);
         const geneResult = await fetchGeneDetails(resultRow.geneSymbol, { skipCache: true });
+        logService.debug('Gene result:', geneResult);
         resultRow.geneScore = geneResult.data?.ngs ?? 0;
+        logService.debug(`Gene score: ${resultRow.geneScore}`);
       }
 
+      // Calculate inheritance score
       resultRow.inheritanceScore = calculateInheritanceScore(inheritance, segregation);
+      logService.debug(`Inheritance score: ${resultRow.inheritanceScore}`);
       
+      // Calculate final NCS score
       if (resultRow.geneScore !== 'N/A' && resultRow.variantScore !== 'N/A') {
         resultRow.ncs = calculateNCS(resultRow.geneScore, resultRow.variantScore, resultRow.inheritanceScore).toFixed(3);
+        logService.debug(`Final NCS: ${resultRow.ncs}`);
       }
+      
+      logService.info(`Successfully processed variant "${variant}" - NCS: ${resultRow.ncs}`);
+      
     } catch (e) {
       logService.error(`Failed to process variant "${variant}":`, e);
-      resultRow.error = e.message || 'Unknown error';
+      resultRow.error = e.message || 'Unknown processing error';
     }
     
-    // Use splice to add to reactive array safely
-    batchResults.value.splice(batchResults.value.length, 0, resultRow);
+    // Add to results and update progress
+    batchResults.value.push(resultRow);
     progress.value = ((index + 1) / total) * 100;
 }
 
@@ -262,7 +317,8 @@ function downloadResults(format) {
   const mimeType = {
     CSV: 'text/csv',
     TSV: 'text/tab-separated-values',
-    JSON: 'application/json'
+    JSON: 'application/json',
+    VCF: 'text/x-vcard'
   }[format];
   
   const extension = format.toLowerCase();
@@ -270,6 +326,45 @@ function downloadResults(format) {
   
   if (format === 'JSON') {
     downloadFile(JSON.stringify(batchResults.value, null, 2), filename, mimeType);
+  } else if (format === 'VCF') {
+    // Generate VCF format with scoring information in INFO field
+    const vcfHeader = [
+      '##fileformat=VCFv4.2',
+      `##fileDate=${new Date().toISOString().split('T')[0].replace(/-/g, '')}`,
+      '##source=NC-Scorer_BatchProcessing',
+      '##INFO=<ID=NCS,Number=1,Type=Float,Description="Nephro Candidate Score">',
+      '##INFO=<ID=VS,Number=1,Type=Float,Description="Variant Score">',
+      '##INFO=<ID=GS,Number=1,Type=Float,Description="Gene Score">',
+      '##INFO=<ID=INH,Number=1,Type=String,Description="Inheritance Pattern">',
+      '##INFO=<ID=GENE,Number=1,Type=String,Description="Gene Symbol">',
+      '#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO'
+    ];
+    
+    const vcfLines = batchResults.value
+      .filter(row => row.variant && row.ncs !== 'N/A')
+      .map(row => {
+        // Parse basic variant info (this is simplified - real implementation would need more robust parsing)
+        const variantParts = row.variant.split(':');
+        const chrom = variantParts[0] || '.';
+        const pos = '1'; // Simplified - would need proper coordinate parsing
+        const id = '.';
+        const ref = '.';
+        const alt = '.';
+        const qual = '.';
+        const filter = 'PASS';
+        const info = [
+          `NCS=${row.ncs}`,
+          `VS=${row.variantScore}`,
+          `GS=${row.geneScore}`,
+          `INH=${row.inheritance}`,
+          `GENE=${row.geneSymbol}`
+        ].join(';');
+        
+        return `${chrom}\t${pos}\t${id}\t${ref}\t${alt}\t${qual}\t${filter}\t${info}`;
+      });
+    
+    const vcfContent = [...vcfHeader, ...vcfLines].join('\n');
+    downloadFile(vcfContent, filename, mimeType);
   } else {
     const delimiter = format === 'CSV' ? ',' : '\t';
     const content = [headers.join(delimiter), ...data.map(row => row.join(delimiter))].join('\n');
