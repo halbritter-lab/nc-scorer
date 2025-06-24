@@ -2,39 +2,17 @@
 import { ref, onMounted, onUnmounted } from 'vue';
 import Shepherd from 'shepherd.js';
 import 'shepherd.js/dist/css/shepherd.css';
-
-// Helper function to check if the tour should be shown
-const shouldShowTour = () => {
-  const tourStatus = localStorage.getItem('nc-scorer-tour-status');
-  // Only show the tour if it hasn't been completed or skipped
-  return tourStatus !== 'completed' && tourStatus !== 'skipped';
-};
-
-// Helper functions to manage tour status
-const markTourAsCompleted = () => {
-  localStorage.setItem('nc-scorer-tour-status', 'completed');
-};
-
-const markTourAsSkipped = () => {
-  localStorage.setItem('nc-scorer-tour-status', 'skipped');
-};
-
-const resetTourStatus = () => {
-  localStorage.removeItem('nc-scorer-tour-status');
-};
-
-// Backward compatibility - convert old format if needed
-const migrateOldTourStatus = () => {
-  if (localStorage.getItem('nc-scorer-tour-shown') === 'true' && 
-      !localStorage.getItem('nc-scorer-tour-status')) {
-    localStorage.setItem('nc-scorer-tour-status', 'completed');
-    localStorage.removeItem('nc-scorer-tour-shown');
-  }
-};
+import { useSettingsStore } from '@/stores/settingsStore';
 
 export default function useTour() {
   const tour = ref(null);
   const isTourActive = ref(false);
+  const settingsStore = useSettingsStore(); // Instantiate the store
+
+  // Helper function now reads from the store
+  const shouldShowTour = () => {
+    return settingsStore.tourStatus === 'new';
+  };
   // Helper function to check if an element exists in the DOM
   const elementExists = (selector) => {
     return document.querySelector(selector) !== null;
@@ -403,7 +381,7 @@ export default function useTour() {
     if (tour.value) {
       tour.value.cancel();
       isTourActive.value = false;
-      markTourAsSkipped();
+      settingsStore.setTourStatus('skipped'); // Use store action
     }
   };
 
@@ -412,33 +390,30 @@ export default function useTour() {
     if (tour.value) {
       tour.value.complete();
       isTourActive.value = false;
-      markTourAsCompleted();
+      settingsStore.setTourStatus('completed'); // Use store action
     }
   };
 
   // Restart the tour manually (for use in settings or FAQ)
   const restartTour = () => {
-    resetTourStatus();
+    settingsStore.resetTour(); // Use the store action
     startTour();
   };
 
   // Check local storage and initialize on component mount
   onMounted(() => {
-    // Migrate any old format tour status
-    migrateOldTourStatus();
-    
     initTour();
 
     // Set up event listeners
     if (tour.value) {
       tour.value.on('cancel', () => {
         isTourActive.value = false;
-        markTourAsSkipped();
+        settingsStore.setTourStatus('skipped'); // Use store action
       });
 
       tour.value.on('complete', () => {
         isTourActive.value = false;
-        markTourAsCompleted();
+        settingsStore.setTourStatus('completed'); // Use store action
       });
     }
   });
@@ -459,6 +434,5 @@ export default function useTour() {
     completeTour,
     shouldShowTour,
     restartTour,
-    resetTourStatus,
   };
 }

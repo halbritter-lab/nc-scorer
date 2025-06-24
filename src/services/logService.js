@@ -1,5 +1,6 @@
 // src/services/logService.js
 import { computed, shallowReactive, markRaw } from 'vue';
+import { useSettingsStore } from '@/stores/settingsStore';
 
 // Define log levels as an enum-like object with names for display and serialization
 export const LogLevel = {
@@ -20,13 +21,18 @@ let CONSOLE_ECHO_ENABLED = false;
 let isLogging = false;
 
 /**
- * Get the initial log level from localStorage or default to INFO
+ * Get the initial log level from settings store or default to DEBUG
  * @returns {number} The log level value from LogLevel enum
  */
 function getInitialLogLevel() {
-  const savedLevel = localStorage.getItem('nc_scorer_logLevel');
-  if (savedLevel && LogLevel.names.includes(savedLevel)) {
-    return LogLevel[savedLevel];
+  try {
+    const settingsStore = useSettingsStore();
+    if (settingsStore.logLevel && LogLevel.names.includes(settingsStore.logLevel)) {
+      return LogLevel[settingsStore.logLevel];
+    }
+  } catch {
+    // If store is not available (during initialization), fall back to default
+    console.debug('Settings store not available during log service initialization, using default level');
   }
   return LogLevel.DEBUG; // Default to DEBUG level to show all messages
 }
@@ -122,13 +128,19 @@ function addLogEntry(level, ...args) {
 }
 
 /**
- * Set the current log level and save to localStorage
+ * Set the current log level and save to settings store
  * @param {number} level - The new log level (from LogLevel enum)
  */
 function setLevel(level) {
   if (level >= LogLevel.DEBUG && level <= LogLevel.ERROR) {
     state.currentLogLevel = level;
-    localStorage.setItem('nc_scorer_logLevel', LogLevel.names[level]);
+    try {
+      const settingsStore = useSettingsStore();
+      settingsStore.setLogLevel(LogLevel.names[level]);
+    } catch (e) {
+      // If store is not available, log the issue but continue
+      console.warn('Settings store not available for log level persistence:', e);
+    }
     addLogEntry(LogLevel.INFO, `Log level changed to ${LogLevel.names[level]}`);
   }
 }

@@ -1,55 +1,31 @@
 /**
  * Composable for managing API cache settings/preferences
- * Provides reactive state for cache enabled/disabled and persists user preferences
+ * Now uses centralized Pinia store for state management and persistence
  */
-import { ref, watchEffect } from 'vue';
-import { logService } from '@/services/logService';
+import { computed } from 'vue';
+import { useSettingsStore } from '@/stores/settingsStore';
 
 export function useCacheSettings() {
-  // Default to enabled
-  const STORAGE_KEY = 'nc-scorer-cache-enabled';
-  const defaultEnabled = true;
-  
-  // Create reactive state for cache enabled/disabled
-  const cacheEnabled = ref(loadCacheSetting());
-  
-  // Persist cache setting to localStorage when changed
-  watchEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(cacheEnabled.value));
-  });
-  
-  /**
-   * Load the cache setting from localStorage or use default
-   */
-  function loadCacheSetting() {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      return saved !== null ? JSON.parse(saved) : defaultEnabled;
-    } catch (e) {
-      logService.warn('Error loading cache settings from localStorage', e);
-      return defaultEnabled;
-    }
-  }
-  
-  /**
-   * Toggle cache state
-   */
-  function toggleCacheEnabled() {
-    cacheEnabled.value = !cacheEnabled.value;
-    return cacheEnabled.value;
-  }
-  
-  /**
-   * Explicitly set cache enabled state
-   */
-  function setCacheEnabled(value) {
-    cacheEnabled.value = !!value;
-    return cacheEnabled.value;
-  }
-  
+  const settingsStore = useSettingsStore();
+
+  // The 'enabled' state is now a computed property reading from the store
+  const cacheEnabled = computed(() => settingsStore.isCacheEnabled);
+
+  // Actions now delegate to the store
+  const toggleCacheEnabled = () => {
+    settingsStore.toggleCache();
+    return settingsStore.isCacheEnabled;
+  };
+
+  // Explicitly set cache enabled state
+  const setCacheEnabled = (value) => {
+    settingsStore.setCacheEnabled(!!value);
+    return settingsStore.isCacheEnabled;
+  };
+
   return {
     cacheEnabled,
     toggleCacheEnabled,
-    setCacheEnabled
+    setCacheEnabled,
   };
 }

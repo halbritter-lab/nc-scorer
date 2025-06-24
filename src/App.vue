@@ -63,6 +63,8 @@ import useTour from '@/composables/useTour.js';
 import { useDisclaimer } from '@/composables/useDisclaimer.js';
 import { onMounted, ref, defineAsyncComponent, computed } from 'vue';
 import { useUiStore } from '@/stores/uiStore';
+import { useSettingsStore } from '@/stores/settingsStore';
+import { useTheme } from 'vuetify';
 import { logService } from '@/services/logService';
 
 // Lazy load the LogViewer component for better initial loading performance
@@ -82,6 +84,8 @@ export default {
     const { startTour, shouldShowTour } = useTour();
     const { checkDisclaimerStatus } = useDisclaimer();
     const uiStore = useUiStore();
+    const settingsStore = useSettingsStore();
+    const theme = useTheme();
     
     const isDisclaimerAcknowledged = ref(checkDisclaimerStatus());
     const showLogViewer = computed(() => uiStore.showLogViewer);
@@ -98,6 +102,9 @@ export default {
     // Auto-start the tour for new users or those who haven't explicitly completed/skipped it
     // after a short delay to ensure the UI has fully loaded
     onMounted(() => {
+      // Set the initial theme from the persisted store state
+      theme.global.name.value = settingsStore.isDarkMode ? 'dark' : 'light';
+      
       // Check if disclaimer has been acknowledged
       isDisclaimerAcknowledged.value = checkDisclaimerStatus();
       
