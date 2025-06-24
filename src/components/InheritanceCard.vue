@@ -50,12 +50,18 @@
                     format: 'number',
                     round: 3,
                   }"
-                  :value="segregationProb"
+                  :value="segregationProb || 'Not provided'"
                 />
               </tbody>
             </v-table>
           </v-card-text>
         </v-card>
+        
+        <!-- Penalty Alert -->
+        <v-alert v-if="wasPenalized" density="compact" type="info" variant="tonal" class="mt-3">
+          <v-icon class="mr-2">mdi-information</v-icon>
+          Score penalized due to missing segregation data for this inheritance pattern.
+        </v-alert>
       </div>
     </v-card-text>
   </v-card>
@@ -64,40 +70,12 @@
 <script>
 // Script section remains unchanged - no logic changes needed for styling
 import { computed, watchEffect, ref, onMounted } from 'vue';
-import { baseScores, scoringParameters, noSegregationPatterns } from '@/config/inheritanceConfig'; // Import all needed
+import { noSegregationPatterns, baseScores } from '@/config/inheritanceConfig'; // Import for penalty detection and base scores
+import { calculateInheritanceScore } from '@/utils/scoringUtils.js'; // Use centralized scoring
 import DataDisplayRow from '@/components/DataDisplayRow.vue';
 import { formatValue } from '@/utils/format';
 import { scoreInterpretationConfig } from '@/config/scoreInterpretationConfig.js';
 
-/**
- * Computes the final genetic variant score based on a base inheritance score and a segregation p-value.
- *
- * The function uses a negative-log transformation of the p-value to boost
- * the base score toward 1.0 for very low p-values (i.e. strong segregation evidence).
- *
- * @param {number} baseScore - Base inheritance pattern score (must be between 0 and 1).
- * @param {number} [pValue=1] - Segregation p-value (must be between 0 and 1). Defaults to 1 (i.e. no added evidence).
- * @param {number} [gamma=0.001] - Threshold p-value for maximal evidence.
- * @param {number} [epsilon=1e-10] - Small floor to avoid logarithm of zero.
- * @returns {number} - Final inheritance score, scaled between baseScore and 1.0.
- * @throws {Error} - If baseScore or pValue are out of the [0,1] range.
- */
-function computeVariantScore(baseScore, pValue = 1, gamma = 0.001, epsilon = 1e-10) {
-  if (baseScore < 0 || baseScore > 1) {
-    throw new Error('baseScore must be between 0 and 1');
-  }
-  if (pValue < 0 || pValue > 1) {
-    throw new Error('pValue must be between 0 and 1');
-  }
-  const adjustedP = Math.max(pValue, epsilon);
-  const numerator = -Math.log(adjustedP);
-  const denominator = -Math.log(gamma);
-  let rawFactor = numerator / denominator;
-  if (rawFactor > 1) {
-    rawFactor = 1;
-  }
-  return baseScore + (1 - baseScore) * rawFactor;
-}
 
 export default {
   name: 'InheritanceCard',
@@ -110,7 +88,7 @@ export default {
       required: true,
     },
     segregation: {
-      // Accept both String and Number so that URL parameters are handled gracefully.
+      // Accept String, Number, or null for penalty logic
       type: [String, Number],
       required: true,
     },
@@ -119,10 +97,20 @@ export default {
     // Add loading state
     const loading = ref(true);
 
-    // Convert the segregation prop to a number.
-    const segregationProb = computed(() => Number(props.segregation));
+    // Handle segregation value - preserve null for penalty detection
+    const segregationValue = computed(() => {
+      if (props.segregation === null || props.segregation === '') {
+        return null;
+      }
+      return props.segregation;
+    });
 
-    // Determine the base score for the current inheritance pattern.
+    // Convert to number for display (only when not null)
+    const segregationProb = computed(() => {
+      return segregationValue.value !== null ? Number(segregationValue.value) : null;
+    });
+
+    // Determine the base score for the current inheritance pattern (for emit compatibility)
     const baseScore = computed(() =>
       baseScores[props.inheritance] !== undefined ? baseScores[props.inheritance] : 0.1
     );
@@ -135,18 +123,15 @@ export default {
       }, 500); // Adjust delay if needed
     });
 
-    // Compute the final inheritance score.
+    // Compute the final inheritance score using centralized logic
     const finalScore = computed(() => {
-      // Check if segregation should be ignored based on config
-      const ignoreSegregation = noSegregationPatterns.includes(props.inheritance);
-      const segregationToUse = ignoreSegregation ? 1 : segregationProb.value;
+      return calculateInheritanceScore(props.inheritance, segregationValue.value);
+    });
 
-      return computeVariantScore(
-        baseScore.value,
-        segregationToUse,
-        scoringParameters.gamma,
-        scoringParameters.epsilon
-      );
+    // Detect if penalty was applied
+    const wasPenalized = computed(() => {
+      const isSegregationMissing = segregationValue.value === null || segregationValue.value === '';
+      return !noSegregationPatterns.includes(props.inheritance) && isSegregationMissing;
     });
 
     // Format the final score to two decimal places for consistency.
@@ -174,8 +159,8 @@ export default {
       loading,
       finalScore,
       finalScoreFormatted,
-      // Removed duplicate inheritance key - we don't need to return props.inheritance as it's directly accessible in template
       segregationProb, // Make computed prob available for template
+      wasPenalized, // Make penalty detection available for template
       scoreInterpretationConfig, // Expose config for skeleton loader
     };
   },

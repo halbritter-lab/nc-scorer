@@ -43,8 +43,18 @@ export async function queryVariant(variantInput, options = {}) {
     onSuccess = null, // Add callback for success after retries
   } = options;
 
-  // Initialize notifications system
-  const { notifyRetry, notifySuccess } = useNotifications();
+  // Initialize notifications system (with fallback for non-component context)
+  let notifyRetry, notifySuccess;
+  try {
+    const notifications = useNotifications();
+    notifyRetry = notifications.notifyRetry;
+    notifySuccess = notifications.notifySuccess;
+  } catch (error) {
+    // If we're not in a component context, use console logging instead
+    console.debug('variantApi: Running outside component context, notifications disabled', error.message);
+    notifyRetry = (text, attempt, errorMsg) => console.debug(`Retry ${attempt} for ${text}: ${errorMsg}`);
+    notifySuccess = (message) => console.debug(`Success: ${message}`);
+  }
   
   // **Dynamic URL Configuration based on assembly selection**
   const isDevelopment = import.meta.env.DEV;
@@ -91,16 +101,19 @@ export async function queryVariant(variantInput, options = {}) {
   let cachedResult = null;
   let apiCache = null;
   
-  // Try to get apiCache, but only if we're in a component context
-  try {
-    apiCache = useApiCache();
-  } catch {
-    // If we're not in a component context, just skip caching
-    console.debug('variantApi: Running outside component context, cache disabled');
-    skipCache = true;
+  // Only attempt to use cache if not explicitly skipping and not a batch request
+  if (!skipCache && !isBatchRequest) {
+    // Try to get apiCache, but only if we're in a component context
+    try {
+      apiCache = useApiCache();
+    } catch (error) {
+      // If we're not in a component context, just skip caching
+      console.debug('variantApi: Running outside component context, cache disabled', error.message);
+      skipCache = true;
+    }
   }
   
-  // Check cache first if not explicitly skipping and not a batch request
+  // Check cache first if we have a valid apiCache instance
   if (!skipCache && !isBatchRequest && apiCache) {
     // Generate cache key and check for cached result
     cacheKey = apiCache.generateCacheKey('variant', normalizedInput, cacheParams);

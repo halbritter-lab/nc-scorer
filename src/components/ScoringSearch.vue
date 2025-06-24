@@ -399,12 +399,15 @@ export default {
         return;
       }
 
+      // Handle empty segregation as null for penalty logic
+      const segregationValue = segregation.value === '' ? null : segregation.value;
+
       // Prepare route params - conditionally include variantInput2 only when needed
       const routeParams = {
         // Normalize variant format to standard format (hyphen-separated for VCF, no whitespace for HGVS)
         variantInput: normalizeVariant(variantInput.value),
         inheritance: inheritance.value,
-        segregation: segregation.value,
+        segregation: segregationValue,
         assembly: assembly.value,
       };
 

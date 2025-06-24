@@ -12,6 +12,8 @@
           Format: <code>Variant &lt;TAB&gt; Inheritance &lt;TAB&gt; Segregation</code>
           <br>
           If inheritance and segregation are omitted, they will default to 'Unknown' and '1'.
+          <br>
+          <strong>Note:</strong> Omitting segregation data for inheritance patterns that expect it may result in a penalty (20% score reduction).
         </p>
         <v-textarea
           v-model="variantsInput"
@@ -238,7 +240,7 @@ function parseInputLine(line) {
   return {
     variant: parts[0]?.trim() || '',
     inheritance: parts[1]?.trim() || 'Unknown',
-    segregation: parts[2]?.trim() || '1.0',
+    segregation: parts[2]?.trim() || null, // Use null for missing segregation data
   };
 }
 

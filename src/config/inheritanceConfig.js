@@ -40,3 +40,10 @@ export const requiresSecondVariant = [
   'Compound heterozygous (confirmed)',
   'Compound heterozygous (suspected)',
 ];
+
+/**
+ * The multiplier to apply to the inheritance score when segregation
+ * data is expected but not provided.
+ * This penalty reflects increased uncertainty when evidence is missing.
+ */
+export const missingSegregationPenalty = 0.8; // 20% penalty

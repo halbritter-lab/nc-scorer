@@ -42,7 +42,7 @@ export async function fetchGeneSearchIndices(options = {}) {
   let cachedResult = null;
   let apiCache = null;
   
-  // Check cache first if not explicitly skipping
+  // Only attempt to use cache if not explicitly skipping
   if (!skipCache) {
     // Try to get apiCache, but handle case when outside component context
     try {
@@ -142,7 +142,7 @@ export async function fetchAllGeneScores(options = {}) {
   let cacheKey = null;
   let apiCache = null;
   
-  // Prepare cache if not skipping
+  // Only attempt to use cache if not skipping
   if (!skipCache) {
     // Try to get apiCache, but handle case when outside component context
     try {
@@ -222,7 +222,7 @@ export async function fetchGeneDetails(symbol, options = {}) {
   let cacheKey = null;
   let apiCache = null;
   
-  // Prepare cache if not skipping
+  // Only attempt to use cache if not skipping
   if (!skipCache) {
     // Try to get apiCache, but handle case when outside component context
     try {

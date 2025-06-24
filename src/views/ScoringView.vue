@@ -156,7 +156,8 @@ export default {
     // Retrieve parameters from the URL (with defaults).
     const variantInput = route.params.variantInput;
     const inheritance = route.params.inheritance || 'Inherited dominant';
-    const segregation = route.params.segregation || '1';
+    // Handle 'null' string from ScoringSearch component - convert back to null
+    const segregation = route.params.segregation === 'null' ? null : (route.params.segregation || '1');
     const variantInput2 = route.params.variantInput2 || '';
     const assembly = route.params.assembly || 'GRCh38';
 

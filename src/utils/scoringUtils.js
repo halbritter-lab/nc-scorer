@@ -1,7 +1,7 @@
 // src/utils/scoringUtils.js
 // Centralized scoring logic for batch processing and component reuse
 
-import { baseScores, scoringParameters, noSegregationPatterns } from '@/config/inheritanceConfig.js';
+import { baseScores, scoringParameters, noSegregationPatterns, missingSegregationPenalty } from '@/config/inheritanceConfig.js';
 
 /**
  * Computes the final genetic variant score based on a base inheritance score and a segregation p-value.
@@ -37,17 +37,33 @@ function computeVariantScore(baseScore, pValue = 1, gamma = 0.001, epsilon = 1e-
  * Calculates the final inheritance score from a pattern and segregation value.
  * This is extracted from InheritanceCard.vue for reuse in batch processing.
  * 
+ * Implements penalty for missing segregation data when it's expected:
+ * - If segregation is null/missing and the inheritance pattern requires segregation data,
+ *   the final score is penalized by multiplying with missingSegregationPenalty
+ * - This reflects increased uncertainty when expected evidence is not provided
+ * 
  * @param {string} inheritance - Inheritance pattern (e.g., 'Denovo', 'Inherited dominant')
- * @param {string|number} segregation - Segregation probability value
+ * @param {string|number|null} segregation - Segregation probability value, or null if missing
  * @returns {number} - Final inheritance score (0-1 range)
  */
 export function calculateInheritanceScore(inheritance, segregation) {
   const baseScore = baseScores[inheritance] ?? 0.1;
-  const segregationProb = Number(segregation);
-  const ignoreSegregation = noSegregationPatterns.includes(inheritance);
-  const pValue = ignoreSegregation ? 1 : segregationProb;
   
-  return computeVariantScore(baseScore, pValue, scoringParameters.gamma, scoringParameters.epsilon);
+  // Determine if segregation data was missing (null) or provided
+  const isSegregationMissing = segregation === null || segregation === '';
+  
+  // If data is missing, use a neutral p-value of 1 for the core calculation.
+  // If provided, convert to a number.
+  const pValueForCalculation = isSegregationMissing ? 1.0 : Number(segregation);
+  
+  // Check if a penalty should be applied for this inheritance type
+  const penaltyShouldApply = !noSegregationPatterns.includes(inheritance) && isSegregationMissing;
+  
+  // Calculate the raw score
+  const rawScore = computeVariantScore(baseScore, pValueForCalculation, scoringParameters.gamma, scoringParameters.epsilon);
+
+  // Apply the penalty only if the conditions are met
+  return penaltyShouldApply ? rawScore * missingSegregationPenalty : rawScore;
 }
 
 /**
