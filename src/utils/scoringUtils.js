@@ -1,18 +1,20 @@
-/**
- * Utility functions for scoring calculations used in batch processing
- */
+// src/utils/scoringUtils.js
+// Centralized scoring logic for batch processing and component reuse
 
 import { baseScores, scoringParameters, noSegregationPatterns } from '@/config/inheritanceConfig.js';
 
 /**
- * Computes inheritance score based on inheritance pattern and segregation probability
- * This is extracted from InheritanceCard.vue computeVariantScore function
- * 
- * @param {number} baseScore - The base score for the inheritance pattern (0-1)
- * @param {number} [pValue=1] - Segregation probability (0-1)
- * @param {number} [gamma=0.001] - Threshold p-value for maximal evidence
- * @param {number} [epsilon=1e-10] - Small floor to avoid logarithm of zero
- * @returns {number} - Final inheritance score, scaled between baseScore and 1.0
+ * Computes the final genetic variant score based on a base inheritance score and a segregation p-value.
+ *
+ * The function uses a negative-log transformation of the p-value to boost
+ * the base score toward 1.0 for very low p-values (i.e. strong segregation evidence).
+ *
+ * @param {number} baseScore - Base inheritance pattern score (must be between 0 and 1).
+ * @param {number} [pValue=1] - Segregation p-value (must be between 0 and 1). Defaults to 1 (i.e. no added evidence).
+ * @param {number} [gamma=0.001] - Threshold p-value for maximal evidence.
+ * @param {number} [epsilon=1e-10] - Small floor to avoid logarithm of zero.
+ * @returns {number} - Final inheritance score, scaled between baseScore and 1.0.
+ * @throws {Error} - If baseScore or pValue are out of the [0,1] range.
  */
 function computeVariantScore(baseScore, pValue = 1, gamma = 0.001, epsilon = 1e-10) {
   if (baseScore < 0 || baseScore > 1) {
@@ -32,40 +34,70 @@ function computeVariantScore(baseScore, pValue = 1, gamma = 0.001, epsilon = 1e-
 }
 
 /**
- * Calculate inheritance score from inheritance pattern and segregation probability
+ * Calculates the final inheritance score from a pattern and segregation value.
+ * This is extracted from InheritanceCard.vue for reuse in batch processing.
  * 
- * @param {string} inheritance - The inheritance pattern
- * @param {string|number} segregation - The segregation probability
- * @returns {number} - The calculated inheritance score
+ * @param {string} inheritance - Inheritance pattern (e.g., 'Denovo', 'Inherited dominant')
+ * @param {string|number} segregation - Segregation probability value
+ * @returns {number} - Final inheritance score (0-1 range)
  */
 export function calculateInheritanceScore(inheritance, segregation) {
-  // Get base score for inheritance pattern
-  const baseScore = baseScores[inheritance] !== undefined ? baseScores[inheritance] : 0.1;
-  
-  // Convert segregation to number
+  const baseScore = baseScores[inheritance] ?? 0.1;
   const segregationProb = Number(segregation);
-  
-  // Check if segregation should be ignored based on config
   const ignoreSegregation = noSegregationPatterns.includes(inheritance);
-  const segregationToUse = ignoreSegregation ? 1 : segregationProb;
+  const pValue = ignoreSegregation ? 1 : segregationProb;
   
-  return computeVariantScore(
-    baseScore,
-    segregationToUse,
-    scoringParameters.gamma,
-    scoringParameters.epsilon
-  );
+  return computeVariantScore(baseScore, pValue, scoringParameters.gamma, scoringParameters.epsilon);
 }
 
 /**
- * Calculate the combined NCS (Nephro Candidate Score)
- * Formula: geneScore * 4 + variantScore * 4 + inheritanceScore * 2
+ * Calculates the final Nephro Candidate Score (NCS).
+ * This is extracted from CombinedScoreCard.vue for reuse in batch processing.
  * 
- * @param {number} geneScore - Gene score (0-1)
- * @param {number} variantScore - Variant score (0-1)
- * @param {number} inheritanceScore - Inheritance score (0-1)
- * @returns {number} - The combined NCS score (0-10)
+ * Formula: (Gene × 4 + Variant × 4 + Inheritance × 2)
+ * Maximum possible score: 10 (when all component scores are 1.0)
+ * 
+ * @param {number} geneScore - Gene score (0-1 range)
+ * @param {number} variantScore - Variant score (0-1 range) 
+ * @param {number} inheritanceScore - Inheritance score (0-1 range)
+ * @returns {number} - Final NCS score (0-10 range)
  */
 export function calculateNCS(geneScore, variantScore, inheritanceScore) {
-  return geneScore * 4 + variantScore * 4 + inheritanceScore * 2;
+  if (typeof geneScore !== 'number' || typeof variantScore !== 'number' || typeof inheritanceScore !== 'number') {
+    return 0;
+  }
+  // Formula: (Gene × 4 + Variant × 4 + Inheritance × 2)
+  return (geneScore * 4) + (variantScore * 4) + (inheritanceScore * 2);
+}
+
+/**
+ * Validates that a score is within the expected 0-1 range
+ * @param {number} score - Score to validate
+ * @param {string} scoreName - Name of the score for error messages
+ * @returns {number} - The validated score, or 0 if invalid
+ */
+export function validateScore(score, scoreName = 'score') {
+  if (typeof score !== 'number' || isNaN(score)) {
+    console.warn(`Invalid ${scoreName}: ${score}. Using 0 instead.`);
+    return 0;
+  }
+  if (score < 0 || score > 1) {
+    console.warn(`${scoreName} out of range [0,1]: ${score}. Clamping to valid range.`);
+    return Math.max(0, Math.min(1, score));
+  }
+  return score;
+}
+
+/**
+ * Helper function to safely extract numeric scores from API responses
+ * @param {any} value - Value to convert to number
+ * @param {number} defaultValue - Default value if conversion fails
+ * @returns {number} - Numeric score
+ */
+export function safeParseScore(value, defaultValue = 0) {
+  if (value === null || value === undefined || value === '') {
+    return defaultValue;
+  }
+  const parsed = Number(value);
+  return isNaN(parsed) ? defaultValue : parsed;
 }

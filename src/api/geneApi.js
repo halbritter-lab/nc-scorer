@@ -40,18 +40,25 @@ export async function fetchGeneSearchIndices(options = {}) {
   // Create cache variables
   let cacheKey = null;
   let cachedResult = null;
+  let apiCache = null;
   
   // Check cache first if not explicitly skipping
   if (!skipCache) {
-    // Get the apiCache inside the execution context where inject() is valid
-    const apiCache = useApiCache();
-    
-    // Create cache key
-    cacheKey = apiCache.generateCacheKey('gene-search-indices');
-    
-    cachedResult = apiCache.getCachedItem(cacheKey);
-    if (cachedResult) {
-      return cachedResult.data;
+    // Try to get apiCache, but handle case when outside component context
+    try {
+      apiCache = useApiCache();
+      
+      // Create cache key
+      cacheKey = apiCache.generateCacheKey('gene-search-indices');
+      
+      cachedResult = apiCache.getCachedItem(cacheKey);
+      if (cachedResult) {
+        return cachedResult.data;
+      }
+    } catch {
+      // If we're not in a component context, just skip caching
+      console.debug('geneApi: Running outside component context, cache disabled for gene search indices');
+      // Don't set skipCache = true, just continue without cache
     }
   }
   
@@ -90,9 +97,7 @@ export async function fetchGeneSearchIndices(options = {}) {
     };
     
     // Cache the result
-    if (!skipCache && cacheKey) {
-      // Get the apiCache inside the execution context where inject() is valid
-      const apiCache = useApiCache();
+    if (!skipCache && cacheKey && apiCache) {
       apiCache.setCachedItem(cacheKey, result, 24 * 60 * 60 * 1000); // 24 hours
     }
     
@@ -139,16 +144,21 @@ export async function fetchAllGeneScores(options = {}) {
   
   // Prepare cache if not skipping
   if (!skipCache) {
-    // Get the apiCache inside the execution context where inject() is valid
-    apiCache = useApiCache();
-    
-    // Create cache key for all gene scores
-    cacheKey = apiCache.generateCacheKey('gene-scores-all', 'summary');
-    
-    // Check cache first
-    const cachedResult = apiCache.getCachedItem(cacheKey);
-    if (cachedResult) {
-      return cachedResult; // Returns {data, source} object
+    // Try to get apiCache, but handle case when outside component context
+    try {
+      apiCache = useApiCache();
+      
+      // Create cache key for all gene scores
+      cacheKey = apiCache.generateCacheKey('gene-scores-all', 'summary');
+      
+      // Check cache first
+      const cachedResult = apiCache.getCachedItem(cacheKey);
+      if (cachedResult) {
+        return cachedResult; // Returns {data, source} object
+      }
+    } catch {
+      // If we're not in a component context, just skip caching
+      console.debug('geneApi: Running outside component context, cache disabled for gene scores');
     }
   }
   
@@ -214,17 +224,22 @@ export async function fetchGeneDetails(symbol, options = {}) {
   
   // Prepare cache if not skipping
   if (!skipCache) {
-    // Get the apiCache inside the execution context where inject() is valid
-    apiCache = useApiCache();
-    
-    // Normalize symbol and create cache key
-    const normalizedSymbol = symbol.trim().toUpperCase();
-    cacheKey = apiCache.generateCacheKey('gene', normalizedSymbol);
-    
-    // Check cache first
-    const cachedResult = apiCache.getCachedItem(cacheKey);
-    if (cachedResult) {
-      return cachedResult; // Returns {data, source} object
+    // Try to get apiCache, but handle case when outside component context
+    try {
+      apiCache = useApiCache();
+      
+      // Normalize symbol and create cache key
+      const normalizedSymbol = symbol.trim().toUpperCase();
+      cacheKey = apiCache.generateCacheKey('gene', normalizedSymbol);
+      
+      // Check cache first
+      const cachedResult = apiCache.getCachedItem(cacheKey);
+      if (cachedResult) {
+        return cachedResult; // Returns {data, source} object
+      }
+    } catch {
+      // If we're not in a component context, just skip caching
+      console.debug(`geneApi: Running outside component context, cache disabled for gene ${symbol}`);
     }
   }
   
