@@ -331,6 +331,10 @@ export default {
       type: String,
       default: '',
     },
+    assembly: {
+      type: String,
+      default: 'GRCh38',
+    },
     showTabs: {
       type: Boolean,
       default: false,
@@ -665,7 +669,8 @@ export default {
       retryStateKey,
       formattedOptionsRef,
       prioritizedRef,
-      selectedIdRef
+      selectedIdRef,
+      assembly
     ) => {
       if (!variantInputToLoad) return false;
 
@@ -682,6 +687,7 @@ export default {
         const retryState = retryStates[retryStateKey];
 
         const response = await queryVariant(variantInputToLoad, {
+          assembly,
           retryState,
           onRetry: (err, attempt) => {
             retryState.inProgress = true;
@@ -779,7 +785,8 @@ export default {
         'variant',
         formattedTranscriptOptions,
         prioritizedTranscript,
-        selectedTranscriptId
+        selectedTranscriptId,
+        props.assembly
       );
 
       // If there is a second variant, load it too
@@ -795,7 +802,8 @@ export default {
           'variant2',
           formattedTranscriptOptions2,
           prioritizedTranscript2,
-          selectedTranscriptId2
+          selectedTranscriptId2,
+          props.assembly
         );
       }
     });

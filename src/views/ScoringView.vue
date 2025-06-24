@@ -111,6 +111,7 @@
         <VariantCard
           :variantInput="variantInput"
           :variantInput2="isCompoundHet ? variantInput2 : ''"
+          :assembly="assembly"
           @variant-score-updated="handleVariantScoreUpdate"
         />
       </v-col>
@@ -157,6 +158,7 @@ export default {
     const inheritance = route.params.inheritance || 'Inherited dominant';
     const segregation = route.params.segregation || '1';
     const variantInput2 = route.params.variantInput2 || '';
+    const assembly = route.params.assembly || 'GRCh38';
 
     // Create reactive state to store component data
     const scoreState = reactive({
@@ -438,7 +440,8 @@ export default {
           variant: variantInput,
           variant2: variantInput2,
           inheritance: inheritance,
-          segregation: segregation
+          segregation: segregation,
+          assembly: assembly
         }
       });
     }
@@ -448,6 +451,7 @@ export default {
       variantInput2,
       inheritance,
       segregation,
+      assembly,
       geneSymbol,
       geneScore,
       variantScore,

@@ -95,6 +95,22 @@ export default defineConfig(async ({ mode }) => {
             });
           },
         },
+        '/ensembl_grch37/': {
+          target: 'https://grch37.rest.ensembl.org',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/ensembl_grch37/, ''),
+          configure: (proxy) => {
+            proxy.on('error', (err) => {
+              console.log('GRCh37 proxy error', err);
+            });
+            proxy.on('proxyReq', (_proxyReq, req) => {
+              console.log('Sending GRCh37 Request to the Target:', req.method, req.url);
+            });
+            proxy.on('proxyRes', (proxyRes, req) => {
+              console.log('Received GRCh37 Response from the Target:', proxyRes.statusCode, req.url);
+            });
+          },
+        },
       },
     },
     define: {

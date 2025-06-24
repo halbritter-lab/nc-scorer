@@ -31,13 +31,13 @@ const routes = [
     component: FAQ,
   },
   {
-    path: '/variant/:variantInput',
+    path: '/variant/:variantInput/:assembly?',
     name: 'VariantView',
     component: VariantView,
     props: true,
   },
   {
-    path: '/scoring/:variantInput/:inheritance?/:segregation?/:variantInput2?',
+    path: '/scoring/:variantInput/:inheritance?/:segregation?/:variantInput2?/:assembly?',
     name: 'ScoringView',
     component: ScoringView,
     props: true,

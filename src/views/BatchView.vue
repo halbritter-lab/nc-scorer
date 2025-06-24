@@ -39,6 +39,23 @@
             </v-btn>
           </div>
         </div>
+
+        <div class="mb-4">
+          <p class="text-subtitle-1 mb-2">Genome Assembly:</p>
+          <v-select
+            v-model="assembly"
+            :items="assemblyOptions"
+            label="Select Genome Assembly"
+            variant="outlined"
+            density="comfortable"
+            :disabled="isLoading"
+            class="mb-2"
+            style="max-width: 300px;"
+          ></v-select>
+          <p class="text-caption">
+            Select GRCh37 for variants with hg19 coordinates, or GRCh38 for hg38 coordinates.
+          </p>
+        </div>
         
         <v-progress-linear v-if="isLoading" :model-value="progress" class="mb-4"></v-progress-linear>
 
@@ -133,11 +150,18 @@ const MAX_VARIANTS = 200;
 
 // Component State
 const variantsInput = ref('');
+const assembly = ref('GRCh38');
 const isLoading = ref(false);
 const errorMsg = ref('');
 const progress = ref(0);
 const batchResults = ref([]);
 const tableSearch = ref('');
+
+// Assembly options for selection
+const assemblyOptions = [
+  { title: 'GRCh38 / hg38 (Default)', value: 'GRCh38' },
+  { title: 'GRCh37 / hg19', value: 'GRCh37' },
+];
 
 // Table Headers
 const tableHeaders = [
@@ -200,7 +224,7 @@ async function processSingleVariant(line, index, total) {
     };
 
     try {
-      const variantResult = await queryVariant(variant, { skipCache: true });
+      const variantResult = await queryVariant(variant, { skipCache: true, assembly: assembly.value });
       const annotation = variantResult.data?.[0] || variantResult.data;
       if (!annotation) throw new Error('No annotation data returned');
 

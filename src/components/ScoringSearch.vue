@@ -111,6 +111,37 @@
               
 
             </div>
+            
+            <!-- Assembly selection row -->
+            <div class="search-inputs-row assembly-row d-flex align-center border-top pt-2" @keyup.enter="searchScoring">
+              <div class="filter-row d-flex">
+                <!-- Assembly selection -->
+                <div class="filter-cell">
+                  <div class="d-flex align-center pl-3 pr-2">
+                    <v-icon class="option-icon mr-2">mdi-book-open-variant</v-icon>
+                    <v-select
+                      v-model="assembly"
+                      :items="assemblyOptions"
+                      label="Genome Assembly"
+                      variant="plain"
+                      hide-details
+                      density="comfortable"
+                      class="option-select"
+                      id="assembly-select"
+                      aria-label="Select genome assembly"
+                      @keydown.enter="searchScoring"
+                    ></v-select>
+                  </div>
+                </div>
+                
+                <!-- Empty cell for alignment -->
+                <div class="filter-cell vertical-divider">
+                  <div class="d-flex align-center pl-3 pr-2">
+                    <span class="text-caption text-medium-emphasis">Select GRCh37 for hg19 coordinates</span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
           
           <!-- Hint text below search box -->
@@ -206,6 +237,7 @@ export default {
     const variantInput2 = ref(route.query.variant2 || route.params.variantInput2 || '');
     const inheritance = ref(route.query.inheritance || route.params.inheritance || 'Unknown');
     const segregation = ref(route.query.segregation || route.params.segregation || '1');
+    const assembly = ref(route.query.assembly || route.params.assembly || 'GRCh38');
     
     // No debug logging to prevent circular references
     
@@ -230,6 +262,12 @@ export default {
       'Compound heterozygous (confirmed)',
       'Compound heterozygous (suspected)',
       'Unknown',
+    ];
+
+    // Assembly options for selection
+    const assemblyOptions = [
+      { title: 'GRCh38 / hg38 (Default)', value: 'GRCh38' },
+      { title: 'GRCh37 / hg19', value: 'GRCh37' },
     ];
 
     // Only allow segregation input if the inheritance pattern allows it
@@ -367,6 +405,7 @@ export default {
         variantInput: normalizeVariant(variantInput.value),
         inheritance: inheritance.value,
         segregation: segregation.value,
+        assembly: assembly.value,
       };
 
       // Add second variant to params only if it exists and is needed
@@ -385,7 +424,9 @@ export default {
       variantInput2,
       inheritance,
       segregation,
+      assembly,
       inheritanceOptions,
+      assemblyOptions,
       showSegregationInput,
       showSecondVariantInput,
       searchScoring,

@@ -39,6 +39,37 @@
                 </v-btn>
               </div>
             </div>
+            
+            <!-- Assembly selection row -->
+            <div class="search-inputs-row assembly-row d-flex align-center border-top pt-2" @keyup.enter="searchVariant">
+              <div class="filter-row d-flex">
+                <!-- Assembly selection -->
+                <div class="filter-cell">
+                  <div class="d-flex align-center pl-3 pr-2">
+                    <v-icon class="option-icon mr-2">mdi-book-open-variant</v-icon>
+                    <v-select
+                      v-model="assembly"
+                      :items="assemblyOptions"
+                      label="Genome Assembly"
+                      variant="plain"
+                      hide-details
+                      density="comfortable"
+                      class="option-select"
+                      id="assembly-select"
+                      aria-label="Select genome assembly"
+                      @keydown.enter="searchVariant"
+                    ></v-select>
+                  </div>
+                </div>
+                
+                <!-- Helper text -->
+                <div class="filter-cell vertical-divider">
+                  <div class="d-flex align-center pl-3 pr-2">
+                    <span class="text-caption text-medium-emphasis">Select GRCh37 for hg19 coordinates</span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
           
           <!-- Hint text below search box -->
@@ -101,8 +132,15 @@ export default {
   name: 'VariantSearch',
   setup() {
     const variantInput = ref('');
+    const assembly = ref('GRCh38');
     const error = ref(null);
     const router = useRouter();
+    
+    // Assembly options for selection
+    const assemblyOptions = [
+      { title: 'GRCh38 / hg38 (Default)', value: 'GRCh38' },
+      { title: 'GRCh37 / hg19', value: 'GRCh37' },
+    ];
     
     const variantRules = [
       (value) => !!value || 'Variant is required',
@@ -123,12 +161,20 @@ export default {
       // Normalize variant format to standard format before navigation
       const normalizedVariant = normalizeVariant(variantInput.value);
       
-      // Navigate to the VariantView page with the normalized input as a route parameter
-      router.push({ name: 'VariantView', params: { variantInput: normalizedVariant } });
+      // Navigate to the VariantView page with the normalized input and assembly as route parameters
+      router.push({ 
+        name: 'VariantView', 
+        params: { 
+          variantInput: normalizedVariant,
+          assembly: assembly.value
+        } 
+      });
     };
 
     return {
       variantInput,
+      assembly,
+      assemblyOptions,
       searchVariant,
       error,
       variantRules,
@@ -301,5 +347,49 @@ export default {
 
 .example-link:hover .example-title {
   text-decoration: underline;
+}
+
+/* Additional styles for assembly selection */
+.option-icon {
+  color: #5f6368;
+  font-size: 18px;
+}
+
+.v-theme--dark .option-icon {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.option-select {
+  font-size: 14px;
+}
+
+.filter-row {
+  display: flex;
+  width: 100%;
+}
+
+.filter-cell {
+  width: 50%;
+  max-width: 50%;
+}
+
+.filter-cell .v-input {
+  width: 100%;
+}
+
+.border-top {
+  border-top: 1px solid #dfe1e5;
+}
+
+.v-theme--dark .border-top {
+  border-top-color: #666;
+  border-top-width: 1.5px;
+}
+
+.assembly-row {
+  margin-top: 2px;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
 }
 </style>

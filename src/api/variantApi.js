@@ -8,20 +8,8 @@ import { useNotifications } from '@/composables/useNotifications';
 // Ensure module is available globally for proper initialization
 window.variantLinker = variantLinker;
 
-// Configure variant-linker to use our proxy only in development mode
-if (variantLinker.config && typeof variantLinker.config.setBaseUrl === 'function') {
-  // Check if we're in development mode
-  const isDevelopment = import.meta.env.DEV;
-
-  if (isDevelopment) {
-    // In development: use the proxy to avoid CORS issues
-    variantLinker.config.setBaseUrl('ensembl');
-  } else {
-    // In production: use the default Ensembl API directly
-    // This will work on GitHub Pages if they allow CORS from github.io domains
-    variantLinker.config.setBaseUrl('https://rest.ensembl.org');
-  }
-}
+// NOTE: Base URL is now set dynamically in each queryVariant call
+// This allows for genome assembly selection (GRCh37 vs GRCh38)
 import variableAssignmentConfig from '@/config/scoring/nephro_variant_score/variable_assignment_config.json';
 import formulaConfig from '@/config/scoring/nephro_variant_score/formula_config.json';
 
@@ -38,6 +26,7 @@ import formulaConfig from '@/config/scoring/nephro_variant_score/formula_config.
  * @param {number} [options.cacheTTL=1800000] - Cache time to live in ms (default 30min).
  * @param {string} [options.output='JSON'] - Desired output format ('JSON', 'CSV', 'TSV', 'VCF').
  * @param {string} [options.filter=''] - Filtering criteria as a string.
+ * @param {string} [options.assembly='GRCh38'] - Genome assembly to use ('GRCh37' or 'GRCh38').
  * @returns {Promise<Object|string>} The result of the variant analysis. Returns object/array for JSON or string for other formats.
  * @throws {Error} If analyzeVariant is not a function on the variant-linker module.
  */
@@ -49,12 +38,31 @@ export async function queryVariant(variantInput, options = {}) {
     cacheTTL = 30 * 60 * 1000, // 30 minutes in milliseconds
     output = 'JSON',
     filter = '',
+    assembly = 'GRCh38', // Default to GRCh38
     onRetry = null, // Add callback for retry events
     onSuccess = null, // Add callback for success after retries
   } = options;
 
   // Initialize notifications system
   const { notifyRetry, notifySuccess } = useNotifications();
+  
+  // **Dynamic URL Configuration based on assembly selection**
+  const isDevelopment = import.meta.env.DEV;
+  let baseUrl;
+
+  if (isDevelopment) {
+    baseUrl = assembly === 'GRCh37' ? '/ensembl_grch37' : '/ensembl';
+  } else {
+    baseUrl = assembly === 'GRCh37'
+      ? 'https://grch37.rest.ensembl.org'
+      : 'https://rest.ensembl.org';
+  }
+
+  // Set the base URL dynamically for this request
+  if (variantLinker.config && typeof variantLinker.config.setBaseUrl === 'function') {
+    variantLinker.config.setBaseUrl(baseUrl);
+    console.log(`variantApi: Set Ensembl base URL to ${baseUrl} for assembly ${assembly}`);
+  }
   
   // We'll dynamically get the apiCache later during execution when needed
 
@@ -75,17 +83,25 @@ export async function queryVariant(variantInput, options = {}) {
     vepOptions,
     output,
     filter,
+    assembly, // Include assembly in cache key to avoid cross-contamination
   };
 
   // Initialize cache key and cached result (only for single variant requests)
   let cacheKey = null;
   let cachedResult = null;
+  let apiCache = null;
+  
+  // Try to get apiCache, but only if we're in a component context
+  try {
+    apiCache = useApiCache();
+  } catch {
+    // If we're not in a component context, just skip caching
+    console.debug('variantApi: Running outside component context, cache disabled');
+    skipCache = true;
+  }
   
   // Check cache first if not explicitly skipping and not a batch request
-  if (!skipCache && !isBatchRequest) {
-    // Get the apiCache inside the execution context where inject() is valid
-    const apiCache = useApiCache();
-    
+  if (!skipCache && !isBatchRequest && apiCache) {
     // Generate cache key and check for cached result
     cacheKey = apiCache.generateCacheKey('variant', normalizedInput, cacheParams);
     cachedResult = apiCache.getCachedItem(cacheKey);
@@ -135,9 +151,7 @@ export async function queryVariant(variantInput, options = {}) {
       }
       
       // Store successful result in cache and get response with source info (only for single variants)
-      if (result && !skipCache && !isBatchRequest) {
-        // Get the apiCache inside the execution context where inject() is valid
-        const apiCache = useApiCache();
+      if (result && !skipCache && !isBatchRequest && apiCache) {
         return apiCache.setCachedItem(cacheKey, result, cacheTTL); // Returns {data, source} object
       }
 

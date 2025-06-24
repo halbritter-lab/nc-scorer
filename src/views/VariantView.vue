@@ -1,7 +1,7 @@
 <!-- src/views/VariantView.vue -->
 <template>
   <ContentContainer>
-    <VariantCard :variantInput="variantInput" />
+    <VariantCard :variantInput="variantInput" :assembly="assembly" />
   </ContentContainer>
 </template>
 
@@ -15,6 +15,10 @@ export default {
     variantInput: {
       type: String,
       required: true,
+    },
+    assembly: {
+      type: String,
+      default: 'GRCh38',
     },
   },
   components: {
