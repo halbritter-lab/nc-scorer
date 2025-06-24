@@ -1,3 +1,10 @@
+# [2.4.0](https://github.com/halbritter-lab/nc-scorer/compare/v2.3.0...v2.4.0) (2025-06-24)
+
+
+### Features
+
+* penalize missing segregation data for inheritance scoring ([2cd9257](https://github.com/halbritter-lab/nc-scorer/commit/2cd9257be0f5c567c7ff4d9525bf3ae9d0faf6c6)), closes [#66](https://github.com/halbritter-lab/nc-scorer/issues/66)
+
 # [2.3.0](https://github.com/halbritter-lab/nc-scorer/compare/v2.2.0...v2.3.0) (2025-06-24)
 
 
