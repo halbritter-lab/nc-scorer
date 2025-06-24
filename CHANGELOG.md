@@ -1,3 +1,10 @@
+## [2.1.1](https://github.com/halbritter-lab/nc-scorer/compare/v2.1.0...v2.1.1) (2025-06-24)
+
+
+### Bug Fixes
+
+* **batch:** improve variant data parsing and add VCF export format ([1711b00](https://github.com/halbritter-lab/nc-scorer/commit/1711b00665bee2cd7a88fd2cd99ba6f3c1f84e9f))
+
 # [2.1.0](https://github.com/halbritter-lab/nc-scorer/compare/v2.0.0...v2.1.0) (2025-06-24)
 
 
