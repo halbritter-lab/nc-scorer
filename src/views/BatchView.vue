@@ -118,10 +118,54 @@
             <router-link v-if="item.geneSymbol !== 'N/A'" :to="{ name: 'GeneView', params: { symbol: item.geneSymbol } }">
               {{ item.geneSymbol }}
             </router-link>
-            <span v-else>N/A</span>
+            <span v-else class="text-grey">N/A</span>
           </template>
           <template #[`item.ncs`]="{ item }">
-            <v-chip :color="getScoreColor(item.ncs)" size="small">{{ item.ncs }}</v-chip>
+            <v-chip 
+              v-if="item.ncs !== 'N/A'" 
+              :color="getScoreColor(item.ncs, 'ncs')" 
+              size="small"
+              :title="`NCS Score: ${item.ncs}`"
+            >
+              {{ item.ncs }}
+            </v-chip>
+            <span v-else class="text-grey">N/A</span>
+          </template>
+          <template #[`item.geneScore`]="{ item }">
+            <v-chip 
+              v-if="item.geneScore !== 'N/A'" 
+              :color="getScoreColor(item.geneScore, 'gene')" 
+              size="small"
+              variant="tonal"
+              :title="`Gene Score: ${item.geneScore}`"
+            >
+              {{ formatScore(item.geneScore) }}
+            </v-chip>
+            <span v-else class="text-grey">N/A</span>
+          </template>
+          <template #[`item.variantScore`]="{ item }">
+            <v-chip 
+              v-if="item.variantScore !== 'N/A'" 
+              :color="getScoreColor(item.variantScore, 'variant')" 
+              size="small"
+              variant="tonal"
+              :title="`Variant Score: ${item.variantScore}`"
+            >
+              {{ formatScore(item.variantScore) }}
+            </v-chip>
+            <span v-else class="text-grey">N/A</span>
+          </template>
+          <template #[`item.inheritanceScore`]="{ item }">
+            <v-chip 
+              v-if="item.inheritanceScore !== 'N/A'" 
+              :color="getScoreColor(item.inheritanceScore, 'inheritance')" 
+              size="small"
+              variant="tonal"
+              :title="`Inheritance Score: ${item.inheritanceScore}`"
+            >
+              {{ formatScore(item.inheritanceScore) }}
+            </v-chip>
+            <span v-else class="text-grey">N/A</span>
           </template>
           <template #[`item.error`]="{ item }">
             <v-tooltip v-if="item.error" :text="item.error">
@@ -146,6 +190,7 @@ import { downloadFile } from '@/utils/exportUtils.js';
 import { logService } from '@/services/logService.js';
 import { exampleLists } from '@/config/batchViewConfig.js';
 import { calculateInheritanceScore, calculateNCS } from '@/utils/scoringUtils.js';
+import { scoreInterpretationConfig } from '@/config/scoreInterpretationConfig.js';
 
 const MAX_VARIANTS = 200;
 
@@ -378,11 +423,36 @@ function clearResults() {
   errorMsg.value = '';
 }
 
-function getScoreColor(score) {
+function getScoreColor(score, scoreType = 'ncs') {
   const numericScore = parseFloat(score);
   if (isNaN(numericScore)) return 'grey';
-  if (numericScore >= 7) return 'error';
-  if (numericScore >= 3) return 'warning';
-  return 'grey';
+  
+  // For NCS (combined) scores, use the standard interpretation ranges
+  if (scoreType === 'ncs') {
+    const ranges = scoreInterpretationConfig.ranges;
+    if (numericScore >= ranges[2].min) return 'error';      // High (7-10): Red
+    if (numericScore >= ranges[1].min) return 'warning';    // Moderate (3-7): Orange
+    return 'grey';                                          // Low (0-3): Grey
+  }
+  
+  // For sub-scores, use theme colors consistent with ScoringView
+  switch (scoreType) {
+    case 'gene':
+      return 'indigo';           // Blue-based for gene scores
+    case 'variant':
+      return 'deep-purple';      // Purple-based for variant scores  
+    case 'inheritance':
+      return 'teal';             // Teal-based for inheritance scores
+    default:
+      return 'grey';
+  }
+}
+
+function formatScore(score) {
+  const numericScore = parseFloat(score);
+  if (isNaN(numericScore)) return 'N/A';
+  
+  // Format to 2 decimal places, removing trailing zeros
+  return numericScore.toFixed(2).replace(/\.?0+$/, '');
 }
 </script>

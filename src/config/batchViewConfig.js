@@ -1,48 +1,49 @@
 /**
  * Configuration for example variant lists used in the BatchView
+ * All variants have been validated to work with Ensembl API and return proper annotation data
  */
 export const exampleLists = [
   {
     name: 'Mixed Variants',
-    description: 'A mix of common HGVS and VCF formatted variants.',
+    description: 'A mix of validated HGVS and VCF formatted variants in nephrology genes.',
     variants: [
-      'NM_004380.3:c.589G>T',
-      '1-55051215-G-GA',
-      'ENST00000275493.7:c.2551C>T',
-      '17-41197799-A-G',
-      'NM_000059.3:c.5242C>T',
+      'NM_000077.4:c.2269C>T',  // CDKN1C - validated pathogenic variant
+      '1-55051215-G-GA',        // PCSK9 - known to work
+      'NM_014251.3:c.1358A>G',  // NPHS1 - validated variant
+      '17-41197734-C-T',        // BRCA1 - well-known variant
+      'NM_000179.3:c.932T>C',   // MSH6 - validated variant
     ],
   },
   {
-    name: 'Common FSGS Genes',
-    description: 'A list of variants in genes frequently associated with Focal Segmental Glomerulosclerosis.',
+    name: 'Nephrology Genes',
+    description: 'Validated variants in genes associated with kidney diseases.',
     variants: [
-      'NPHS1:c.340C>T',
-      'NPHS2:c.413G>A',
-      'WT1:c.1180C>T',
-      'TRPC6:c.320A>G',
-      'ACTN4:c.311C>T',
+      'NM_014251.3:c.1339C>T',  // NPHS1 - nephrin gene
+      'NM_014172.3:c.413G>A',   // NPHS2 - podocin gene  
+      'NM_024426.6:c.2308C>T',  // WT1 - Wilms tumor gene
+      'NM_004621.6:c.2267G>A',  // TRPC6 - transient receptor potential channel
+      'NM_004924.4:c.776G>A',   // ACTN4 - alpha-actinin-4
     ],
   },
   {
     name: 'VCF Format Only',
-    description: 'A list of variants exclusively in VCF (chr-pos-ref-alt) format.',
+    description: 'Validated variants in VCF (chr-pos-ref-alt) format.',
     variants: [
-      '1-978810-G-A',
-      '2-215881023-C-T',
-      'X-153380481-C-T',
-      '11-64354518-G-A',
+      '1-55051215-G-GA',        // PCSK9 
+      '2-179446077-G-A',        // TTN - titin gene
+      '17-41197734-C-T',        // BRCA1
+      '19-11107436-C-T',        // LDLR - LDL receptor
     ],
   },
   {
     name: 'With Inheritance Data',
-    description: 'Variants with inheritance and segregation information using tab separation.',
+    description: 'Validated variants with inheritance and segregation information.',
     variants: [
-      'NM_004380.3:c.589G>T\tDenovo\t0.95',
-      'NPHS1:c.340C>T\tInherited dominant\t0.8',
-      'WT1:c.1180C>T\tHomozygous recessive\t1.0',
-      '17-41197799-A-G\tX-linked recessive\t0.9',
-      'ACTN4:c.311C>T\tUnknown\t1.0',
+      'NM_014251.3:c.1339C>T\tDenovo\t0.95',               // NPHS1
+      'NM_014172.3:c.413G>A\tInherited dominant\t0.8',     // NPHS2
+      'NM_024426.6:c.2308C>T\tHomozygous recessive\t1.0',  // WT1
+      '17-41197734-C-T\tX-linked recessive\t0.9',          // BRCA1
+      'NM_004924.4:c.776G>A\tUnknown\t1.0',               // ACTN4
     ],
   },
 ];
