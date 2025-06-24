@@ -1,3 +1,10 @@
+# [2.2.0](https://github.com/halbritter-lab/nc-scorer/compare/v2.1.1...v2.2.0) (2025-06-24)
+
+
+### Features
+
+* **batch:** improve score display with consistent chips and colors ([b9a75e8](https://github.com/halbritter-lab/nc-scorer/commit/b9a75e8cf7c14812d4bd432b023b0486dcae3151))
+
 ## [2.1.1](https://github.com/halbritter-lab/nc-scorer/compare/v2.1.0...v2.1.1) (2025-06-24)
 
 
