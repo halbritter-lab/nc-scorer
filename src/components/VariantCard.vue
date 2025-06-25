@@ -852,6 +852,8 @@ export default {
             isCompoundHet: true,
             geneSummary: annotationSummary.value, // Provide primary variant's gene summary
             prioritizedGeneSymbol: prioritizedGeneSymbol.value, // Use primary prioritized symbol
+            frequencyExtracted: frequencyExtracted.value,
+            selectedTranscript: selectedTranscript.value,
             // Optionally include second variant's data if needed by parent
             secondVariantData: {
                geneSummary: annotationSummary2.value,

@@ -23,6 +23,7 @@
             :geneScore="geneScore"
             :variantScore="variantScore"
             :inheritanceScore="inheritanceScore"
+            :inheritancePattern="inheritancePattern"
           />
           
           <!-- Action buttons group -->
@@ -161,6 +162,8 @@ export default {
       geneSymbol: '',
       variantScore: 0,
       inheritanceScore: 0,
+      // Add new properties to hold the driver data
+      inheritancePattern: inheritance || 'Unknown',
       // Store additional data that might be needed
       variantData: null,
       secondVariantData: null,
@@ -195,6 +198,9 @@ export default {
 
     // Use the reactive state value directly for inheritance score
     const inheritanceScore = computed(() => scoreState.inheritanceScore || 0);
+
+    // Create a computed property for inheritance pattern with safe fallback
+    const inheritancePattern = computed(() => scoreState.inheritancePattern || inheritance || 'Unknown');
 
     // Only consider the combined score available if all three component scores are greater than 0.
     const combinedScoreAvailable = computed(() => {
@@ -238,6 +244,9 @@ export default {
     function handleInheritanceScoreUpdate(data) {
       scoreState.inheritanceScore = Number(data.score) || 0;
       scoreState.inheritanceData = data;
+      
+      // Store the inheritance pattern
+      scoreState.inheritancePattern = data.pattern || inheritance;
     }
 
     /**
@@ -451,6 +460,7 @@ export default {
       geneScore,
       variantScore,
       inheritanceScore,
+      inheritancePattern,
       combinedScoreAvailable,
       isCompoundHet,
       scoreInterpretationConfig, // Make available to the template for skeleton loaders

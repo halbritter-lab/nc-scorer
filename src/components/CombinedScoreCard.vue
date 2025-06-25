@@ -18,6 +18,12 @@
           <div>Inheritance: {{ formattedInheritanceScore }} × 2 = {{ weightedInheritanceScore }}</div>
         </div>
       </v-tooltip>
+
+      <!-- NEW DYNAMIC SUMMARY -->
+      <v-card-subtitle class="mt-4 summary-text text-wrap">
+        {{ dynamicSummary }}
+      </v-card-subtitle>
+
       <!-- Score Interpretation Guide with current score marker -->
       <ScoreInterpretationGuide class="mt-3" :currentScore="combinedScore" />
     </v-card-text>
@@ -47,6 +53,11 @@ export default {
     inheritanceScore: {
       type: Number,
       required: true,
+    },
+    // New props for the summary
+    inheritancePattern: {
+      type: String,
+      default: 'Unknown',
     },
   },
   setup(props, { expose }) {
@@ -102,6 +113,67 @@ export default {
       }
     });
 
+    // Determine the interpretation label (e.g., "High Priority")
+    const interpretation = computed(() => {
+      const score = combinedScore.value;
+      const ranges = scoreInterpretationConfig.ranges;
+      if (score >= ranges[2].min) return ranges[2].label;
+      if (score >= ranges[1].min) return ranges[1].label;
+      return ranges[0].label;
+    });
+
+    const dynamicSummary = computed(() => {
+      // Create an array of score components with their weighted values and explanations
+      const components = [
+        {
+          name: 'gene',
+          weightedScore: props.geneScore * 4,
+          // Explanation for a high score
+          explanation: "the gene's strong relevance to nephrology", 
+          // Explanation for a low score
+          lowScoreExplanation: "the gene's limited relevance" 
+        },
+        {
+          name: 'variant',
+          weightedScore: props.variantScore * 4,
+          explanation: `the variant's high pathogenicity score`,
+          lowScoreExplanation: `the variant's low pathogenicity score`
+        },
+        {
+          name: 'inheritance',
+          weightedScore: props.inheritanceScore * 2,
+          explanation: `the strong evidence from the '${props.inheritancePattern}' pattern`,
+          lowScoreExplanation: "weak evidence from the inheritance pattern"
+        },
+      ];
+
+      // Sort components by their contribution to the score, descending
+      components.sort((a, b) => b.weightedScore - a.weightedScore);
+
+      const topDriver = components[0];
+      const secondDriver = components[1];
+      let summaryText = '';
+
+      // Logic for High/Moderate priority scores
+      if (interpretation.value === 'High Priority' || interpretation.value === 'Moderate Priority') {
+        summaryText = `This score is primarily driven by ${topDriver.explanation}`;
+        // If the second driver is also significant, mention it
+        if (secondDriver.weightedScore > 2.0) { // Threshold for significance
+            summaryText += ` and ${secondDriver.explanation}.`;
+        } else {
+            summaryText += '.';
+        }
+      } 
+      // Logic for Low priority scores
+      else {
+        // For low scores, explain what's holding it back
+        const weakestLink = components[2];
+        summaryText = `This score is primarily limited by ${weakestLink.lowScoreExplanation}.`;
+      }
+
+      return `${interpretation.value}: ${summaryText}`;
+    });
+
     // Expose the computed values to parent components
     expose({
       combinedScore,
@@ -121,6 +193,8 @@ export default {
       combinedScore,
       combinedScoreFormatted,
       scoreColor,
+      // Dynamic summary
+      dynamicSummary,
     };
   },
 };
@@ -149,5 +223,13 @@ export default {
   padding: 8px;
   line-height: 1.5;
   font-size: 0.9rem;
+}
+
+.summary-text {
+  font-size: 0.9rem !important;
+  font-style: italic;
+  white-space: normal; /* Ensures the text wraps */
+  line-height: 1.4;
+  opacity: 0.9;
 }
 </style>
