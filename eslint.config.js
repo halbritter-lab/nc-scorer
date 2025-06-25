@@ -2,7 +2,6 @@
 import globals from "globals";
 import pluginJs from "@eslint/js";
 import pluginVue from "eslint-plugin-vue";
-import babelParser from "@babel/eslint-parser";
 import vueParser from "vue-eslint-parser";
 import eslintConfigPrettier from "eslint-config-prettier";
 
@@ -27,10 +26,6 @@ export default [
           ...globals.node,     // Include node for scripts/config files if needed
           ...globals.es2022,  // Or your preferred ES version
        },
-       parser: babelParser, // Default parser
-       parserOptions: {
-          requireConfigFile: false,
-        }
      },
      // rules: { /* JS specific rule overrides */ }
   },
@@ -45,7 +40,6 @@ export default [
      languageOptions: {
         parser: vueParser, // MUST use vue-eslint-parser for .vue files
         parserOptions: {
-           parser: babelParser, // Specify parser for <script> blocks
            ecmaVersion: "latest",
            sourceType: "module",
         },
