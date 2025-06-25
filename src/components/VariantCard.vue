@@ -316,6 +316,7 @@ import useRetryState from '@/composables/useRetryState.js';
 import { getPrioritizedGeneSymbol } from '@/utils/geneSymbolUtils.js';
 import { prioritizeTranscript, formatTranscriptOptions } from '@/utils/transcriptUtils.js';
 import { scoreInterpretationConfig } from '@/config/scoreInterpretationConfig.js';
+import { API_CACHE_KEY } from '@/composables/useApiCache';
 
 export default {
   name: 'VariantCard',
@@ -371,6 +372,9 @@ export default {
 
     // Get shared retry state from parent or create a new one
     const { retryStates } = inject('retryState', useRetryState());
+    
+    // Inject API cache instance
+    const apiCache = inject(API_CACHE_KEY, null);
 
     // Ensure retry state for variant2 exists if needed
     if (props.variantInput2 && !retryStates.variant2) {
@@ -689,6 +693,7 @@ export default {
         const response = await queryVariant(variantInputToLoad, {
           assembly,
           retryState,
+          apiCache,
           onRetry: (err, attempt) => {
             retryState.inProgress = true;
             logService.warn(`Retry attempt ${attempt} for ${retryStateKey}: ${err.message}`);

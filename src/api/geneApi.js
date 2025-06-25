@@ -3,7 +3,6 @@ import axios from 'axios';
 import { logService } from '@/services/logService';
 import geneApiConfig from '@/config/geneApiConfig.json';
 import { retryWithBackoff } from '@/utils/retry.js';
-import { useApiCache } from '@/composables/useApiCache';
 
 /**
  * Fetch the index of gene symbols.
@@ -32,33 +31,24 @@ export async function fetchHgncIndex() {
  * This function retrieves both indices in parallel and returns them together.
  * @param {Object} [options={}] - Options for fetching indices.
  * @param {boolean} [options.skipCache=false] - If true, bypasses cache.
+ * @param {Object} [options.apiCache=null] - Optional API cache instance from useApiCache composable.
  * @returns {Promise<Object>} Object containing both symbol and HGNC indices.
  */
 export async function fetchGeneSearchIndices(options = {}) {
-  const { skipCache = false } = options;
+  const { skipCache = false, apiCache = null } = options;
   
   // Create cache variables
   let cacheKey = null;
   let cachedResult = null;
-  let apiCache = null;
   
-  // Only attempt to use cache if not explicitly skipping
-  if (!skipCache) {
-    // Try to get apiCache, but handle case when outside component context
-    try {
-      apiCache = useApiCache();
-      
-      // Create cache key
-      cacheKey = apiCache.generateCacheKey('gene-search-indices');
-      
-      cachedResult = apiCache.getCachedItem(cacheKey);
-      if (cachedResult) {
-        return cachedResult.data;
-      }
-    } catch {
-      // If we're not in a component context, just skip caching
-      console.debug('geneApi: Running outside component context, cache disabled for gene search indices');
-      // Don't set skipCache = true, just continue without cache
+  // Only attempt to use cache if not explicitly skipping and we have an apiCache instance
+  if (!skipCache && apiCache) {
+    // Create cache key
+    cacheKey = apiCache.generateCacheKey('gene-search-indices');
+    
+    cachedResult = apiCache.getCachedItem(cacheKey);
+    if (cachedResult) {
+      return cachedResult.data;
     }
   }
   
@@ -127,6 +117,7 @@ export async function fetchGeneSearchIndices(options = {}) {
  * @param {Function} [options.onSuccess] - Callback on success.
  * @param {boolean} [options.skipCache=false] - If true, bypasses cache.
  * @param {number} [options.cacheTTL] - Cache time to live in ms.
+ * @param {Object} [options.apiCache=null] - Optional API cache instance from useApiCache composable.
  * @returns {Promise<Object>} The gene scores data with source information.
  */
 export async function fetchAllGeneScores(options = {}) {
@@ -135,30 +126,22 @@ export async function fetchAllGeneScores(options = {}) {
     onRetry, 
     onSuccess, 
     skipCache = false,
-    cacheTTL = 12 * 60 * 60 * 1000 // 12 hours default
+    cacheTTL = 12 * 60 * 60 * 1000, // 12 hours default
+    apiCache = null
   } = options;
   
   // Cache variables at the top function scope
   let cacheKey = null;
-  let apiCache = null;
   
-  // Only attempt to use cache if not skipping
-  if (!skipCache) {
-    // Try to get apiCache, but handle case when outside component context
-    try {
-      apiCache = useApiCache();
-      
-      // Create cache key for all gene scores
-      cacheKey = apiCache.generateCacheKey('gene-scores-all', 'summary');
-      
-      // Check cache first
-      const cachedResult = apiCache.getCachedItem(cacheKey);
-      if (cachedResult) {
-        return cachedResult; // Returns {data, source} object
-      }
-    } catch {
-      // If we're not in a component context, just skip caching
-      console.debug('geneApi: Running outside component context, cache disabled for gene scores');
+  // Only attempt to use cache if not skipping and we have an apiCache instance
+  if (!skipCache && apiCache) {
+    // Create cache key for all gene scores
+    cacheKey = apiCache.generateCacheKey('gene-scores-all', 'summary');
+    
+    // Check cache first
+    const cachedResult = apiCache.getCachedItem(cacheKey);
+    if (cachedResult) {
+      return cachedResult; // Returns {data, source} object
     }
   }
   
@@ -207,6 +190,7 @@ export async function fetchAllGeneScores(options = {}) {
  * @param {Function} [options.onSuccess] - Callback on success.
  * @param {boolean} [options.skipCache=false] - If true, bypasses cache.
  * @param {number} [options.cacheTTL] - Cache time to live in ms.
+ * @param {Object} [options.apiCache=null] - Optional API cache instance from useApiCache composable.
  * @returns {Promise<Object>} The gene data with source information.
  */
 export async function fetchGeneDetails(symbol, options = {}) {
@@ -215,31 +199,23 @@ export async function fetchGeneDetails(symbol, options = {}) {
     onRetry, 
     onSuccess, 
     skipCache = false,
-    cacheTTL = 30 * 60 * 1000 // 30 minutes default
+    cacheTTL = 30 * 60 * 1000, // 30 minutes default
+    apiCache = null
   } = options;
   
   // Cache variables at the top function scope
   let cacheKey = null;
-  let apiCache = null;
   
-  // Only attempt to use cache if not skipping
-  if (!skipCache) {
-    // Try to get apiCache, but handle case when outside component context
-    try {
-      apiCache = useApiCache();
-      
-      // Normalize symbol and create cache key
-      const normalizedSymbol = symbol.trim().toUpperCase();
-      cacheKey = apiCache.generateCacheKey('gene', normalizedSymbol);
-      
-      // Check cache first
-      const cachedResult = apiCache.getCachedItem(cacheKey);
-      if (cachedResult) {
-        return cachedResult; // Returns {data, source} object
-      }
-    } catch {
-      // If we're not in a component context, just skip caching
-      console.debug(`geneApi: Running outside component context, cache disabled for gene ${symbol}`);
+  // Only attempt to use cache if not skipping and we have an apiCache instance
+  if (!skipCache && apiCache) {
+    // Normalize symbol and create cache key
+    const normalizedSymbol = symbol.trim().toUpperCase();
+    cacheKey = apiCache.generateCacheKey('gene', normalizedSymbol);
+    
+    // Check cache first
+    const cachedResult = apiCache.getCachedItem(cacheKey);
+    if (cachedResult) {
+      return cachedResult; // Returns {data, source} object
     }
   }
   

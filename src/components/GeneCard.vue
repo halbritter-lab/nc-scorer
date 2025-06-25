@@ -104,6 +104,7 @@ import { getColor, formatValue } from '@/utils/format.js';
 import useRetryState from '@/composables/useRetryState.js';
 import DataDisplayRow from '@/components/DataDisplayRow.vue';
 import { scoreInterpretationConfig } from '@/config/scoreInterpretationConfig.js';
+import { API_CACHE_KEY } from '@/composables/useApiCache';
 
 export default {
   name: 'GeneCard',
@@ -126,6 +127,9 @@ export default {
 
     // Get shared retry state from parent or create a new one
     const { retryStates } = inject('retryState', useRetryState());
+    
+    // Inject API cache instance
+    const apiCache = inject(API_CACHE_KEY, null);
 
     // Compute gene details formatted by the configuration.
     const filteredGeneData = computed(() => {
@@ -163,6 +167,7 @@ export default {
 
         const result = await fetchGeneDetails(props.symbol, {
           retryState,
+          apiCache,
           onRetry: (err, attempt) => { // Add params to onRetry
              retryState.inProgress = true;
              logService.warn(`Retry attempt ${attempt} for gene ${props.symbol}: ${err.message}`);

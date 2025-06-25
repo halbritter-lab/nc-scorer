@@ -2,7 +2,6 @@
 // Import variant-linker with proper compatibility for Vite
 import variantLinker from 'variant-linker';
 import { retryWithBackoff } from '@/utils/retry.js';
-import { useApiCache } from '@/composables/useApiCache';
 import { useNotifications } from '@/composables/useNotifications';
 
 // Ensure module is available globally for proper initialization
@@ -27,6 +26,7 @@ import formulaConfig from '@/config/scoring/nephro_variant_score/formula_config.
  * @param {string} [options.output='JSON'] - Desired output format ('JSON', 'CSV', 'TSV', 'VCF').
  * @param {string} [options.filter=''] - Filtering criteria as a string.
  * @param {string} [options.assembly='GRCh38'] - Genome assembly to use ('GRCh37' or 'GRCh38').
+ * @param {Object} [options.apiCache=null] - Optional API cache instance from useApiCache composable.
  * @returns {Promise<Object|string>} The result of the variant analysis. Returns object/array for JSON or string for other formats.
  * @throws {Error} If analyzeVariant is not a function on the variant-linker module.
  */
@@ -41,6 +41,7 @@ export async function queryVariant(variantInput, options = {}) {
     assembly = 'GRCh38', // Default to GRCh38
     onRetry = null, // Add callback for retry events
     onSuccess = null, // Add callback for success after retries
+    apiCache = null, // Optional API cache instance
   } = options;
 
   // Initialize notifications system (with fallback for non-component context)
@@ -99,20 +100,8 @@ export async function queryVariant(variantInput, options = {}) {
   // Initialize cache key and cached result (only for single variant requests)
   let cacheKey = null;
   let cachedResult = null;
-  let apiCache = null;
   
-  // Only attempt to use cache if not explicitly skipping and not a batch request
-  if (!skipCache && !isBatchRequest) {
-    // Try to get apiCache, but only if we're in a component context
-    try {
-      apiCache = useApiCache();
-    } catch (error) {
-      // If we're not in a component context, just skip caching
-      console.debug('variantApi: Running outside component context, cache disabled', error.message);
-      skipCache = true;
-    }
-  }
-  
+  // Only attempt to use cache if not explicitly skipping and not a batch request  
   // Check cache first if we have a valid apiCache instance
   if (!skipCache && !isBatchRequest && apiCache) {
     // Generate cache key and check for cached result
