@@ -160,10 +160,6 @@
     <v-spacer></v-spacer>
   </v-app-bar>
 
-  <!-- Snackbar for feedback -->
-  <v-snackbar v-model="snackbarVisible" :timeout="snackbarTimeout" :color="snackbarColor">
-    {{ snackbarMessage }}
-  </v-snackbar>
 </template>
 
 <script>
@@ -177,24 +173,20 @@ import { fetchLastCommit } from '@/api/github.js'; // Adjust the path as needed
 import useThemeToggle from '@/composables/useThemeToggle.js';
 import { useCacheSettings } from '@/composables/useCacheSettings.js';
 import useTour from '@/composables/useTour.js';
+import { useNotifications } from '@/composables/useNotifications.js';
 
 export default {
   name: 'AppBar',
   setup() {
     const router = useRouter();
-    // Use the theme toggle, cache settings, and tour composables
+    // Use the theme toggle, cache settings, tour, and notifications composables
     const { darkTheme, toggleTheme } = useThemeToggle();
     const { cacheEnabled, toggleCacheEnabled } = useCacheSettings();
     const { startTour } = useTour();
+    const { notifySuccess, notifyError } = useNotifications();
     const version = packageInfo.version;
     const lastCommitHash = ref('loading...');
     const fetchError = ref(false);
-
-    // Snackbar data properties
-    const snackbarVisible = ref(false);
-    const snackbarMessage = ref('');
-    const snackbarTimeout = 6000;
-    const snackbarColor = ref('success');
     const showCopyIcon = ref(false);
 
     // Navigation helper method
@@ -208,13 +200,11 @@ export default {
       navigator.clipboard
         .writeText(citation)
         .then(() => {
-          snackbarMessage.value = 'Citation copied to clipboard!';
-          snackbarVisible.value = true;
+          notifySuccess('Citation copied to clipboard!');
         })
         .catch((error) => {
           logService.error('Error copying citation:', error);
-          snackbarMessage.value = 'Error copying citation!';
-          snackbarVisible.value = true;
+          notifyError('Error copying citation!');
         });
     };
 
@@ -256,10 +246,6 @@ export default {
       menuItems,
       version,
       lastCommitHash,
-      snackbarVisible,
-      snackbarMessage,
-      snackbarTimeout,
-      snackbarColor,
       copyCitation,
       showCopyIcon,
       navigateHome,

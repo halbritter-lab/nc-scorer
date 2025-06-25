@@ -18,16 +18,16 @@
 </template>
 
 <script>
-import { useNotifications } from '@/composables/useNotifications';
+import { useUiStore } from '@/stores/uiStore';
 
 export default {
   name: 'GlobalNotification',
   setup() {
-    const { snackbar, closeNotification } = useNotifications();
+    const uiStore = useUiStore();
 
     return {
-      notification: snackbar,
-      closeNotification
+      notification: uiStore.notification,
+      closeNotification: uiStore.closeNotification
     };
   }
 };

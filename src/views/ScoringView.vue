@@ -1,14 +1,6 @@
 <template>
   <!-- Use ContentContainer for consistent width across the application -->
   <ContentContainer>
-    <!-- Retry Snackbar -->
-    <v-snackbar
-      v-model="retrySnackbar.visible"
-      :color="retrySnackbar.color"
-      :timeout="retrySnackbar.timeout"
-    >
-      {{ retrySnackbar.message }}
-    </v-snackbar>
 
     <!-- Combined Score Card at the top -->
     <v-row>
@@ -129,6 +121,7 @@ import CombinedScoreCard from '@/components/CombinedScoreCard.vue';
 import ContentContainer from '@/components/ContentContainer.vue';
 import CollaborationLinks from '@/components/CollaborationLinks.vue';
 import useRetryState from '@/composables/useRetryState.js';
+import { useNotifications } from '@/composables/useNotifications.js';
 import { requiresSecondVariant } from '@/config/inheritanceConfig';
 import { scoreInterpretationConfig } from '@/config/scoreInterpretationConfig';
 import { generateCSV, downloadFile, sanitizeFilename, generateExcel } from '@/utils/exportUtils';
@@ -148,10 +141,11 @@ export default {
     const router = useRouter();
 
     // Set up retry state for the API requests
-    const { retryStates, showSnackbar, snackbar: retrySnackbar } = useRetryState();
+    const { retryStates } = useRetryState();
+    const { notifyRetry } = useNotifications();
 
-    // Provide retry state to child components
-    provide('retryState', { retryStates, showSnackbar });
+    // Provide retry state and notification method to child components
+    provide('retryState', { retryStates, notifyRetry });
 
     // Retrieve parameters from the URL (with defaults).
     const variantInput = route.params.variantInput;
@@ -459,7 +453,6 @@ export default {
       inheritanceScore,
       combinedScoreAvailable,
       isCompoundHet,
-      retrySnackbar,
       scoreInterpretationConfig, // Make available to the template for skeleton loaders
       handleVariantScoreUpdate,
       handleGeneScoreUpdate,
