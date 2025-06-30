@@ -1,3 +1,16 @@
+# [2.5.0](https://github.com/halbritter-lab/nc-scorer/compare/v2.4.0...v2.5.0) (2025-06-30)
+
+
+### Bug Fixes
+
+* resolve Vue inject() warning in API cache usage ([c80b856](https://github.com/halbritter-lab/nc-scorer/commit/c80b85671d7b3c0be49212edb97a07fc470fecee))
+
+
+### Features
+
+* add dynamic explanatory summary to CombinedScoreCard ([1f177f9](https://github.com/halbritter-lab/nc-scorer/commit/1f177f9f8628918d2d5d3e6288f14ee2e0f3d01e))
+* **deps:** update variant-linker to v3.9.1 ([c6ad5c9](https://github.com/halbritter-lab/nc-scorer/commit/c6ad5c9d8ae85eff2c29aaee4cd708c9e5b30eb3))
+
 # [2.4.0](https://github.com/halbritter-lab/nc-scorer/compare/v2.3.0...v2.4.0) (2025-06-24)
 
 
