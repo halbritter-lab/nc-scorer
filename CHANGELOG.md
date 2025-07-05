@@ -1,3 +1,10 @@
+## [3.1.1](https://github.com/halbritter-lab/nc-scorer/compare/v3.1.0...v3.1.1) (2025-07-05)
+
+
+### Bug Fixes
+
+* update all domain references to nc-scorer.kidney-genetics.org ([878c843](https://github.com/halbritter-lab/nc-scorer/commit/878c84381a2e576c407e17817bb8fee1e23adb06))
+
 # [3.1.0](https://github.com/halbritter-lab/nc-scorer/compare/v3.0.1...v3.1.0) (2025-07-05)
 
 
