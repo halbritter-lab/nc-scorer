@@ -37,7 +37,7 @@ jobs:
       - name: Build Project
         env:
           NODE_OPTIONS: --no-experimental-fetch --openssl-legacy-provider # Keep if needed
-        run: npm run build # Build uses the checked-out code with the updated package.json
+        run: npm run build # Builds both app and docs into dist/
 
       - name: Prepare 404 page for SPA routing
         # Copies index.html to 404.html for GitHub Pages SPA handling

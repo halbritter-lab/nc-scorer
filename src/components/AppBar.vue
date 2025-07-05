@@ -94,7 +94,14 @@
           </v-menu>
           <v-tooltip location="bottom" v-else>
             <template v-slot:activator="{ props }">
-              <v-btn :to="item.to" text v-bind="props" class="mx-1">
+              <v-btn 
+                :to="item.to" 
+                :href="item.href"
+                :target="item.href ? '_blank' : undefined"
+                text 
+                v-bind="props" 
+                class="mx-1"
+              >
                 <v-icon left v-if="item.icon">{{ item.icon }}</v-icon>
                 {{ item.text }}
               </v-btn>

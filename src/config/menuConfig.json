@@ -19,6 +19,13 @@
       "icon": "mdi-help-circle",
       "to": "/faq",
       "visibility": "all"
+    },
+    {
+      "text": "Docs",
+      "icon": "mdi-book-open-variant",
+      "href": "/nc-scorer/docs/",
+      "tooltip": "View documentation",
+      "visibility": "all"
     }
   ]
 }

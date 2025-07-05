@@ -1,0 +1,38 @@
+/* Custom styles for NC-Scorer documentation */
+
+/* Adjust hero logo size */
+.VPHero .image-container {
+  transform: scale(1.2);
+}
+
+/* Better logo display in navbar */
+.VPNavBarTitle .logo {
+  height: 32px;
+  margin-right: 8px;
+}
+
+/* Add visual distinction for back to app link */
+.VPNavBarMenu a[href="/nc-scorer/"] {
+  background-color: var(--vp-c-brand-soft);
+  border-radius: 4px;
+  padding: 0 12px;
+}
+
+.VPNavBarMenu a[href="/nc-scorer/"]:hover {
+  background-color: var(--vp-c-brand-light);
+}
+
+/* Match NC-Scorer app colors */
+:root {
+  --vp-c-brand-1: #009688; /* Teal from Vuetify */
+  --vp-c-brand-2: #00796B;
+  --vp-c-brand-3: #004D40;
+}
+
+/* Dark mode brand colors */
+.dark {
+  --vp-c-brand-1: #26A69A;
+  --vp-c-brand-2: #009688;
+  --vp-c-brand-3: #00796B;
+}
+

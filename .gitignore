@@ -29,3 +29,8 @@ pnpm-debug.log*
 # Claude Code guidance file
 CLAUDE.md
 .claude/
+
+# VitePress
+docs/.vitepress/cache
+docs/.vitepress/dist
+docs/.vitepress/temp
