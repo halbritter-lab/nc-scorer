@@ -1,3 +1,10 @@
+## [3.0.1](https://github.com/halbritter-lab/nc-scorer/compare/v3.0.0...v3.0.1) (2025-07-05)
+
+
+### Bug Fixes
+
+* remove duplicate documentation link from footer ([e1c071e](https://github.com/halbritter-lab/nc-scorer/commit/e1c071eceac6323be2b8427ccfd5e46b29a6f75e))
+
 # [3.0.0](https://github.com/halbritter-lab/nc-scorer/compare/v2.5.0...v3.0.0) (2025-07-05)
 
 
