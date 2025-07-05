@@ -16,8 +16,7 @@ export default defineConfig({
     nav: [
       { text: 'Guide', link: '/guide/' },
       { text: 'API Reference', link: '/api/' },
-      { text: 'FAQ', link: '/faq' },
-      { text: '← Back to NC-Scorer App', link: 'https://nc-scorer.kidney-genetics.org/' }
+      { text: 'FAQ', link: '/faq' }
     ],
     
     
