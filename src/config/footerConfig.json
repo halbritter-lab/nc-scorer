@@ -6,11 +6,6 @@
         "text": "GitHub"
       },
       {
-        "icon": "mdi-file-document-outline",
-        "href": "/nc-scorer/docs/",
-        "text": "Documentation"
-      },
-      {
         "icon": "mdi-certificate",
         "href": "https://github.com/halbritter-lab/nc-scorer/blob/main/LICENSE",
         "text": "License"
