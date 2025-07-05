@@ -4,6 +4,7 @@ import vue from '@vitejs/plugin-vue';
 import vuetify from 'vite-plugin-vuetify';
 import { visualizer } from 'rollup-plugin-visualizer';
 import path from 'path';
+import fs from 'fs';
 // Use dynamic import for sitemap plugin to handle ESM compatibility
 // Will be imported asynchronously in the config function
 
@@ -31,7 +32,7 @@ export default defineConfig(async ({ mode }) => {
         filename: 'dist/stats.html',
       }),
       VitePluginSitemap({
-        hostname: isProd ? 'https://halbritter-lab.github.io/nc-scorer' : 'http://localhost:5173',
+        hostname: isProd ? 'https://nc-scorer.kidney-genetics.org' : 'http://localhost:5173',
         lastmod: new Date().toISOString(),
         changefreq: 'weekly',
         // Define static routes for the sitemap
@@ -50,13 +51,21 @@ export default defineConfig(async ({ mode }) => {
           { url: '/scoring/chr16-g.2162630C>T/dominant', priority: 0.8 },
         ],
       }),
+      {
+        name: 'copy-cname',
+        writeBundle() {
+          if (fs.existsSync('CNAME')) {
+            fs.copyFileSync('CNAME', path.join('dist', 'CNAME'));
+          }
+        }
+      },
     ],
     resolve: {
       alias: {
         '@': path.resolve(__dirname, 'src'), // Setup '@' alias to point to src directory
       },
     },
-    base: isProd ? '/nc-scorer/' : '/', // Preserve the base URL for GitHub Pages
+    base: '/', // Custom domain doesn't need subdirectory
     
     // Optimize build output for better caching
     build: {
@@ -120,7 +129,7 @@ export default defineConfig(async ({ mode }) => {
       // Make process.env available to the client for compatibility
       'process.env': {
         NODE_ENV: JSON.stringify(mode),
-        BASE_URL: JSON.stringify(isProd ? '/nc-scorer/' : '/'),
+        BASE_URL: JSON.stringify('/'),
       },
     }
   };
