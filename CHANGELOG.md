@@ -1,3 +1,10 @@
+# [3.1.0](https://github.com/halbritter-lab/nc-scorer/compare/v3.0.1...v3.1.0) (2025-07-05)
+
+
+### Features
+
+* configure custom domain nc-scorer.kidney-genetics.org ([1a8adb0](https://github.com/halbritter-lab/nc-scorer/commit/1a8adb08f8d54b787443c9a63f35df039a6011cf))
+
 ## [3.0.1](https://github.com/halbritter-lab/nc-scorer/compare/v3.0.0...v3.0.1) (2025-07-05)
 
 
