@@ -16,7 +16,7 @@ The tool leverages a scoring system called the Nephro Candidate Score (NCS) to p
 
 ## Quick Start
 
-1. Visit the [NC-Scorer application](https://halbritter-lab.github.io/nc-scorer/)
+1. Visit the [NC-Scorer application](https://nc-scorer.kidney-genetics.org/)
 2. Search for a gene or variant using the search interface
 3. Review the calculated scores and annotations
 4. Export results for further analysis

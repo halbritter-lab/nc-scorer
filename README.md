@@ -7,16 +7,16 @@ NC-Scorer is a tool for automated assessment of candidate variants in Exome Sequ
 
 ## 🚀 Quick Start
 
-Visit the application: https://halbritter-lab.github.io/nc-scorer/
+Visit the application: https://nc-scorer.kidney-genetics.org/
 
 ## 📚 Documentation
 
-Full documentation is available at: https://halbritter-lab.github.io/nc-scorer/docs/
+Full documentation is available at: https://nc-scorer.kidney-genetics.org/docs/
 
-- [Getting Started](https://halbritter-lab.github.io/nc-scorer/docs/guide/)
-- [Installation Guide](https://halbritter-lab.github.io/nc-scorer/docs/guide/installation)
-- [User Guide](https://halbritter-lab.github.io/nc-scorer/docs/guide/usage)
-- [API Reference](https://halbritter-lab.github.io/nc-scorer/docs/api/)
+- [Getting Started](https://nc-scorer.kidney-genetics.org/docs/guide/)
+- [Installation Guide](https://nc-scorer.kidney-genetics.org/docs/guide/installation)
+- [User Guide](https://nc-scorer.kidney-genetics.org/docs/guide/usage)
+- [API Reference](https://nc-scorer.kidney-genetics.org/docs/api/)
 
 ## 🛠️ Development
 
@@ -36,7 +36,7 @@ npm run build
 
 ## 🤝 Contributing
 
-Please see our [Contributing Guide](https://halbritter-lab.github.io/nc-scorer/docs/guide/contributing).
+Please see our [Contributing Guide](https://nc-scorer.kidney-genetics.org/docs/guide/contributing).
 
 ## 📄 License
 

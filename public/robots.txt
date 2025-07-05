@@ -4,7 +4,7 @@ User-agent: *
 Allow: /
 
 # Sitemap reference for search engines
-Sitemap: https://halbritter-lab.github.io/nc-scorer/sitemap.xml
+Sitemap: https://nc-scorer.kidney-genetics.org/sitemap.xml
 
 # Crawl-delay to rate limit requests (in seconds)
 Crawl-delay: 10

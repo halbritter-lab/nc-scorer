@@ -17,7 +17,7 @@
     {
       "text": "Docs",
       "icon": "mdi-book-open-variant",
-      "href": "/nc-scorer/docs/",
+      "href": "/docs/",
       "tooltip": "View documentation",
       "visibility": "all"
     }

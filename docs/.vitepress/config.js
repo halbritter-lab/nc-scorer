@@ -2,7 +2,7 @@ import { defineConfig } from 'vitepress';
 import { fileURLToPath } from 'url';
 
 export default defineConfig({
-  base: '/nc-scorer/docs/',
+  base: '/docs/',
   title: 'NC-Scorer Documentation',
   description: 'Automated assessment of candidate variants in Exome Sequencing for CKD patients',
   
@@ -17,7 +17,7 @@ export default defineConfig({
       { text: 'Guide', link: '/guide/' },
       { text: 'API Reference', link: '/api/' },
       { text: 'FAQ', link: '/faq' },
-      { text: '← Back to NC-Scorer App', link: '/nc-scorer/' }
+      { text: '← Back to NC-Scorer App', link: '../' }
     ],
     
     
