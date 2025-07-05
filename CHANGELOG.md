@@ -1,3 +1,19 @@
+# [3.0.0](https://github.com/halbritter-lab/nc-scorer/compare/v2.5.0...v3.0.0) (2025-07-05)
+
+
+### Documentation
+
+* migrate from GitHub Wiki to VitePress documentation ([c2a4f3c](https://github.com/halbritter-lab/nc-scorer/commit/c2a4f3cc31881154f7940e55355ce470756a9123))
+
+
+### BREAKING CHANGES
+
+* Wiki content has been moved to VitePress docs. The GitHub Wiki will no longer be updated.
+
+🤖 Generated with [Claude Code](https://claude.ai/code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+
 # [2.5.0](https://github.com/halbritter-lab/nc-scorer/compare/v2.4.0...v2.5.0) (2025-06-30)
 
 
