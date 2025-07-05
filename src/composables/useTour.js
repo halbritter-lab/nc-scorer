@@ -85,7 +85,7 @@ export default function useTour() {
     // App Menu Items step
     tour.value.addStep({
       id: 'menu-items',
-      text: '<h3>Navigation Menu</h3><p>These menu items help you navigate through different sections of the application:</p><ul><li>Search - Find and score variants</li><li>FAQ - Frequently asked questions</li><li>About - Information about NC-Scorer</li></ul>',
+      text: '<h3>Navigation Menu</h3><p>These menu items help you navigate through different sections of the application:</p><ul><li>Genes - Browse all gene scores</li><li>Batch - Process multiple variants</li><li>Docs - View documentation</li></ul>',
       attachTo: {
         element: '.menu-items',
         on: 'bottom',
@@ -394,7 +394,7 @@ export default function useTour() {
     }
   };
 
-  // Restart the tour manually (for use in settings or FAQ)
+  // Restart the tour manually (for use in settings)
   const restartTour = () => {
     settingsStore.resetTour(); // Use the store action
     startTour();

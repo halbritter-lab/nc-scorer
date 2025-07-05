@@ -38,7 +38,10 @@ export default defineConfig(async ({ mode }) => {
         urls: [
           // Static pages
           { url: '/', changefreq: 'weekly', priority: 1.0 },
-          { url: '/faq', changefreq: 'monthly', priority: 0.7 },
+          { url: '/genes', changefreq: 'weekly', priority: 0.8 },
+          { url: '/batch', changefreq: 'weekly', priority: 0.8 },
+          { url: '/about', changefreq: 'monthly', priority: 0.7 },
+          { url: '/methodology', changefreq: 'monthly', priority: 0.7 },
           // Dynamic routes - these are sample routes that will be included in the sitemap
           // Common gene/variant entries can be added statically to ensure they're indexed
           { url: '/symbols/PKD1', priority: 0.8 },

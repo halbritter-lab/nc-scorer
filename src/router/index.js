@@ -6,7 +6,6 @@ import { createRouter, createWebHistory } from 'vue-router';
 
 const SearchPage = () => import(/* webpackChunkName: "search" */ '@/views/SearchPage.vue');
 const GeneView = () => import(/* webpackChunkName: "gene" */ '@/views/GeneView.vue');
-const FAQ = () => import(/* webpackChunkName: "faq" */ '@/views/FAQ.vue');
 const PageNotFound = () => import(/* webpackChunkName: "404" */ '@/views/PageNotFound.vue');
 const VariantView = () => import(/* webpackChunkName: "variant" */ '@/views/VariantView.vue');
 const ScoringView = () => import(/* webpackChunkName: "scoring" */ '@/views/ScoringView.vue');
@@ -24,11 +23,6 @@ const routes = [
     name: 'GeneView',
     component: GeneView,
     props: true,
-  },
-  {
-    path: '/faq',
-    name: 'FAQ',
-    component: FAQ,
   },
   {
     path: '/variant/:variantInput/:assembly?',
