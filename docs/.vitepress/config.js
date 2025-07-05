@@ -17,7 +17,7 @@ export default defineConfig({
       { text: 'Guide', link: '/guide/' },
       { text: 'API Reference', link: '/api/' },
       { text: 'FAQ', link: '/faq' },
-      { text: '← Back to NC-Scorer App', link: '../' }
+      { text: '← Back to NC-Scorer App', link: 'https://nc-scorer.kidney-genetics.org/' }
     ],
     
     
