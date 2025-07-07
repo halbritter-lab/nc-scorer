@@ -1,3 +1,15 @@
+# [3.2.0](https://github.com/halbritter-lab/nc-scorer/compare/v3.1.1...v3.2.0) (2025-07-07)
+
+
+### Bug Fixes
+
+* update documentation back link to use absolute URL ([80121f3](https://github.com/halbritter-lab/nc-scorer/commit/80121f3d7c5a0502fa9d87a345a7373555114221))
+
+
+### Features
+
+* implement comprehensive SEO optimization system ([1550d48](https://github.com/halbritter-lab/nc-scorer/commit/1550d48bb0112d125811efc237d50514137cccf0))
+
 ## [3.1.1](https://github.com/halbritter-lab/nc-scorer/compare/v3.1.0...v3.1.1) (2025-07-05)
 
 
