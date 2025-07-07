@@ -1,0 +1,20 @@
+Open Graph Image Placeholder
+============================
+
+The file 'og-image.png' should be created with the following specifications:
+
+Dimensions: 1200x630 pixels
+Format: PNG
+Content suggestions:
+- NC-Scorer logo
+- Tagline: "Nephro Candidate Score for Genetic Variant Assessment"
+- Visual elements representing genetics/kidney disease
+- Halbritter Lab branding
+
+Tools to create:
+- Canva (https://www.canva.com)
+- Figma (https://www.figma.com)
+- Adobe Creative Suite
+- Or any image editing software
+
+The image should be saved as: /public/og-image.png

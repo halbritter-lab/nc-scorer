@@ -4,12 +4,51 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width,initial-scale=1.0">
-    <meta name="description" content="NC-Scorer: A tool for scoring and prioritizing genetic variants associated with Chronic Kidney Disease using the Nephro Candidate Score.">
+    
+    <!-- Primary Meta Tags -->
+    <title>NC-Scorer - Nephro Candidate Score for Genetic Variant Assessment</title>
+    <meta name="title" content="NC-Scorer - Nephro Candidate Score for Genetic Variant Assessment">
+    <meta name="description" content="Free online tool for automated assessment of genetic variants in kidney disease using the Nephro Candidate Score (NCS) algorithm. Analyze genes and variants instantly.">
+    <meta name="keywords" content="nephrology, genetics, variant analysis, kidney disease, CKD, exome sequencing, genetic testing, nephro candidate score">
+    <meta name="author" content="Halbritter Lab">
+    <meta name="robots" content="index, follow">
+    <meta name="language" content="English">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://nc-scorer.kidney-genetics.org/">
+    <meta property="og:title" content="NC-Scorer - Nephro Candidate Score for Genetic Variant Assessment">
+    <meta property="og:description" content="Free online tool for automated assessment of genetic variants in kidney disease using the Nephro Candidate Score (NCS) algorithm.">
+    <meta property="og:image" content="https://nc-scorer.kidney-genetics.org/og-image.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:site_name" content="NC-Scorer">
+    <meta property="og:locale" content="en_US">
+    
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://nc-scorer.kidney-genetics.org/">
+    <meta name="twitter:title" content="NC-Scorer - Nephro Candidate Score for Genetic Variant Assessment">
+    <meta name="twitter:description" content="Free online tool for automated assessment of genetic variants in kidney disease using the Nephro Candidate Score (NCS) algorithm.">
+    <meta name="twitter:image" content="https://nc-scorer.kidney-genetics.org/og-image.png">
+    <meta name="twitter:site" content="@kidney_genetics">
+    <meta name="twitter:creator" content="@kidney_genetics">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://nc-scorer.kidney-genetics.org/">
+    
+    <!-- Favicon -->
     <link rel="icon" href="<%= BASE_URL %>favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="<%= BASE_URL %>apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="<%= BASE_URL %>favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="<%= BASE_URL %>favicon-16x16.png">
+    <link rel="manifest" href="<%= BASE_URL %>manifest.json">
     
     <!-- Performance optimization: DNS-Prefetch, Preconnect and Resource Hints -->
     <link rel="dns-prefetch" href="https://rest.ensembl.org">
     <link rel="preconnect" href="https://rest.ensembl.org" crossorigin>
+    <link rel="dns-prefetch" href="https://grch37.rest.ensembl.org">
+    <link rel="preconnect" href="https://grch37.rest.ensembl.org" crossorigin>
     
     <!-- Preload critical assets -->
     <link rel="preload" href="<%= BASE_URL %>img/logo.webp" as="image" type="image/webp">
@@ -17,35 +56,72 @@
     
     <!-- Font display optimization for Material Design Icons -->
     <link rel="preload" as="font" crossorigin type="font/woff2" href="https://cdn.jsdelivr.net/npm/@mdi/font@latest/fonts/materialdesignicons-webfont.woff2">
-    <title><%= htmlWebpackPlugin.options.title %></title>
+    
     <!-- Schema.org structured data for enhanced SEO -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": "WebApplication",
-      "name": "NC-Scorer",
-      "url": "https://nc-scorer.kidney-genetics.org/",
-      "description": "A tool for scoring and prioritizing genetic variants associated with Chronic Kidney Disease using the Nephro Candidate Score.",
-      "applicationCategory": "ScientificApplication",
-      "applicationSubCategory": "GeneticTool",
-      "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "USD"
-      },
-      "publisher": {
-        "@type": "Organization",
-        "name": "Halbritter Lab",
-        "url": "https://www.meduniwien.ac.at/web/en/forschung/researcher-profiles/researcher-profiles/detail/jan-halbritter/"
-      },
-      "operatingSystem": "Any",
-      "browserRequirements": "Requires JavaScript. Compatible with modern web browsers."
+      "@graph": [
+        {
+          "@type": "WebApplication",
+          "@id": "https://nc-scorer.kidney-genetics.org/#webapp",
+          "name": "NC-Scorer",
+          "url": "https://nc-scorer.kidney-genetics.org/",
+          "description": "Free online tool for automated assessment of genetic variants in kidney disease using the Nephro Candidate Score (NCS) algorithm.",
+          "applicationCategory": "HealthApplication",
+          "applicationSubCategory": "MedicalCalculator",
+          "operatingSystem": "Any",
+          "browserRequirements": "Requires JavaScript. Compatible with modern web browsers.",
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD",
+            "availability": "https://schema.org/InStock"
+          },
+          "creator": {
+            "@id": "https://nc-scorer.kidney-genetics.org/#organization"
+          }
+        },
+        {
+          "@type": "Organization",
+          "@id": "https://nc-scorer.kidney-genetics.org/#organization",
+          "name": "Halbritter Lab",
+          "url": "https://halbritter-lab.com",
+          "logo": "https://nc-scorer.kidney-genetics.org/halbritter-lab-logo.png",
+          "sameAs": [
+            "https://github.com/halbritter-lab",
+            "https://twitter.com/kidney_genetics"
+          ],
+          "memberOf": {
+            "@type": "Organization",
+            "name": "Leipzig University Medical Center"
+          }
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://nc-scorer.kidney-genetics.org/#website",
+          "url": "https://nc-scorer.kidney-genetics.org/",
+          "name": "NC-Scorer",
+          "publisher": {
+            "@id": "https://nc-scorer.kidney-genetics.org/#organization"
+          },
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": {
+              "@type": "EntryPoint",
+              "urlTemplate": "https://nc-scorer.kidney-genetics.org/search?q={search_term_string}"
+            },
+            "query-input": "required name=search_term_string"
+          }
+        }
+      ]
     }
     </script>
   </head>
   <body>
     <noscript>
-      <strong>We're sorry but <%= htmlWebpackPlugin.options.title %> doesn't work properly without JavaScript enabled. Please enable it to continue.</strong>
+      <strong>We're sorry but NC-Scorer doesn't work properly without JavaScript enabled. Please enable it to continue.</strong>
+      <p>NC-Scorer is a web application for automated assessment of genetic variants in kidney disease. To use this tool, please enable JavaScript in your browser settings.</p>
     </noscript>
     <div id="app"></div>
     <!-- built files will be auto injected -->

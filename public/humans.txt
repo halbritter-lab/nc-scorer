@@ -1,0 +1,27 @@
+/* TEAM */
+Lab Director: Prof. Dr. Jan Halbritter
+Site: https://halbritter-lab.com
+Twitter: @kidney_genetics
+Location: Leipzig, Germany
+
+Development Team: Halbritter Lab
+GitHub: https://github.com/halbritter-lab
+
+/* THANKS */
+University of Leipzig Medical Center
+Vue.js Community
+Vuetify Team
+Open Source Contributors
+
+/* SITE */
+Last update: 2025/01/07
+Standards: HTML5, CSS3, ES6+
+Components: Vue.js, Vuetify, Vite
+Language: English
+Doctype: HTML5
+
+/* RESEARCH */
+Focus: Chronic Kidney Disease Genetics
+Method: Nephro Candidate Score (NCS)
+Purpose: Automated genetic variant assessment
+License: Open Source

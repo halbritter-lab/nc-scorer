@@ -49,6 +49,9 @@
     
     <!-- Disclaimer dialog -->
     <DisclaimerDialog v-if="!isDisclaimerAcknowledged" @acknowledged="onDisclaimerAcknowledged" />
+    
+    <!-- Global Structured Data -->
+    <JsonLd :data="structuredData" />
   </v-app>
   </ApiCacheProvider>
 </template>
@@ -59,13 +62,21 @@ import FooterBar from './components/FooterBar.vue';
 import GlobalNotification from './components/GlobalNotification.vue';
 import DisclaimerDialog from './components/DisclaimerDialog.vue';
 import ApiCacheProvider from './components/ApiCacheProvider.vue';
+import JsonLd from './components/JsonLd.vue';
 import useTour from '@/composables/useTour.js';
 import { useDisclaimer } from '@/composables/useDisclaimer.js';
+import { useSeo } from '@/composables/useSeo.js';
 import { onMounted, ref, defineAsyncComponent, computed } from 'vue';
 import { useUiStore } from '@/stores/uiStore';
 import { useSettingsStore } from '@/stores/settingsStore';
 import { useTheme } from 'vuetify';
 import { logService } from '@/services/logService';
+import { 
+  generateOrganizationSchema, 
+  generateWebApplicationSchema, 
+  generateSearchActionSchema,
+  combineSchemas 
+} from '@/utils/jsonLd';
 
 // Lazy load the LogViewer component for better initial loading performance
 const LogViewer = defineAsyncComponent(() => import('./components/LogViewer.vue'));
@@ -79,6 +90,7 @@ export default {
     DisclaimerDialog,
     LogViewer,
     ApiCacheProvider,
+    JsonLd,
   },
   setup() {
     const { startTour, shouldShowTour } = useTour();
@@ -86,6 +98,16 @@ export default {
     const uiStore = useUiStore();
     const settingsStore = useSettingsStore();
     const theme = useTheme();
+    
+    // Initialize SEO
+    useSeo();
+    
+    // Generate global structured data
+    const structuredData = combineSchemas(
+      generateOrganizationSchema(),
+      generateWebApplicationSchema(),
+      generateSearchActionSchema()
+    );
     
     const isDisclaimerAcknowledged = ref(checkDisclaimerStatus());
     const showLogViewer = computed(() => uiStore.showLogViewer);
@@ -124,7 +146,8 @@ export default {
       isDisclaimerAcknowledged,
       onDisclaimerAcknowledged,
       showLogViewer,
-      closeLogViewer
+      closeLogViewer,
+      structuredData
     };
   },
 };

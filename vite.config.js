@@ -32,24 +32,29 @@ export default defineConfig(async ({ mode }) => {
         filename: 'dist/stats.html',
       }),
       VitePluginSitemap({
-        hostname: isProd ? 'https://nc-scorer.kidney-genetics.org' : 'http://localhost:5173',
+        hostname: 'https://nc-scorer.kidney-genetics.org',
         lastmod: new Date().toISOString(),
         changefreq: 'weekly',
-        // Define static routes for the sitemap
-        urls: [
-          // Static pages
-          { url: '/', changefreq: 'weekly', priority: 1.0 },
-          { url: '/genes', changefreq: 'weekly', priority: 0.8 },
-          { url: '/batch', changefreq: 'weekly', priority: 0.8 },
-          { url: '/about', changefreq: 'monthly', priority: 0.7 },
-          { url: '/methodology', changefreq: 'monthly', priority: 0.7 },
-          // Dynamic routes - these are sample routes that will be included in the sitemap
-          // Common gene/variant entries can be added statically to ensure they're indexed
-          { url: '/symbols/PKD1', priority: 0.8 },
-          { url: '/symbols/PKD2', priority: 0.8 },
-          { url: '/variant/chr16-g.2162630C>T', priority: 0.8 },
-          { url: '/scoring/chr16-g.2162630C>T/dominant', priority: 0.8 },
-        ],
+        // Generate dynamic routes from gene database
+        urls: async () => {
+          if (isProd) {
+            try {
+              const { generateSitemapRoutes } = await import('./scripts/generate-sitemap-routes.js');
+              return generateSitemapRoutes();
+            } catch (error) {
+              console.warn('Could not generate dynamic sitemap routes:', error.message);
+            }
+          }
+          // Fallback routes for development or if generation fails
+          return [
+            { url: '/', changefreq: 'weekly', priority: 1.0 },
+            { url: '/genes', changefreq: 'weekly', priority: 0.8 },
+            { url: '/batch', changefreq: 'weekly', priority: 0.8 },
+            { url: '/about', changefreq: 'monthly', priority: 0.7 },
+            { url: '/methodology', changefreq: 'monthly', priority: 0.7 },
+            { url: '/search', changefreq: 'daily', priority: 0.9 },
+          ];
+        },
       }),
       {
         name: 'copy-cname',

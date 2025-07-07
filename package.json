@@ -25,6 +25,7 @@
   },
   "dependencies": {
     "@mdi/font": "^7.4.47",
+    "@vueuse/head": "^2.0.0",
     "axios": "^1.6.5",
     "pinia": "^3.0.2",
     "shepherd.js": "^14.5.0",

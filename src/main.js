@@ -3,6 +3,7 @@ import { createApp } from 'vue';
 import App from './App.vue';
 import router from './router';
 import { createPinia } from 'pinia';
+import { createHead } from '@vueuse/head';
 
 // Vuetify - Manual style imports to avoid sass-embedded dependency issues
 import 'vuetify/styles';
@@ -37,6 +38,9 @@ const vuetify = createVuetify({
 // Create Pinia instance
 const pinia = createPinia();
 
+// Create head instance for SEO
+const head = createHead();
+
 // Create and mount the app
 const app = createApp(App);
 
@@ -44,6 +48,7 @@ const app = createApp(App);
 app.use(vuetify);
 app.use(router);
 app.use(pinia);
+app.use(head);
 
 // Mount the app
 app.mount('#app');

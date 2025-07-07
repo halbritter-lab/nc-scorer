@@ -1,10 +1,43 @@
 # robots.txt for NC-Scorer
-# Allow crawling of all content by default
+# https://nc-scorer.kidney-genetics.org
+
+# Allow all search engines
 User-agent: *
 Allow: /
 
-# Sitemap reference for search engines
+# Specific directives for major search engines
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 0
+
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 5
+
+# Disallow API endpoints from crawling
+User-agent: *
+Disallow: /ensembl/
+Disallow: /ensembl_grch37/
+Disallow: /api/
+
+# Disallow assets and build files
+User-agent: *
+Disallow: /assets/*.js
+Disallow: /assets/*.css
+Disallow: /assets/*.map
+Disallow: *.json$
+
+# Allow specific JSON files that are important for SEO
+Allow: /manifest.json
+Allow: /sitemap.json
+
+# Sitemap location
 Sitemap: https://nc-scorer.kidney-genetics.org/sitemap.xml
 
-# Crawl-delay to rate limit requests (in seconds)
+# Security.txt location (RFC 9116)
+# https://securitytxt.org/
+Security.txt: https://nc-scorer.kidney-genetics.org/.well-known/security.txt
+
+# Default crawl delay for other bots
+User-agent: *
 Crawl-delay: 10
