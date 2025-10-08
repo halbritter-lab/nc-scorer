@@ -88,6 +88,7 @@ export const useSettingsStore = defineStore('settings', () => {
   const disclaimerAcknowledgedAt = ref(initialState.disclaimerAcknowledgedAt || null);
   const tourStatus = ref(initialState.tourStatus || 'new'); // 'new', 'skipped', 'completed'
   const logLevel = ref(initialState.logLevel || 'DEBUG'); // 'DEBUG', 'INFO', 'WARN', 'ERROR'
+  const isPreprintBannerDismissed = ref(initialState.isPreprintBannerDismissed ?? false);
 
   // --- GETTERS ---
   const isDisclaimerAcknowledged = computed(() => !!disclaimerAcknowledgedAt.value);
@@ -133,6 +134,14 @@ export const useSettingsStore = defineStore('settings', () => {
     }
   }
 
+  function dismissPreprintBanner() {
+    isPreprintBannerDismissed.value = true;
+  }
+
+  function resetPreprintBanner() {
+    isPreprintBannerDismissed.value = false;
+  }
+
   // --- PERSISTENCE ---
   // This watcher is the key to the solution. It observes the state and persists it.
   watch(
@@ -141,7 +150,8 @@ export const useSettingsStore = defineStore('settings', () => {
       isCacheEnabled: isCacheEnabled.value,
       disclaimerAcknowledgedAt: disclaimerAcknowledgedAt.value,
       tourStatus: tourStatus.value,
-      logLevel: logLevel.value
+      logLevel: logLevel.value,
+      isPreprintBannerDismissed: isPreprintBannerDismissed.value
     }),
     (stateToPersist) => {
       try {
@@ -160,6 +170,7 @@ export const useSettingsStore = defineStore('settings', () => {
     disclaimerAcknowledgedAt,
     tourStatus,
     logLevel,
+    isPreprintBannerDismissed,
     // Getters
     isDisclaimerAcknowledged,
     formattedDisclaimerDate,
@@ -171,6 +182,8 @@ export const useSettingsStore = defineStore('settings', () => {
     acknowledgeDisclaimer,
     setTourStatus,
     resetTour,
-    setLogLevel
+    setLogLevel,
+    dismissPreprintBanner,
+    resetPreprintBanner
   };
 });

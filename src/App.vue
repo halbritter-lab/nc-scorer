@@ -13,6 +13,9 @@
     <!-- Include the FooterBar component -->
     <FooterBar />
 
+    <!-- Preprint Banner (fixed at bottom above footer) -->
+    <PreprintBanner />
+
     <!-- Global notification system -->
     <GlobalNotification />
     
@@ -63,6 +66,7 @@ import GlobalNotification from './components/GlobalNotification.vue';
 import DisclaimerDialog from './components/DisclaimerDialog.vue';
 import ApiCacheProvider from './components/ApiCacheProvider.vue';
 import JsonLd from './components/JsonLd.vue';
+import PreprintBanner from './components/PreprintBanner.vue';
 import useTour from '@/composables/useTour.js';
 import { useDisclaimer } from '@/composables/useDisclaimer.js';
 import { useSeo } from '@/composables/useSeo.js';
@@ -91,6 +95,7 @@ export default {
     LogViewer,
     ApiCacheProvider,
     JsonLd,
+    PreprintBanner,
   },
   setup() {
     const { startTour, shouldShowTour } = useTour();
