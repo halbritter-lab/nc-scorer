@@ -1,3 +1,10 @@
+# [3.3.0](https://github.com/halbritter-lab/nc-scorer/compare/v3.2.0...v3.3.0) (2025-10-08)
+
+
+### Features
+
+* **ui:** add fixed preprint banner to application footer ([13a7141](https://github.com/halbritter-lab/nc-scorer/commit/13a71415f0f957a125d68a75ce18e0248b402f22))
+
 # [3.2.0](https://github.com/halbritter-lab/nc-scorer/compare/v3.1.1...v3.2.0) (2025-07-07)
 
 
