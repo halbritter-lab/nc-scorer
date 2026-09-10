@@ -1,3 +1,10 @@
+## [3.5.3](https://github.com/halbritter-lab/nc-scorer/compare/v3.5.2...v3.5.3) (2026-09-10)
+
+
+### Bug Fixes
+
+* **scoring:** safely normalize gene symbol to prevent gene.trim error on array symbols ([78ff6b5](https://github.com/halbritter-lab/nc-scorer/commit/78ff6b513ebab45e09f7f9d5f09e2d37f8b8c47f))
+
 ## [3.5.2](https://github.com/halbritter-lab/nc-scorer/compare/v3.5.1...v3.5.2) (2026-09-10)
 
 
