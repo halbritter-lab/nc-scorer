@@ -1,3 +1,10 @@
+## [3.3.1](https://github.com/halbritter-lab/nc-scorer/compare/v3.3.0...v3.3.1) (2026-09-10)
+
+
+### Bug Fixes
+
+* **deps:** modernize packages and resolve security vulnerabilities ([9c40a07](https://github.com/halbritter-lab/nc-scorer/commit/9c40a07d588ece4b2cface38d2420247ac462847))
+
 # [3.3.0](https://github.com/halbritter-lab/nc-scorer/compare/v3.2.0...v3.3.0) (2025-10-08)
 
 
