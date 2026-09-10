@@ -1,3 +1,10 @@
+## [3.5.4](https://github.com/halbritter-lab/nc-scorer/compare/v3.5.3...v3.5.4) (2026-09-10)
+
+
+### Bug Fixes
+
+* **citation:** resolve broken zenodo 404 badge and link, and add working tag and release badges ([7423c9f](https://github.com/halbritter-lab/nc-scorer/commit/7423c9f8ecdb38ef43291382cb2536c7aa733f30))
+
 ## [3.5.3](https://github.com/halbritter-lab/nc-scorer/compare/v3.5.2...v3.5.3) (2026-09-10)
 
 
