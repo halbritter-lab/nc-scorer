@@ -425,7 +425,10 @@ export default {
       // Generate file based on format selection
       if (format === 'excel') {
         // Generate Excel file
-        generateExcel(headers, data, generateFilename('excel'));
+        generateExcel(headers, data, generateFilename('excel')).catch(() => {
+          const csvContent = generateCSV(headers, data);
+          downloadFile(csvContent, generateFilename('csv'));
+        });
       } else {
         // Generate CSV and trigger download
         const csvContent = generateCSV(headers, data);

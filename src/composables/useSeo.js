@@ -1,5 +1,5 @@
-import { useHead } from '@vueuse/head';
-import { computed, watch } from 'vue';
+import { useHead } from '@unhead/vue';
+import { computed, toValue } from 'vue';
 import { useRoute } from 'vue-router';
 import { generateMetaTags } from '@/config/seo.config';
 
@@ -7,22 +7,22 @@ export function useSeo(customMeta = {}) {
   const route = useRoute();
   
   const metaTags = computed(() => {
-    return generateMetaTags(route, customMeta);
+    const meta = toValue(customMeta) || {};
+    return generateMetaTags(route, meta);
   });
   
-  // Update head tags
+  // Unhead automatically tracks computed refs reactively
   const head = useHead(metaTags);
   
-  // Watch for route changes
-  watch(route, () => {
-    head.value = metaTags.value;
-  });
-  
   return {
+    head,
     metaTags,
     updateMeta: (newMeta) => {
-      Object.assign(customMeta, newMeta);
-      head.value = generateMetaTags(route, customMeta);
+      const meta = toValue(customMeta) || {};
+      Object.assign(meta, newMeta);
+      if (head && typeof head.patch === 'function') {
+        head.patch(generateMetaTags(route, meta));
+      }
     }
   };
 }
@@ -48,7 +48,8 @@ export function useGenePageSeo(geneData) {
     };
   });
   
-  return useSeo(customMeta.value);
+  // Pass the computed ref directly so Unhead reacts when geneData resolves!
+  return useSeo(customMeta);
 }
 
 export function useVariantPageSeo(variantData) {
@@ -79,7 +80,8 @@ export function useVariantPageSeo(variantData) {
     };
   });
   
-  return useSeo(customMeta.value);
+  // Pass computed ref directly
+  return useSeo(customMeta);
 }
 
 export function useBatchPageSeo(batchData) {
@@ -97,5 +99,6 @@ export function useBatchPageSeo(batchData) {
     };
   });
   
-  return useSeo(customMeta.value);
+  // Pass computed ref directly
+  return useSeo(customMeta);
 }

@@ -1,14 +1,13 @@
 /**
  * Utilities for exporting data from the application
  */
-import * as XLSX from 'xlsx';
 import { logService } from '@/services/logService';
 
 /**
  * Generate a CSV string from header and data arrays
  * 
  * @param {Array} headers - Array of header strings
- * @param {Array} data - Array of data values
+ * @param {Array} data - Array of data values (1D or 2D)
  * @returns {String} - CSV formatted string
  */
 export function generateCSV(headers, data) {
@@ -20,36 +19,34 @@ export function generateCSV(headers, data) {
     return header;
   });
 
-  // Process data to escape any commas and handle null/undefined values
-  const processedData = data.map(value => {
-    if (value === null || value === undefined) {
-      return 'NA';
-    }
-    
-    if (typeof value === 'string' && value.includes(',')) {
-      return `"${value}"`;
-    }
-    
-    return value;
-  });
+  const isMultiRow = Array.isArray(data) && data.length > 0 && Array.isArray(data[0]);
+  const rows = isMultiRow ? data : [data];
 
-  // Create CSV content
+  const processedRows = rows.map(row => 
+    (Array.isArray(row) ? row : [row]).map(value => {
+      if (value === null || value === undefined) {
+        return 'NA';
+      }
+      if (typeof value === 'string' && value.includes(',')) {
+        return `"${value}"`;
+      }
+      return value;
+    }).join(',')
+  );
+
   const headerRow = processedHeaders.join(',');
-  const dataRow = processedData.join(',');
-  
-  return `${headerRow}\n${dataRow}`;
+  return `${headerRow}\n${processedRows.join('\n')}`;
 }
 
 /**
  * Trigger a file download in the browser
  * 
- * @param {String} content - Content to download
+ * @param {Blob|String} content - Content to download
  * @param {String} filename - Name for the downloaded file
  * @param {String} mimeType - MIME type for the content
  */
 export function downloadFile(content, filename, mimeType = 'text/csv;charset=utf-8;') {
-  // Create a blob with the content
-  const blob = new Blob([content], { type: mimeType });
+  const blob = content instanceof Blob ? content : new Blob([content], { type: mimeType });
   
   // Create a temporary link element for the download
   const link = document.createElement('a');
@@ -68,25 +65,56 @@ export function downloadFile(content, filename, mimeType = 'text/csv;charset=utf
 }
 
 /**
- * Generate and download an Excel file from headers and data
+ * Helper to format a cell value for write-excel-file
+ */
+function formatExcelCell(val) {
+  if (val === null || val === undefined || val === '') {
+    return { value: 'NA', type: String };
+  }
+  if (typeof val === 'number') {
+    return { value: val, type: Number };
+  }
+  if (typeof val === 'boolean') {
+    return { value: val, type: Boolean };
+  }
+  return { value: String(val), type: String };
+}
+
+/**
+ * Generate and download an Excel file from headers and data using write-excel-file
+ * Handles both 1D data (single row) and 2D data (multiple rows)
  * 
  * @param {Array} headers - Array of header strings
- * @param {Array} data - Array of data values
+ * @param {Array} data - Array of data values (1D) or array of rows (2D)
  * @param {String} filename - Name for the downloaded file
  */
-export function generateExcel(headers, data, filename) {
+export async function generateExcel(headers, data, filename) {
   try {
-    // Create a worksheet with the data
-    const ws = XLSX.utils.aoa_to_sheet([headers, data]);
-    
-    // Create a workbook with the worksheet
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Results');
-    
-    // Generate the Excel file and trigger download
-    XLSX.writeFile(wb, filename);
+    // Dynamic import to keep initial vendor bundle minimal
+    const { default: writeXlsxFile } = await import('write-excel-file/browser');
+
+    const headerRow = headers.map(header => ({
+      value: String(header ?? ''),
+      fontWeight: 'bold',
+      backgroundColor: '#f5f5f5',
+    }));
+
+    const isMultiRow = Array.isArray(data) && data.length > 0 && Array.isArray(data[0]);
+    const rowsArray = isMultiRow ? data : [data];
+
+    const dataRows = rowsArray.map(row =>
+      (Array.isArray(row) ? row : [row]).map(cell => formatExcelCell(cell))
+    );
+
+    const sheetData = [headerRow, ...dataRows];
+    const finalFilename = filename.endsWith('.xlsx') ? filename : `${filename}.xlsx`;
+
+    await writeXlsxFile(sheetData, {
+      fileName: finalFilename,
+    });
   } catch (error) {
     logService.error('Error generating Excel file:', error);
+    throw error;
   }
 }
 

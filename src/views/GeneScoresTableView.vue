@@ -120,6 +120,7 @@
 import { ref, onMounted, computed, reactive } from 'vue';
 import { logService } from '@/services/logService';
 import { fetchAllGeneScores } from '@/api/geneApi';
+import { generateExcel } from '@/utils/exportUtils';
 import ContentContainer from '@/components/ContentContainer.vue';
 
 export default {
@@ -266,37 +267,6 @@ export default {
     };
 
     /**
-     * Generate Excel file using SheetJS library
-     * 
-     * @param {string[]} headers - Column headers
-     * @param {string[][]} rows - Data rows
-     * @param {string} filename - Output filename
-     */
-    const generateExcel = async (headers, rows, filename) => {
-      try {
-        // Dynamically import SheetJS (xlsx) library
-        const XLSX = await import('xlsx');
-        
-        // Create worksheet
-        const worksheet = XLSX.utils.aoa_to_sheet([headers, ...rows]);
-        
-        // Create workbook and add worksheet
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, 'Gene Scores');
-        
-        // Generate Excel file and trigger download
-        const excelBlob = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-        triggerDownload(new Blob([excelBlob], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), filename);
-      } catch (error) {
-        logService.error('Error generating Excel file:', error);
-        alert('Failed to generate Excel file. CSV download will be attempted instead.');
-        
-        // Fallback to CSV download
-        downloadGeneScores('csv');
-      }
-    };
-
-    /**
      * Download gene scores in the specified format
      * 
      * @param {string} format - Format to download ('csv' or 'excel')
@@ -329,8 +299,13 @@ export default {
       
       // Generate file based on format selection
       if (format === 'excel') {
-        // Generate Excel file
-        generateExcel(headers, rows, generateFilename('excel'));
+        try {
+          await generateExcel(headers, rows, generateFilename('excel'));
+        } catch (error) {
+          logService.error('Error generating Excel file:', error);
+          alert('Failed to generate Excel file. CSV download will be attempted instead.');
+          downloadGeneScores('csv');
+        }
       } else {
         // Generate CSV and trigger download
         const csvContent = generateCSV(headers, rows);

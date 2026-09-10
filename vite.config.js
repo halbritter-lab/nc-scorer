@@ -1,16 +1,17 @@
-// vite.config.js - Convert to ESM format
+// vite.config.js - Modernized ESM configuration
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import vuetify from 'vite-plugin-vuetify';
 import { visualizer } from 'rollup-plugin-visualizer';
-import path from 'path';
-import fs from 'fs';
-// Use dynamic import for sitemap plugin to handle ESM compatibility
-// Will be imported asynchronously in the config function
+import path from 'node:path';
+import fs from 'node:fs';
+import { fileURLToPath } from 'node:url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // https://vitejs.dev/config/
 export default defineConfig(async ({ mode }) => {
-  // Use the command and mode parameters instead of import.meta.env
   const isProd = mode === 'production';
   
   // Dynamic import for the sitemap plugin (ESM module)
@@ -65,6 +66,13 @@ export default defineConfig(async ({ mode }) => {
         }
       },
     ],
+    css: {
+      preprocessorOptions: {
+        scss: {
+          api: 'modern-compiler',
+        },
+      },
+    },
     resolve: {
       alias: {
         '@': path.resolve(__dirname, 'src'), // Setup '@' alias to point to src directory
@@ -79,8 +87,7 @@ export default defineConfig(async ({ mode }) => {
         output: {
           manualChunks: {
             'vue-core': ['vue', 'vue-router'],
-            vuetify: ['vuetify', 'vuetify/styles'],
-            icons: ['@mdi/font/css/materialdesignicons.css'],
+            vuetify: ['vuetify'],
           },
           // Ensure asset names include content hash for better caching
           entryFileNames: 'assets/[name].[hash].js',
@@ -131,11 +138,9 @@ export default defineConfig(async ({ mode }) => {
       },
     },
     define: {
-      // Make process.env available to the client for compatibility
-      'process.env': {
-        NODE_ENV: JSON.stringify(mode),
-        BASE_URL: JSON.stringify('/'),
-      },
+      // Make process.env properties specifically available without clobbering third-party libraries
+      'process.env.NODE_ENV': JSON.stringify(mode),
+      'process.env.BASE_URL': JSON.stringify('/'),
     }
   };
 });

@@ -2,10 +2,13 @@
 // scripts/analyze-bundle.js
 // Script to build and analyze the production bundle
 
-const { execSync } = require('child_process');
-const fs = require('fs');
-const path = require('path');
-const open = require('open'); // You may need to install this package: npm install open
+import { execSync } from 'node:child_process';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 console.log('🔍 Building and analyzing production bundle...');
 
@@ -59,13 +62,6 @@ try {
     
     console.log(`\nTotal bundle size: ${(totalSize / 1024).toFixed(2)} KB`);
     console.log(`\nFor detailed visualization, see: ${statsPath}`);
-    
-    // Open the stats file in the default browser (optional)
-    try {
-      open(statsPath);
-    } catch (e) {
-      console.log('Could not automatically open the stats file. Please open it manually.');
-    }
   } else {
     console.error(`\n❌ Stats file not found at: ${statsPath}`);
   }

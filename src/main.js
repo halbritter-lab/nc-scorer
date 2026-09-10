@@ -3,7 +3,7 @@ import { createApp } from 'vue';
 import App from './App.vue';
 import router from './router';
 import { createPinia } from 'pinia';
-import { createHead } from '@vueuse/head';
+import { createHead } from '@unhead/vue/client';
 
 // Vuetify - Manual style imports to avoid sass-embedded dependency issues
 import 'vuetify/styles';
@@ -12,8 +12,6 @@ import '@mdi/font/css/materialdesignicons.css';
 // Custom CSS for font optimization without requiring Sass processing
 import '@/assets/css/font-optimization.css';
 import { createVuetify } from 'vuetify';
-import * as components from 'vuetify/components';
-import * as directives from 'vuetify/directives';
 
 // Performance optimization: Add font-display: swap to prevent FOIT (Flash of Invisible Text)
 // This is done via CSS instead of Sass to avoid sass-embedded issues
@@ -26,10 +24,8 @@ import themeConfig from '@/config/themeConfig.json';
 // Configurable performance settings
 const ENABLE_PERFORMANCE_HINTS = true;
 
-// Create Vuetify instance with tree-shakable components
+// Create Vuetify instance with tree-shaking enabled via vite-plugin-vuetify
 const vuetify = createVuetify({
-  components,
-  directives,
   theme: {
     defaultTheme: themeConfig.defaultTheme,
   },
