@@ -126,7 +126,8 @@ export default {
     const showCacheIndicator = ref(false);
 
     // Get shared retry state from parent or create a new one
-    const { retryStates } = inject('retryState', useRetryState());
+    const injectedRetryState = inject('retryState', null);
+    const { retryStates } = injectedRetryState || useRetryState();
     
     // Inject API cache instance
     const apiCache = inject(API_CACHE_KEY, null);

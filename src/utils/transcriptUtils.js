@@ -25,7 +25,7 @@ export function prioritizeTranscript(transcripts) {
 
   // First try to find MANE Select transcripts
   const maneSelectTranscripts = transcripts.filter(
-    (tc) => tc.mane && tc.mane.includes('MANE_Select')
+    (tc) => tc.mane && (typeof tc.mane === 'string' ? tc.mane.includes('MANE') : Boolean(tc.mane))
   );
 
   // If we have MANE Select transcripts, prioritize by impact
@@ -57,7 +57,7 @@ export function formatTranscriptOptions(transcripts) {
   }
 
   return transcripts.map(transcript => {
-    const isMANE = transcript.mane && transcript.mane.includes('MANE_Select');
+    const isMANE = Boolean(transcript.mane && (typeof transcript.mane === 'string' ? transcript.mane.includes('MANE') : Boolean(transcript.mane)));
     const geneSymbol = transcript.gene_symbol || '';
     const impact = transcript.impact || '';
     

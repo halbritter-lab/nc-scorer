@@ -26,8 +26,10 @@ pnpm-debug.log*
 .windsurf
 .windsurfrules
 
-# Claude Code guidance file
-CLAUDE.md
+# Test coverage
+coverage/
+
+# Claude Code
 .claude/
 
 # VitePress

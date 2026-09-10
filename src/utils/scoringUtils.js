@@ -17,11 +17,14 @@ import { baseScores, scoringParameters, noSegregationPatterns, missingSegregatio
  * @throws {Error} - If baseScore or pValue are out of the [0,1] range.
  */
 function computeVariantScore(baseScore, pValue = 1, gamma = 0.001, epsilon = 1e-10) {
-  if (baseScore < 0 || baseScore > 1) {
+  if (typeof baseScore !== 'number' || !Number.isFinite(baseScore) || baseScore < 0 || baseScore > 1) {
     throw new Error('baseScore must be between 0 and 1');
   }
-  if (pValue < 0 || pValue > 1) {
+  if (typeof pValue !== 'number' || !Number.isFinite(pValue) || pValue < 0 || pValue > 1) {
     throw new Error('pValue must be between 0 and 1');
+  }
+  if (typeof gamma !== 'number' || !Number.isFinite(gamma) || gamma <= 0 || gamma >= 1) {
+    throw new Error('gamma must be between 0 and 1 (exclusive)');
   }
   const adjustedP = Math.max(pValue, epsilon);
   const numerator = -Math.log(adjustedP);
@@ -50,7 +53,7 @@ export function calculateInheritanceScore(inheritance, segregation) {
   const baseScore = baseScores[inheritance] ?? 0.1;
   
   // Determine if segregation data was missing (null) or provided
-  const isSegregationMissing = segregation === null || segregation === '';
+  const isSegregationMissing = segregation === null || segregation === undefined || segregation === '';
   
   // If data is missing, use a neutral p-value of 1 for the core calculation.
   // If provided, convert to a number.
@@ -79,7 +82,7 @@ export function calculateInheritanceScore(inheritance, segregation) {
  * @returns {number} - Final NCS score (0-10 range)
  */
 export function calculateNCS(geneScore, variantScore, inheritanceScore) {
-  if (typeof geneScore !== 'number' || typeof variantScore !== 'number' || typeof inheritanceScore !== 'number') {
+  if (!Number.isFinite(geneScore) || !Number.isFinite(variantScore) || !Number.isFinite(inheritanceScore)) {
     return 0;
   }
   // Formula: (Gene × 4 + Variant × 4 + Inheritance × 2)
@@ -93,7 +96,7 @@ export function calculateNCS(geneScore, variantScore, inheritanceScore) {
  * @returns {number} - The validated score, or 0 if invalid
  */
 export function validateScore(score, scoreName = 'score') {
-  if (typeof score !== 'number' || isNaN(score)) {
+  if (typeof score !== 'number' || !Number.isFinite(score)) {
     console.warn(`Invalid ${scoreName}: ${score}. Using 0 instead.`);
     return 0;
   }

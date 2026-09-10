@@ -29,9 +29,9 @@ export function useSeo(customMeta = {}) {
 
 export function useGenePageSeo(geneData) {
   const customMeta = computed(() => {
-    if (!geneData.value) return {};
+    const gene = toValue(geneData);
+    if (!gene || !gene.symbol) return {};
     
-    const gene = geneData.value;
     const description = `Explore ${gene.symbol} (${gene.name || 'Gene'}) variants associated with kidney disease. 
       ${gene.inheritance ? `Inheritance: ${gene.inheritance}.` : ''} 
       ${gene.phenotypes ? `Associated conditions: ${gene.phenotypes.slice(0, 3).join(', ')}.` : ''}`;
@@ -40,7 +40,7 @@ export function useGenePageSeo(geneData) {
       title: `${gene.symbol} - ${gene.name || 'Gene Analysis'} | NC-Scorer`,
       description: description.replace(/\s+/g, ' ').trim(),
       keywords: [
-        gene.symbol.toLowerCase(),
+        (gene.symbol || '').toLowerCase(),
         'kidney disease',
         'genetic variants',
         ...(gene.phenotypes || []).slice(0, 5).map(p => p.toLowerCase())
@@ -56,11 +56,11 @@ export function useVariantPageSeo(variantData) {
   const route = useRoute();
   
   const customMeta = computed(() => {
-    if (!variantData.value) return {};
+    const variant = toValue(variantData);
+    if (!variant) return {};
     
-    const variant = variantData.value;
-    const gene = variant.gene || route.params.gene || '';
-    const variantId = variant.id || variant.rsid || route.params.variant || '';
+    const gene = variant.gene || (route && route.params ? route.params.gene : '') || '';
+    const variantId = variant.id || variant.rsid || (route && route.params ? route.params.variant : '') || '';
     
     const description = `Analysis of ${gene} variant ${variantId}. 
       ${variant.consequence ? `Consequence: ${variant.consequence}.` : ''} 
@@ -86,7 +86,8 @@ export function useVariantPageSeo(variantData) {
 
 export function useBatchPageSeo(batchData) {
   const customMeta = computed(() => {
-    if (!batchData.value || batchData.value.length === 0) {
+    const batch = toValue(batchData);
+    if (!batch || batch.length === 0) {
       return {
         title: 'Batch Variant Processing - Upload Your Data | NC-Scorer',
         description: 'Process multiple genetic variants at once. Upload VCF, CSV, or TSV files with up to 200 variants for automated Nephro Candidate Score analysis.'
@@ -94,8 +95,8 @@ export function useBatchPageSeo(batchData) {
     }
     
     return {
-      title: `Processing ${batchData.value.length} Variants | NC-Scorer Batch Analysis`,
-      description: `Currently analyzing ${batchData.value.length} genetic variants. Export results in multiple formats with comprehensive scoring and annotations.`
+      title: `Processing ${batch.length} Variants | NC-Scorer Batch Analysis`,
+      description: `Currently analyzing ${batch.length} genetic variants. Export results in multiple formats with comprehensive scoring and annotations.`
     };
   });
   

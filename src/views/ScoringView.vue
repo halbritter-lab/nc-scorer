@@ -341,12 +341,12 @@ export default {
         }
         
         // Add gnomAD frequency if available
-        if (variantData.frequencyExtracted && variantData.frequencyExtracted.gnomade) {
+        if (variantData.frequencyExtracted && variantData.frequencyExtracted.gnomade !== undefined && variantData.frequencyExtracted.gnomade !== null) {
           headers.push('gnomADe_Frequency');
           data.push(variantData.frequencyExtracted.gnomade);
         }
         
-        if (variantData.frequencyExtracted && variantData.frequencyExtracted.gnomadg) {
+        if (variantData.frequencyExtracted && variantData.frequencyExtracted.gnomadg !== undefined && variantData.frequencyExtracted.gnomadg !== null) {
           headers.push('gnomADg_Frequency');
           data.push(variantData.frequencyExtracted.gnomadg);
         }

@@ -25,7 +25,7 @@ export function prioritizeGeneSymbol(variantAnnotation) {
 
   // First try to find MANE Select transcripts
   const maneSelectTranscripts = variantAnnotation.transcript_consequences.filter(
-    (tc) => tc.mane && tc.mane.includes('MANE_Select')
+    (tc) => tc.mane && (typeof tc.mane === 'string' ? tc.mane.includes('MANE') : Boolean(tc.mane))
   );
 
   // If we have MANE Select transcripts, prioritize by impact

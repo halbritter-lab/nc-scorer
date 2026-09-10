@@ -2,7 +2,7 @@
  * Composable for client-side API response caching
  * Uses sessionStorage to persist during browser session
  */
-import { inject, reactive, readonly } from 'vue';
+import { inject, reactive, computed, hasInjectionContext } from 'vue';
 import { logService } from '@/services/logService';
 import { useCacheSettings } from '@/composables/useCacheSettings';
 
@@ -14,7 +14,7 @@ export function useApiCache() {
   const { cacheEnabled } = useCacheSettings();
   
   // Try to get existing cache from the current Vue instance
-  const existingCache = inject(API_CACHE_KEY, null);
+  const existingCache = hasInjectionContext() ? inject(API_CACHE_KEY, null) : null;
   if (existingCache) return existingCache;
   
   // Cache storage configuration
@@ -188,13 +188,13 @@ export function useApiCache() {
     };
   }
   
-  // Return readonly stats to prevent external state modifications
   return {
     cacheEnabled,
     getCachedItem,
     setCachedItem,
     clearCache,
     generateCacheKey,
-    stats: readonly(getCacheStats())
+    getCacheStats,
+    stats: computed(() => getCacheStats())
   };
 }
