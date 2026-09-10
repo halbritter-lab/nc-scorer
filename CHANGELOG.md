@@ -1,3 +1,10 @@
+## [3.5.1](https://github.com/halbritter-lab/nc-scorer/compare/v3.5.0...v3.5.1) (2026-09-10)
+
+
+### Performance Improvements
+
+* **ux:** optimize Core Web Vitals, eliminate layout shifts, and enhance contrast ([6a0b73f](https://github.com/halbritter-lab/nc-scorer/commit/6a0b73f6b01c5c8290b04474e2a5921a8b8b9e64))
+
 # [3.5.0](https://github.com/halbritter-lab/nc-scorer/compare/v3.4.0...v3.5.0) (2026-09-10)
 
 
