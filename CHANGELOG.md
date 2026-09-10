@@ -1,3 +1,10 @@
+# [3.4.0](https://github.com/halbritter-lab/nc-scorer/compare/v3.3.1...v3.4.0) (2026-09-10)
+
+
+### Features
+
+* **test:** add vitest test harness, vue-tsc typechecking, and AGENTS.md ([5a4611c](https://github.com/halbritter-lab/nc-scorer/commit/5a4611c86d40a569abd514f565ccac0ccc4131e3))
+
 ## [3.3.1](https://github.com/halbritter-lab/nc-scorer/compare/v3.3.0...v3.3.1) (2026-09-10)
 
 
