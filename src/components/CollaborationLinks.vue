@@ -4,11 +4,11 @@
       <v-btn
         color="secondary"
         prepend-icon="mdi-account-group"
-        class="ml-2"
+        class="ml-2 font-weight-medium"
         v-bind="props"
         :disabled="!isActive"
-        size="small"
         variant="flat"
+        min-height="44"
         :title="platformsConfig.uiText.buttonTooltip"
       >
         {{ platformsConfig.uiText.menuTitle }}

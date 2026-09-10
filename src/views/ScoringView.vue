@@ -51,8 +51,10 @@
                   prepend-icon="mdi-download"
                   v-bind="props"
                   :disabled="!combinedScoreAvailable"
-                  size="small"
                   variant="flat"
+                  min-height="44"
+                  min-width="150"
+                  class="font-weight-medium"
                 >
                   Download Results
                 </v-btn>
@@ -62,11 +64,13 @@
                   @click="downloadResults('csv')"
                   prepend-icon="mdi-file-delimited"
                   title="Download as CSV"
+                  min-height="44"
                 />
                 <v-list-item
                   @click="downloadResults('excel')"
                   prepend-icon="mdi-file-excel"
                   title="Download as Excel"
+                  min-height="44"
                 />
               </v-list>
             </v-menu>
@@ -81,8 +85,10 @@
             <v-btn
               color="primary-darken-1"
               prepend-icon="mdi-pencil"
-              size="small"
               variant="flat"
+              min-height="44"
+              min-width="120"
+              class="font-weight-medium"
               @click="navigateToEditSearch"
               title="Modify your search parameters"
             >
@@ -154,6 +160,7 @@ import { useNotifications } from '@/composables/useNotifications.js';
 import { requiresSecondVariant } from '@/config/inheritanceConfig';
 import { scoreInterpretationConfig } from '@/config/scoreInterpretationConfig';
 import { generateCSV, downloadFile, sanitizeFilename, generateExcel } from '@/utils/exportUtils';
+import { coordinateCache } from '@/services/coordinateCache.js';
 
 export default {
   name: 'ScoringView',
@@ -184,10 +191,13 @@ export default {
     const variantInput2 = route.params.variantInput2 || '';
     const assembly = route.params.assembly || 'GRCh38';
 
+    // Fast gene pre-resolution from coordinate cache for concurrent fetching
+    const initialGeneSymbol = coordinateCache.getGeneSymbol(variantInput, assembly) || '';
+
     // Create reactive state to store component data
     const scoreState = reactive({
       geneScore: 0,
-      geneSymbol: '',
+      geneSymbol: initialGeneSymbol,
       variantScore: 0,
       inheritanceScore: 0,
       // Add new properties to hold the driver data
@@ -215,7 +225,7 @@ export default {
         const gs = scoreState.variantData.geneSummary.gene_symbol;
         return Array.isArray(gs) ? gs[0] : gs;
       }
-      return '';
+      return scoreState.geneSymbol || coordinateCache.getGeneSymbol(variantInput, assembly) || '';
     });
 
     // Use the reactive state value directly for gene score

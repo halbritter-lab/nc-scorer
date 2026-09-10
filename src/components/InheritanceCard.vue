@@ -58,7 +58,7 @@
         </v-card>
         
         <!-- Penalty Alert -->
-        <v-alert v-if="wasPenalized" density="compact" type="info" variant="tonal" class="mt-3">
+        <v-alert v-if="wasPenalized" density="compact" type="info" variant="flat" class="mt-3 font-weight-medium">
           <v-icon class="mr-2">mdi-information</v-icon>
           Score penalized due to missing segregation data for this inheritance pattern.
         </v-alert>

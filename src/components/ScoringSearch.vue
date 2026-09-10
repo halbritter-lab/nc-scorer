@@ -28,16 +28,18 @@
               </div>
               
               <!-- Simple search button -->
-              <div class="search-button-area d-flex align-center px-2" style="width: 56px;">
+              <div class="search-button-area d-flex align-center justify-center px-1" style="min-width: 56px;">
                 <v-btn
                   color="primary"
-                  variant="text"
+                  variant="flat"
                   icon
                   @click="searchScoring"
                   aria-label="Search"
-                  size="large"
+                  min-width="48"
+                  min-height="48"
+                  class="search-submit-btn"
                 >
-                  <v-icon>mdi-arrow-right</v-icon>
+                  <v-icon size="24">mdi-arrow-right</v-icon>
                 </v-btn>
               </div>
             </div>
@@ -161,7 +163,6 @@
             <router-link
               :to="exampleLinkOld1"
               class="example-link"
-              aria-label="Example with VCF format 1-55051215-G-GA, Inherited dominant pattern, segregation 0.95"
             >
               <v-icon size="x-small" class="mr-1" color="primary">mdi-dna</v-icon>
               <div class="example-content">
@@ -174,7 +175,6 @@
             <router-link
               :to="exampleLinkPKD1"
               class="example-link"
-              aria-label="Example with PKD1 gene variant NM_001009944.3:c.11935C>T, Inherited dominant, segregation 0.95"
             >
               <v-icon size="x-small" class="mr-1" color="primary">mdi-dna</v-icon>
               <div class="example-content">
@@ -187,7 +187,6 @@
             <router-link
               :to="exampleLinkCOL4A5"
               class="example-link"
-              aria-label="Example with COL4A5 gene variant NM_033380.3:c.1871G>A, Denovo pattern"
             >
               <v-icon size="x-small" class="mr-1" color="primary">mdi-dna</v-icon>
               <div class="example-content">
@@ -200,7 +199,6 @@
             <router-link
               :to="exampleLinkCEP290"
               class="example-link example-highlight"
-              aria-label="Compound heterozygous example with CEP290 gene variants using genomic coordinates"
             >
               <v-icon size="x-small" class="mr-1" color="secondary">mdi-dna</v-icon>
               <div class="example-content">
@@ -628,23 +626,27 @@ export default {
 }
 
 .example-link {
-  padding: 4px 6px;
-  border-radius: 4px;
+  padding: 8px 12px;
+  min-height: 44px;
+  border-radius: 6px;
   display: inline-flex;
-  align-items: start;
-  font-size: 0.85rem;
-  transition: background-color 0.2s ease;
+  align-items: center;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
   text-decoration: none;
-  margin-bottom: 2px;
+  margin-bottom: 6px;
+  border: 1px solid rgba(var(--v-theme-on-surface), 0.15);
 }
 
 .example-link:hover {
-  background-color: rgba(0, 0, 0, 0.05);
+  background-color: rgba(var(--v-theme-primary), 0.08);
+  border-color: rgba(var(--v-theme-primary), 0.5);
   text-decoration: none;
 }
 
 .v-theme--dark .example-link:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.3);
 }
 
 .example-content {
@@ -653,18 +655,18 @@ export default {
 }
 
 .example-title {
-  font-weight: 500;
-  line-height: 1.2;
+  font-weight: 600;
+  line-height: 1.3;
 }
 
 .example-details {
-  font-size: 0.75rem;
-  color: rgba(0, 0, 0, 0.6);
-  line-height: 1.2;
+  font-size: 0.8rem;
+  color: rgba(var(--v-theme-on-surface), 0.85);
+  line-height: 1.3;
 }
 
 .v-theme--dark .example-details {
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(255, 255, 255, 0.85);
 }
 
 .example-link:hover .example-title {

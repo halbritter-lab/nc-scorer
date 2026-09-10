@@ -3,9 +3,14 @@
   <ContentContainer>
     <v-row>
       <v-col cols="12">
-        <v-alert border="start" variant="tonal" color="info" class="mb-4">
-          <h1 class="text-h6">Welcome to NC-Scorer</h1>
-          <p class="mt-2">
+        <v-alert
+          border="start"
+          variant="flat"
+          color="primary-darken-1"
+          class="mb-4 text-white"
+        >
+          <h1 class="text-h6 font-weight-bold">Welcome to NC-Scorer</h1>
+          <p class="mt-2 text-body-2">
             This tool helps standardize and automate the assessment of candidate variants found via
             high throughput sequencing (e.g., exome or genome Sequencing) for patients with Chronic
             Kidney Disease of unknown etiology (CKDu). It uses the Nephro Candidate Score (NCS) to
@@ -15,11 +20,11 @@
         </v-alert>
       </v-col>
     </v-row>
-    <v-card>
+    <v-card class="elevation-2">
       <v-tabs v-model="activeTab" fixed-tabs>
-        <v-tab value="scoring">Scoring Search</v-tab>
-        <v-tab value="variant">Variant Search</v-tab>
-        <v-tab value="gene">Gene Search</v-tab>
+        <v-tab value="scoring" min-height="48" class="font-weight-medium">Scoring Search</v-tab>
+        <v-tab value="variant" min-height="48" class="font-weight-medium">Variant Search</v-tab>
+        <v-tab value="gene" min-height="48" class="font-weight-medium">Gene Search</v-tab>
       </v-tabs>
 
       <v-card-text>

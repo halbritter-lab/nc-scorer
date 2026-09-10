@@ -1,16 +1,26 @@
-/* Font display optimization - applied globally */
+/* Font display optimization - applied globally for Material Design Icons */
 
-/* Modify the font-display property for all text to ensure content is visible during webfont loading */
-* {
-  font-display: swap !important;
+@font-face {
+  font-family: 'Material Design Icons';
+  src: url('@mdi/font/fonts/materialdesignicons-webfont.woff2?v=7.4.47') format('woff2'),
+       url('@mdi/font/fonts/materialdesignicons-webfont.woff?v=7.4.47') format('woff');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
 }
 
-/* Apply font-display: swap to all font faces */
-* {
-  font-display: swap !important;
+/* Accessibility & Touch Target Hygiene (WCAG 2.1 AAA >= 44x44px) */
+.v-field__input {
+  min-height: 44px;
 }
 
-/* Optimization for Material Design Icons */
-.mdi {
-  font-display: swap !important;
+.v-data-table-footer .v-btn {
+  min-width: 44px !important;
+  min-height: 44px !important;
 }
+
+.v-data-table-footer .v-field {
+  min-height: 44px !important;
+}
+
+

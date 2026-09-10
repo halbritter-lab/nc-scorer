@@ -3,9 +3,8 @@
 import variantLinker from 'variant-linker';
 import { retryWithBackoff } from '@/utils/retry.js';
 import { useNotifications } from '@/composables/useNotifications';
-
-// Ensure module is available globally for proper initialization
-window.variantLinker = variantLinker;
+import { coordinateCache } from '@/services/coordinateCache.js';
+import { fetchGeneDetails } from '@/api/geneApi.js';
 
 // NOTE: Base URL is now set dynamically in each queryVariant call
 // This allows for genome assembly selection (GRCh37 vs GRCh38)
@@ -58,10 +57,10 @@ export async function queryVariant(variantInput, options = {}) {
   }
   
   // **Dynamic URL Configuration based on assembly selection**
-  const isDevelopment = import.meta.env.DEV;
+  const isLocalOrDev = import.meta.env.DEV || (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'));
   let baseUrl;
 
-  if (isDevelopment) {
+  if (isLocalOrDev) {
     baseUrl = assembly === 'GRCh37' ? '/ensembl_grch37' : '/ensembl';
   } else {
     baseUrl = assembly === 'GRCh37'
@@ -75,8 +74,6 @@ export async function queryVariant(variantInput, options = {}) {
     console.log(`variantApi: Set Ensembl base URL to ${baseUrl} for assembly ${assembly}`);
   }
   
-  // We'll dynamically get the apiCache later during execution when needed
-
   // Determine if this is a batch request
   const isBatchRequest = Array.isArray(variantInput);
 
@@ -87,6 +84,22 @@ export async function queryVariant(variantInput, options = {}) {
   
   // Normalize variant ID to use as cache key (only for single variant requests)
   const normalizedInput = isBatchRequest ? null : variantInput.trim();
+
+  // Check coordinate cache for accelerated HGVS-to-VCF translation
+  let queryInput = normalizedInput;
+  let isAccelerated = false;
+  if (!isBatchRequest && normalizedInput) {
+    const cachedVcf = coordinateCache.getVcf(normalizedInput, assembly);
+    if (cachedVcf) {
+      queryInput = cachedVcf;
+      isAccelerated = true;
+      // Speculatively warm cache for gene details if gene symbol is known
+      const prefetchGene = coordinateCache.getGeneSymbol(normalizedInput, assembly);
+      if (prefetchGene && apiCache) {
+        fetchGeneDetails(prefetchGene, { apiCache }).catch(() => {});
+      }
+    }
+  }
 
   // Create cache parameters object with options that affect the response
   const cacheParams = {
@@ -111,6 +124,15 @@ export async function queryVariant(variantInput, options = {}) {
     if (cachedResult) {
       return cachedResult; // Returns {data, source} object
     }
+
+    // Also check if VCF equivalent is cached
+    if (isAccelerated && queryInput !== normalizedInput) {
+      const vcfCacheKey = apiCache.generateCacheKey('variant', queryInput, cacheParams);
+      const vcfCachedResult = apiCache.getCachedItem(vcfCacheKey);
+      if (vcfCachedResult) {
+        return vcfCachedResult;
+      }
+    }
   }
 
   if (typeof variantLinker.analyzeVariant !== 'function') {
@@ -125,7 +147,6 @@ export async function queryVariant(variantInput, options = {}) {
 
   return retryWithBackoff(
     async () => {
-      // Return the result of the variant analysis
       // Return the result of the variant analysis
       let result;
       if (isBatchRequest) {
@@ -142,7 +163,7 @@ export async function queryVariant(variantInput, options = {}) {
       } else {
         // For single variant requests
         result = await variantLinker.analyzeVariant({
-          variant: normalizedInput,
+          variant: queryInput,
           recoderOptions,
           vepOptions,
           scoringConfig,
@@ -153,15 +174,52 @@ export async function queryVariant(variantInput, options = {}) {
       }
       
       // Store successful result in cache and get response with source info (only for single variants)
-      if (result && !skipCache && !isBatchRequest && apiCache) {
-        return apiCache.setCachedItem(cacheKey, result, cacheTTL); // Returns {data, source} object
+      if (result && !isBatchRequest) {
+        // If accelerated from HGVS to VCF, attach original notation metadata
+        if (isAccelerated) {
+          if (Array.isArray(result)) {
+            result.forEach((item) => {
+              item.originalInput = normalizedInput;
+              item.vcfString = queryInput;
+            });
+          } else if (typeof result === 'object') {
+            result.originalInput = normalizedInput;
+            result.vcfString = queryInput;
+          }
+        }
+
+        // Extract resolved genomic coordinates and gene symbol to warm coordinate cache
+        const topItem = Array.isArray(result) ? result[0] : result;
+        const anno = topItem?.annotationData?.[0];
+        const vcfKey = topItem?.variantKey || anno?.variantKey || (isAccelerated ? queryInput : null);
+        const geneSymbol = anno?.gene_symbol || (Array.isArray(anno?.gene_symbol) ? anno.gene_symbol[0] : null);
+
+        if (vcfKey) {
+          coordinateCache.set(normalizedInput, vcfKey, geneSymbol, assembly);
+          if (normalizedInput !== queryInput) {
+            coordinateCache.set(queryInput, vcfKey, geneSymbol, assembly);
+          }
+        }
+
+        if (!skipCache && apiCache) {
+          if (cacheKey) {
+            apiCache.setCachedItem(cacheKey, result, cacheTTL);
+          }
+          if (vcfKey && vcfKey !== normalizedInput) {
+            const vcfCacheKey = apiCache.generateCacheKey('variant', vcfKey, cacheParams);
+            apiCache.setCachedItem(vcfCacheKey, result, cacheTTL);
+          }
+          return {
+            data: result,
+            source: { fromCache: false, accelerated: isAccelerated },
+          };
+        }
       }
 
       // If skipCache is true or it's a batch request, return result with source info
-      // For batch requests with non-JSON output formats, result may be a string
       return { 
         data: result, 
-        source: { fromCache: false } 
+        source: { fromCache: false, accelerated: isAccelerated } 
       };
     },
     {

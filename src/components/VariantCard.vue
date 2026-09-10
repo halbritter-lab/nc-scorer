@@ -11,7 +11,17 @@
             <span>Variant Details for "{{ variantInput }}"</span>
             <v-menu v-if="variantLinks && Object.keys(variantLinks).length > 0">
               <template v-slot:activator="{ props }">
-                <v-btn v-bind="props" icon="mdi-open-in-new" size="x-small" class="ml-1" variant="text" color="primary" title="View in external databases"></v-btn>
+                <v-btn
+                  v-bind="props"
+                  icon="mdi-open-in-new"
+                  variant="text"
+                  color="primary"
+                  title="View in external databases"
+                  aria-label="View in external databases"
+                  min-width="44"
+                  min-height="44"
+                  class="ml-1"
+                ></v-btn>
               </template>
               <v-list density="compact">
                 <v-list-item v-if="variantLinks.ensembl" :href="variantLinks.ensembl" target="_blank" rel="noopener noreferrer">
@@ -779,39 +789,39 @@ export default {
     // scoreInterpretationConfig is already imported and available to the template
 
     onMounted(async () => {
-      // Load the primary variant
-      await loadVariantData(
-        props.variantInput,
-        result,
-        loading,
-        error,
-        isMaxRetriesError,
-        fromCache,
-        showCacheIndicator,
-        'variant',
-        formattedTranscriptOptions,
-        prioritizedTranscript,
-        selectedTranscriptId,
-        props.assembly
-      );
-
-      // If there is a second variant, load it too
-      if (props.variantInput2) {
-        await loadVariantData(
-          props.variantInput2,
-          result2,
-          loading2,
-          error2,
-          isMaxRetriesError2,
-          fromCache2,
-          showCacheIndicator2,
-          'variant2',
-          formattedTranscriptOptions2,
-          prioritizedTranscript2,
-          selectedTranscriptId2,
+      // Parallelize primary and secondary variant requests with Promise.allSettled
+      await Promise.allSettled([
+        loadVariantData(
+          props.variantInput,
+          result,
+          loading,
+          error,
+          isMaxRetriesError,
+          fromCache,
+          showCacheIndicator,
+          'variant',
+          formattedTranscriptOptions,
+          prioritizedTranscript,
+          selectedTranscriptId,
           props.assembly
-        );
-      }
+        ),
+        props.variantInput2
+          ? loadVariantData(
+              props.variantInput2,
+              result2,
+              loading2,
+              error2,
+              isMaxRetriesError2,
+              fromCache2,
+              showCacheIndicator2,
+              'variant2',
+              formattedTranscriptOptions2,
+              prioritizedTranscript2,
+              selectedTranscriptId2,
+              props.assembly
+            )
+          : Promise.resolve(),
+      ]);
     });
 
     // Calculate combined score for compound heterozygous cases

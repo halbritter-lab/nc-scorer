@@ -34,8 +34,9 @@
               v-for="example in exampleLists"
               :key="example.name"
               @click="prefillTextArea(example.variants)"
-              variant="tonal"
-              size="small"
+              variant="outlined"
+              min-height="44"
+              class="font-weight-medium"
               :title="example.description"
             >
               {{ example.name }}
@@ -67,7 +68,9 @@
           :loading="isLoading" 
           :disabled="!hasValidInput"
           @click="processVariants"
-          class="mb-4"
+          class="mb-4 font-weight-bold"
+          min-height="44"
+          min-width="160"
         >
           Process Variants
         </v-btn>
@@ -83,10 +86,10 @@
       <v-card-title class="d-flex justify-space-between align-center">
         <span>Batch Results</span>
         <div class="d-flex" style="gap: 8px;">
-          <v-btn color="secondary" @click="clearResults" size="small" variant="tonal">Clear Results</v-btn>
+          <v-btn color="secondary" @click="clearResults" variant="outlined" min-height="44" min-width="120">Clear Results</v-btn>
           <v-menu>
               <template v-slot:activator="{ props }">
-                <v-btn color="primary" v-bind="props" size="small" variant="tonal" prepend-icon="mdi-download">
+                <v-btn color="primary" v-bind="props" variant="flat" min-height="44" min-width="120" prepend-icon="mdi-download">
                   Download
                 </v-btn>
               </template>

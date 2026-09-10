@@ -18,10 +18,11 @@
               v-model="searchQuery"
               clearable
               hide-details
-              density="compact"
+              density="comfortable"
               label="Search by Gene Symbol or HGNC ID"
               prepend-inner-icon="mdi-magnify"
               variant="outlined"
+              min-height="44"
             ></v-text-field>
           </v-col>
           <v-col cols="12" md="6" class="d-flex justify-end align-center">
@@ -32,8 +33,10 @@
                   color="primary"
                   prepend-icon="mdi-download"
                   v-bind="props"
-                  size="small"
-                  variant="tonal"
+                  variant="flat"
+                  min-height="44"
+                  min-width="160"
+                  class="font-weight-medium"
                   :disabled="loadingState.loading || loadingState.error || filteredGenes.length === 0"
                 >
                   Download Data
@@ -44,11 +47,13 @@
                   @click="downloadGeneScores('csv')"
                   prepend-icon="mdi-file-delimited"
                   title="Download as CSV"
+                  min-height="44"
                 />
                 <v-list-item
                   @click="downloadGeneScores('excel')"
                   prepend-icon="mdi-file-excel"
                   title="Download as Excel"
+                  min-height="44"
                 />
               </v-list>
             </v-menu>
@@ -80,7 +85,7 @@
           >
           <!-- Custom column for gene symbol with router-link -->
           <template #[`item.symbol`]="{ item }">
-            <router-link :to="{ name: 'GeneView', params: { symbol: item.symbol } }">
+            <router-link :to="{ name: 'GeneView', params: { symbol: item.symbol } }" class="gene-table-link font-weight-bold">
               {{ item.symbol }}
             </router-link>
           </template>
@@ -363,5 +368,14 @@ export default {
 
 .text-grey {
   color: rgba(var(--v-theme-on-surface), 0.75);
+}
+
+.gene-table-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 4px 4px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 </style>

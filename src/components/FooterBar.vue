@@ -12,19 +12,19 @@
               <v-btn
                 v-bind="props"
                 variant="text"
-                density="compact"
-                size="small"
+                min-height="44"
+                min-width="44"
                 :color="formattedAcknowledgmentDate ? 'success' : 'grey-lighten-1'"
                 @click="showDisclaimer"
                 aria-label="View disclaimer information"
-                class="pa-1 mr-2"
+                class="pa-2 mr-2"
               >
                 <v-icon
                   start
                   :icon="formattedAcknowledgmentDate ? 'mdi-check-circle-outline' : 'mdi-gavel'"
                   class="mr-1"
                 ></v-icon>
-                <span class="text-caption">Disclaimer</span>
+                <span class="text-caption font-weight-medium">Disclaimer</span>
               </v-btn>
             </template>
             <!-- Tooltip Content -->
@@ -41,19 +41,19 @@
               <v-btn
                 v-bind="props"
                 variant="text"
-                density="compact"
-                size="small"
+                min-height="44"
+                min-width="44"
                 :color="showLogViewer ? 'primary' : 'grey-lighten-1'"
                 @click="toggleLogViewer"
                 aria-label="Show/Hide Application Logs"
-                class="pa-1"
+                class="pa-2"
               >
                 <v-icon
                   start
                   icon="mdi-text-box-outline"
                   class="mr-1"
                 ></v-icon>
-                <span class="text-caption">Logs</span>
+                <span class="text-caption font-weight-medium">Logs</span>
               </v-btn>
             </template>
             <span>{{ showLogViewer ? 'Hide application logs' : 'Show application logs' }}</span>
@@ -70,7 +70,7 @@
                 icon
                 :href="link.href"
                 target="_blank"
-                text
+                variant="text"
                 v-bind="props"
                 min-width="48px"
                 min-height="48px"
@@ -86,17 +86,22 @@
       </v-row>
     </div>
 
-    <!-- Dialog remains unchanged -->
-    <v-dialog v-model="disclaimerDialogVisible" max-width="600">
-       <v-card>
-        <v-card-title class="text-h5">
+    <!-- Dialog with accessibility metadata -->
+    <v-dialog
+      v-model="disclaimerDialogVisible"
+      max-width="600"
+      role="dialog"
+      aria-label="Research Use Disclaimer"
+    >
+       <v-card class="elevation-4">
+        <v-card-title class="text-h5 font-weight-bold">
           Research Use Disclaimer
         </v-card-title>
         <v-card-text>
           <v-alert
             type="warning"
-            variant="tonal"
-            class="mb-4"
+            variant="flat"
+            class="mb-4 text-body-2 font-weight-medium"
           >
             <strong>NC-Scorer is intended for research purposes only and is not a clinical diagnostic tool.</strong>
           </v-alert>
@@ -112,9 +117,16 @@
 
           <p>Using this application implies understanding and acceptance of these limitations.</p>
         </v-card-text>
-        <v-card-actions>
+        <v-card-actions class="pa-4">
           <v-spacer></v-spacer>
-          <v-btn color="primary" @click="acknowledgeAgain">
+          <v-btn
+            color="primary"
+            variant="flat"
+            min-height="44"
+            min-width="160"
+            class="font-weight-bold"
+            @click="acknowledgeAgain"
+          >
             I Understand and Agree
           </v-btn>
         </v-card-actions>

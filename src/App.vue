@@ -31,8 +31,10 @@
             <v-spacer></v-spacer>
             <v-btn
               icon="mdi-close"
-              size="small"
               variant="text"
+              min-width="44"
+              min-height="44"
+              aria-label="Close Log Viewer"
               @click="closeLogViewer"
             ></v-btn>
           </v-card-title>
@@ -145,6 +147,21 @@ export default {
       
       // Create a single info log entry at app startup
       logService.info('Application initialized - NC-Scorer');
+
+      // Accessibility: ensure Vuetify tooltips rendered into overlay container have accessible names
+      if (typeof window !== 'undefined' && typeof MutationObserver !== 'undefined') {
+        const syncTooltipAccessibility = () => {
+          document.querySelectorAll('[role="tooltip"]:not([aria-label])').forEach((el) => {
+            const text = el.textContent?.trim();
+            if (text) {
+              el.setAttribute('aria-label', text);
+            }
+          });
+        };
+        syncTooltipAccessibility();
+        const tooltipObserver = new MutationObserver(syncTooltipAccessibility);
+        tooltipObserver.observe(document.body, { childList: true, subtree: true });
+      }
     });
 
     return {

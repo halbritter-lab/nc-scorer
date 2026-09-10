@@ -42,13 +42,13 @@
         <v-tooltip location="bottom">
           <template v-slot:activator="{ props }">
             <span
-              class="clickable font-weight-bold"
+              class="clickable font-weight-bold py-1 px-1"
               v-bind="props"
               @click="navigateHome"
               role="button"
               tabindex="0"
               @keydown.enter="navigateHome"
-              aria-label="Go to Home Page"
+              aria-label="NC-Scorer - Return to home"
             >
               NC-Scorer
             </span>
@@ -66,12 +66,13 @@
           <v-btn
             v-if="showCopyIcon"
             icon="mdi-content-copy"
-            size="x-small"
+            size="small"
             variant="text"
-            density="compact"
             @click="copyCitation"
             aria-label="Copy Citation"
-            class="ml-1"
+            class="ml-1 copy-citation-btn"
+            min-height="44"
+            min-width="44"
           ></v-btn>
         </span>
       </v-toolbar-title>
@@ -81,7 +82,13 @@
         <template v-for="item in menuItems" :key="item.text">
           <v-menu offset-y v-if="item.children">
             <template v-slot:activator="{ props }">
-              <v-btn text v-bind="props" class="mx-1">
+              <v-btn
+                variant="text"
+                v-bind="props"
+                class="mx-1 app-nav-btn"
+                min-height="44"
+                min-width="44"
+              >
                 <v-icon left v-if="item.icon">{{ item.icon }}</v-icon>
                 {{ item.text }}
               </v-btn>
@@ -91,6 +98,7 @@
                 v-for="childItem in item.children"
                 :key="childItem.text"
                 :to="childItem.to"
+                min-height="44"
               >
                 <v-list-item-title>
                   <v-icon v-if="childItem.icon">
@@ -107,9 +115,11 @@
                 :to="item.to" 
                 :href="item.href"
                 :target="item.href ? '_blank' : undefined"
-                text 
+                variant="text" 
                 v-bind="props" 
-                class="mx-1"
+                class="mx-1 app-nav-btn"
+                min-height="44"
+                min-width="44"
               >
                 <v-icon left v-if="item.icon">{{ item.icon }}</v-icon>
                 {{ item.text }}
@@ -126,7 +136,9 @@
               icon
               v-bind="props"
               @click="toggleCacheEnabled"
-              class="ml-2"
+              class="ml-2 app-icon-btn"
+              min-height="44"
+              min-width="44"
               aria-label="Toggle API Cache"
             >
               <v-icon>
@@ -144,7 +156,9 @@
               icon
               v-bind="props"
               @click="toggleTheme"
-              class="ml-2 theme-toggle"
+              class="ml-2 theme-toggle app-icon-btn"
+              min-height="44"
+              min-width="44"
               aria-label="Toggle Theme"
             >
               <v-icon>
@@ -161,7 +175,9 @@
               icon
               v-bind="props"
               @click="startTour"
-              class="ml-2 tour-button"
+              class="ml-2 tour-button app-icon-btn"
+              min-height="44"
+              min-width="44"
               aria-label="Start Interactive Tour"
             >
               <v-icon>mdi-compass</v-icon>
@@ -316,11 +332,32 @@ export default {
   cursor: pointer;
 }
 
-/* Hover effect for clickable elements in the toolbar */
-.clickable:hover {
-  opacity: 0.8;
-  transition: opacity 0.3s ease;
+/* Clickable elements in the toolbar */
+.clickable {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.clickable:hover {
+  opacity: 0.9;
+}
+
+.app-nav-btn {
+  min-height: 44px !important;
+  min-width: 44px !important;
+}
+
+.app-icon-btn {
+  min-height: 44px !important;
+  min-width: 44px !important;
+}
+
+.copy-citation-btn {
+  min-width: 44px !important;
+  min-height: 44px !important;
 }
 
 /* Styles for the version info */

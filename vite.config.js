@@ -20,6 +20,35 @@ export default defineConfig(async ({ mode }) => {
   return {
     plugins: [
       vue(),
+      {
+        name: 'mdi-font-display-swap',
+        transform(code, id) {
+          if (id.includes('materialdesignicons') && id.endsWith('.css')) {
+            return {
+              code: code.replace(/@font-face\s*\{/g, '@font-face {\n  font-display: swap;'),
+              map: null,
+            };
+          }
+        },
+      },
+      {
+        name: 'variant-linker-proxy-fix',
+        transform(code, id) {
+          if (id.includes('variant-linker') && (id.includes('apiHelper') || id.includes('configHelper'))) {
+            let transformed = code;
+            if (transformed.includes('process.env.ENSEMBL_BASE_URL || apiConfig.ensembl.baseUrl')) {
+              transformed = transformed.replace(
+                'process.env.ENSEMBL_BASE_URL || apiConfig.ensembl.baseUrl',
+                '(typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") ? "/ensembl" : apiConfig.ensembl.baseUrl)'
+              );
+            }
+            return {
+              code: transformed,
+              map: null,
+            };
+          }
+        },
+      },
       vuetify({
         autoImport: true,
         // Disable Vuetify's built-in sass handling to avoid sass-embedded issues
@@ -85,9 +114,18 @@ export default defineConfig(async ({ mode }) => {
       cssCodeSplit: true, // Split CSS by chunk for better caching
       rollupOptions: {
         output: {
-          manualChunks: {
-            'vue-core': ['vue', 'vue-router'],
-            vuetify: ['vuetify'],
+          manualChunks(id) {
+            if (id.includes('node_modules')) {
+              if (id.includes('vuetify')) {
+                return 'vuetify';
+              }
+              if (id.includes('variant-linker')) {
+                return 'variant-linker';
+              }
+              if (id.includes('vue') || id.includes('pinia') || id.includes('@unhead')) {
+                return 'vue-core';
+              }
+            }
           },
           // Ensure asset names include content hash for better caching
           entryFileNames: 'assets/[name].[hash].js',
@@ -97,6 +135,22 @@ export default defineConfig(async ({ mode }) => {
       },
       // Configure chunk size warnings
       chunkSizeWarningLimit: 700, // KB
+    },
+    preview: {
+      port: 4173,
+      host: 'localhost',
+      proxy: {
+        '/ensembl/': {
+          target: 'https://rest.ensembl.org',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/ensembl/, ''),
+        },
+        '/ensembl_grch37/': {
+          target: 'https://grch37.rest.ensembl.org',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/ensembl_grch37/, ''),
+        },
+      },
     },
     server: {
       watch: {
