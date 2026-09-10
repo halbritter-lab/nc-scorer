@@ -114,13 +114,22 @@ Click the log icon in the footer to open the log viewer. This displays:
 ## Research & Citations
 
 ### How should I cite NC-Scorer?
-If you use NC-Scorer in your research, please cite:
-> Citation details to be added after publication
+If you use NC-Scorer in your research, please cite both our preprint publication and the software release:
 
-This helps us track the impact of our tool and secure continued funding for development.
+1. **Preprint Publication:**
+   > Rank N, Lukassen S, Anderegg MA, Eckardt KU, Halbritter JP, Popp B.  
+   > *Automatic variant prioritization in suspected genetic kidney disease using the Nephro Candidate Score (N-CS).*  
+   > medRxiv 2025. DOI: [10.1101/2025.09.29.25336840](https://doi.org/10.1101/2025.09.29.25336840)
+
+2. **Software Archive:**
+   > NC-Scorer: Nephro Candidate Score Web Application and Framework (v3.4.0).  
+   > DOI: [10.5281/zenodo.745544900](https://zenodo.org/badge/latestdoi/745544900).  
+   > URL: [https://nc-scorer.kidney-genetics.org/](https://nc-scorer.kidney-genetics.org/)
+
+See our dedicated [Citation Guide](./guide/citation) and [`CITATION.cff`](https://github.com/halbritter-lab/nc-scorer/blob/main/CITATION.cff) for BibTeX snippets and GitHub citation export.
 
 ### Are there related publications?
-The methodology behind NC-Scorer is based on several key publications in the field of kidney genetics. Check our [GitHub repository](https://github.com/halbritter-lab/nc-scorer) for the latest citation information.
+The methodology behind NC-Scorer is based on the Nephro Candidate Score framework described in our medRxiv preprint ([doi:10.1101/2025.09.29.25336840](https://doi.org/10.1101/2025.09.29.25336840)). Additional methodological and machine learning training details are available in the companion [nephro_candidate_score](https://github.com/halbritter-lab/nephro_candidate_score) repository.
 
 ## Getting Help
 

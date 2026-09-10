@@ -1,0 +1,71 @@
+{
+  "title": "NC-Scorer: Automated Variant Prioritization in Suspected Genetic Kidney Disease",
+  "description": "<p><strong>NC-Scorer</strong> (Nephro Candidate Scorer) is an open-source web application and computational framework for standardized, automated prioritization of candidate genetic variants and novel disease gene discovery in patients with suspected inherited kidney disease (IKD) and chronic kidney disease of unknown etiology (CKDu).</p><p>The Nephro Candidate Score (NCS) framework integrates three complementary sub-scores scaled to [0, 10]: (1) <strong>Nephro Gene Score (N-GS)</strong> predicting kidney disease relevance using an XGBoost machine learning model trained on functional genomics features, (2) <strong>Nephro Variant Score (N-VS)</strong> assessing variant pathogenicity via regularized logistic regression, and (3) a heuristic <strong>Inheritance Score (IS)</strong> evaluating disease model compatibility. Results can be explored interactively, computed in batch (up to 200 variants), and exported in JSON, CSV, TSV, or VCF format.</p>",
+  "upload_type": "software",
+  "creators": [
+    {
+      "name": "Rank, Nina",
+      "affiliation": "Department of Nephrology and Medical Intensive Care, Charité – Universitätsmedizin Berlin, Berlin, Germany; Berlin Institute of Health at Charité – Universitätsmedizin Berlin, Center of Functional Genomics, Berlin, Germany",
+      "orcid": "0000-0002-5984-4836"
+    },
+    {
+      "name": "Lukassen, Sören",
+      "affiliation": "Berlin Institute of Health at Charité – Universitätsmedizin Berlin, Center of Digital Health, Berlin, Germany",
+      "orcid": "0000-0001-7045-6327"
+    },
+    {
+      "name": "Anderegg, Manuel A.",
+      "affiliation": "Department of Nephrology and Medical Intensive Care, Charité – Universitätsmedizin Berlin, Berlin, Germany; Department of Nephrology and Hypertension, Bern University Hospital, Bern, Switzerland"
+    },
+    {
+      "name": "Eckardt, Kai-Uwe",
+      "affiliation": "Department of Nephrology and Medical Intensive Care, Charité – Universitätsmedizin Berlin, Berlin, Germany"
+    },
+    {
+      "name": "Halbritter, Jan P.",
+      "affiliation": "Department of Nephrology and Medical Intensive Care, Charité – Universitätsmedizin Berlin, Berlin, Germany; Department of Nephrology, Universitätsklinikum Freiburg, Freiburg, Germany",
+      "orcid": "0000-0002-1377-9880"
+    },
+    {
+      "name": "Popp, Bernt",
+      "affiliation": "Berlin Institute of Health at Charité – Universitätsmedizin Berlin, Center of Functional Genomics, Berlin, Germany; Labor Berlin – Charité Vivantes GmbH, Berlin, Germany",
+      "orcid": "0000-0002-3679-1081"
+    }
+  ],
+  "keywords": [
+    "kidney disease",
+    "variant prioritization",
+    "nephrology",
+    "exome sequencing",
+    "machine learning",
+    "genomics",
+    "bioinformatics",
+    "candidate gene discovery",
+    "rare diseases",
+    "clinical genetics"
+  ],
+  "license": "MIT",
+  "access_right": "open",
+  "related_identifiers": [
+    {
+      "identifier": "https://github.com/halbritter-lab/nc-scorer",
+      "relation": "isSupplementTo",
+      "scheme": "url"
+    },
+    {
+      "identifier": "https://doi.org/10.1101/2025.09.29.25336840",
+      "relation": "isDescribedBy",
+      "scheme": "doi"
+    },
+    {
+      "identifier": "https://github.com/halbritter-lab/nephro_candidate_score",
+      "relation": "isSupplementTo",
+      "scheme": "url"
+    },
+    {
+      "identifier": "https://nc-scorer.kidney-genetics.org/",
+      "relation": "isIdenticalTo",
+      "scheme": "url"
+    }
+  ]
+}
