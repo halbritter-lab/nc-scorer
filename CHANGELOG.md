@@ -1,3 +1,10 @@
+## [3.5.2](https://github.com/halbritter-lab/nc-scorer/compare/v3.5.1...v3.5.2) (2026-09-10)
+
+
+### Performance Improvements
+
+* **arch:** optimize SPA performance, accessibility, cDNA caching, and preprint banner ([de7cc96](https://github.com/halbritter-lab/nc-scorer/commit/de7cc964b57dbfb72a8412f0860b0d98e6ba0aa3))
+
 ## [3.5.1](https://github.com/halbritter-lab/nc-scorer/compare/v3.5.0...v3.5.1) (2026-09-10)
 
 
