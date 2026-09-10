@@ -122,7 +122,7 @@ If you use NC-Scorer in your research, please cite both our preprint publication
    > medRxiv 2025. DOI: [10.1101/2025.09.29.25336840](https://doi.org/10.1101/2025.09.29.25336840)
 
 2. **Software Archive:**
-   > NC-Scorer: Nephro Candidate Score Web Application and Framework (v3.4.0).  
+   > NC-Scorer: Nephro Candidate Score Web Application and Framework (v3.5.0).  
    > DOI: [10.5281/zenodo.745544900](https://zenodo.org/badge/latestdoi/745544900).  
    > URL: [https://nc-scorer.kidney-genetics.org/](https://nc-scorer.kidney-genetics.org/)
 
