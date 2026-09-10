@@ -1,3 +1,10 @@
+# [3.5.0](https://github.com/halbritter-lab/nc-scorer/compare/v3.4.0...v3.5.0) (2026-09-10)
+
+
+### Features
+
+* **citation:** implement research citation standards, CFF 1.2.0, Zenodo DOI, and metadata tests ([79d11fa](https://github.com/halbritter-lab/nc-scorer/commit/79d11fa2ea4e26934fb712df5567f7e4199dd2c0))
+
 # [3.4.0](https://github.com/halbritter-lab/nc-scorer/compare/v3.3.1...v3.4.0) (2026-09-10)
 
 
