@@ -21,6 +21,7 @@
     <td class="value-col">
       <v-chip
         v-if="config.style === 'chip' && formattedValue !== 'NA'"
+        variant="flat"
         :class="{
           'italic-font': config.font === 'italic',
           'bold-font': config.font === 'bold',
@@ -121,7 +122,7 @@ export default {
         }
         return 'primary'; // Default primary color if no score type specified
       }
-      return colorValue.value; // Use regular color logic for non-key scores
+      return colorValue.value || 'primary'; // Use regular color logic with primary fallback
     });
 
     // Generate an external link if link pattern is available

@@ -8,7 +8,7 @@
         v-bind="props"
         :disabled="!isActive"
         size="small"
-        variant="tonal"
+        variant="flat"
         :title="platformsConfig.uiText.buttonTooltip"
       >
         {{ platformsConfig.uiText.menuTitle }}

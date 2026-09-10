@@ -1,8 +1,9 @@
 <template>
   <ContentContainer>
+    <h1 class="text-h4 mb-4">Batch Variant Scoring</h1>
     <v-card class="mb-6">
-      <v-card-title class="text-h5">
-        Batch Variant Scoring
+      <v-card-title class="text-h6">
+        Variant Input & Settings
       </v-card-title>
       <v-card-text>
         <p class="mb-2">

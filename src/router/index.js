@@ -32,6 +32,7 @@ const routes = [
   },
   {
     path: '/scoring/:variantInput/:inheritance?/:segregation?/:variantInput2?/:assembly?',
+    alias: '/score/:variantInput/:inheritance?/:segregation?/:variantInput2?/:assembly?',
     name: 'ScoringView',
     component: ScoringView,
     props: true,

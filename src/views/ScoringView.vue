@@ -1,33 +1,48 @@
 <template>
   <!-- Use ContentContainer for consistent width across the application -->
   <ContentContainer>
+    <!-- Scoring View Header with semantic H1 -->
+    <v-row class="mb-2">
+      <v-col cols="12">
+        <h1 class="text-h4 font-weight-bold d-flex align-center">
+          <v-icon start color="primary" class="mr-2">mdi-calculator-variant</v-icon>
+          Candidate Variant Assessment
+        </h1>
+        <p class="text-body-2 text-medium-emphasis mt-1 mb-0">
+          Prioritization evaluation for variant <strong>{{ variantInput }}</strong>
+          <span v-if="isCompoundHet && variantInput2"> and <strong>{{ variantInput2 }}</strong></span>
+          ({{ assembly }})
+        </p>
+      </v-col>
+    </v-row>
 
-    <!-- Combined Score Card at the top -->
+    <!-- Combined Score Card at the top with stable container -->
     <v-row>
       <v-col cols="12">
-        <!-- Placeholder card with skeleton loader while data loads -->
-        <v-card v-if="!combinedScoreAvailable" class="combined-score-card">
-          <v-card-title class="px-4 py-3">Nephro Candidate Score (NSC)</v-card-title>
-          <v-card-text class="text-center pa-4">
-            <v-skeleton-loader
-              class="mx-auto"
-              :type="scoreInterpretationConfig.skeletonLoaders.combined.type"
-              :loading="true"
-            ></v-skeleton-loader>
-          </v-card-text>
-        </v-card>
+        <div class="combined-score-wrapper d-flex flex-column">
+          <!-- Placeholder card with skeleton loader while data loads -->
+          <v-card v-if="!combinedScoreAvailable" class="combined-score-card">
+            <v-card-title class="px-4 py-3">Nephro Candidate Score (NCS)</v-card-title>
+            <v-card-text class="text-center pa-4">
+              <v-skeleton-loader
+                class="mx-auto"
+                :type="scoreInterpretationConfig.skeletonLoaders.combined.type"
+                :loading="true"
+              ></v-skeleton-loader>
+            </v-card-text>
+          </v-card>
 
-        <!-- Actual score card when data is available -->
-        <div v-else class="d-flex flex-column">
+          <!-- Actual score card when data is available -->
           <CombinedScoreCard
+            v-else
             :geneScore="geneScore"
             :variantScore="variantScore"
             :inheritanceScore="inheritanceScore"
             :inheritancePattern="inheritancePattern"
           />
           
-          <!-- Action buttons group -->
-          <div class="mt-2 align-self-end d-flex gap-2">
+          <!-- Action buttons group - always present to prevent layout shifts -->
+          <div class="mt-2 align-self-end d-flex gap-2 action-toolbar">
             <!-- Download menu for exporting results -->
             <v-menu>
               <template v-slot:activator="{ props }">
@@ -37,7 +52,7 @@
                   v-bind="props"
                   :disabled="!combinedScoreAvailable"
                   size="small"
-                  variant="tonal"
+                  variant="flat"
                 >
                   Download Results
                 </v-btn>
@@ -64,10 +79,10 @@
             
             <!-- Edit Search button -->
             <v-btn
-              color="info"
+              color="primary-darken-1"
               prepend-icon="mdi-pencil"
               size="small"
-              variant="tonal"
+              variant="flat"
               @click="navigateToEditSearch"
               title="Modify your search parameters"
             >
@@ -90,13 +105,26 @@
           @inheritance-score-updated="handleInheritanceScoreUpdate"
         />
 
-        <!-- Gene Card (now second since it loads data asynchronously) -->
-        <v-card class="mb-4" v-if="geneSymbol && geneSymbol.trim() !== ''">
-          <GeneCard :symbol="geneSymbol" @gene-score-updated="handleGeneScoreUpdate" />
-        </v-card>
-        <v-card class="mb-4" v-else>
-          <v-alert type="info"> Waiting for gene data... </v-alert>
-        </v-card>
+        <!-- Gene Card Container with stable placeholder -->
+        <div class="gene-card-container">
+          <v-card class="mb-4" v-if="geneSymbol && geneSymbol.trim() !== ''">
+            <GeneCard :symbol="geneSymbol" @gene-score-updated="handleGeneScoreUpdate" />
+          </v-card>
+          <v-card class="mb-4 gene-placeholder-card" v-else>
+            <v-card-title class="px-4 py-3">Gene Details</v-card-title>
+            <v-card-text class="pa-4">
+              <div class="d-flex align-center justify-center py-4 mb-2">
+                <v-progress-circular indeterminate color="primary" size="20" class="mr-2"></v-progress-circular>
+                <span class="text-caption text-medium-emphasis">Resolving gene information...</span>
+              </div>
+              <v-skeleton-loader
+                class="mx-auto"
+                :type="scoreInterpretationConfig.skeletonLoaders.gene.type"
+                :loading="true"
+              ></v-skeleton-loader>
+            </v-card-text>
+          </v-card>
+        </div>
       </v-col>
 
       <!-- Variant Card with tabs when in compound heterozygous mode -->
@@ -482,14 +510,33 @@ export default {
   margin-bottom: 16px;
 }
 
-/* Style for both placeholder and real score cards */
+.combined-score-wrapper {
+  min-height: 240px;
+  width: 100%;
+}
+
 .combined-score-card {
+  width: 100%;
+  min-height: 180px;
+}
+
+.action-toolbar {
+  min-height: 36px;
+}
+
+.gene-card-container {
+  min-height: 380px;
+  width: 100%;
+}
+
+.gene-placeholder-card {
+  min-height: 380px;
   width: 100%;
 }
 
 .score-tooltip {
   margin-left: 8px;
   font-size: 0.8rem;
-  color: #555;
+  color: rgba(var(--v-theme-on-surface), 0.75);
 }
 </style>

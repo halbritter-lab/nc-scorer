@@ -3,11 +3,13 @@
   <v-container>
     <v-row justify="center">
       <v-col cols="12" md="8">
-        <v-card>
-          <v-card-title class="text-h5"> 404: Page Not Found </v-card-title>
+        <v-card class="pa-4">
+          <v-card-title>
+            <h1 class="text-h5 font-weight-bold">404: Page Not Found</h1>
+          </v-card-title>
           <v-card-text>
-            <p>The page you are looking for does not exist or has been moved.</p>
-            <v-btn color="primary" @click="goHome">Go Home</v-btn>
+            <p class="mb-4">The page you are looking for does not exist or has been moved.</p>
+            <v-btn color="primary" variant="flat" @click="goHome">Go Home</v-btn>
           </v-card-text>
         </v-card>
       </v-col>

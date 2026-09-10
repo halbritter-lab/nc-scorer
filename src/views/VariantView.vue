@@ -1,6 +1,7 @@
 <!-- src/views/VariantView.vue -->
 <template>
   <ContentContainer>
+    <h1 class="text-h4 mb-4">Variant Details: {{ variantInput }}</h1>
     <VariantCard :variantInput="variantInput" :assembly="assembly" />
   </ContentContainer>
 </template>

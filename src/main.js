@@ -28,6 +28,22 @@ const ENABLE_PERFORMANCE_HINTS = true;
 const vuetify = createVuetify({
   theme: {
     defaultTheme: themeConfig.defaultTheme,
+    themes: {
+      dark: {
+        colors: {
+          primary: '#1976D2',
+          'primary-darken-1': '#1565C0',
+          secondary: '#00695C',
+        },
+      },
+      light: {
+        colors: {
+          primary: '#1565C0',
+          'primary-darken-1': '#0D47A1',
+          secondary: '#00695C',
+        },
+      },
+    },
   },
 });
 

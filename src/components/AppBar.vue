@@ -1,6 +1,6 @@
 <!-- components/AppBar.vue -->
 <template>
-  <v-app-bar app color="teal" dark>
+  <v-app-bar app color="teal-darken-3" class="elevation-2">
     <!-- Left Spacer for Centering -->
     <v-spacer></v-spacer>
 
@@ -42,10 +42,12 @@
         <v-tooltip location="bottom">
           <template v-slot:activator="{ props }">
             <span
-              class="clickable"
+              class="clickable font-weight-bold"
               v-bind="props"
               @click="navigateHome"
               role="button"
+              tabindex="0"
+              @keydown.enter="navigateHome"
               aria-label="Go to Home Page"
             >
               NC-Scorer
@@ -61,9 +63,16 @@
           @mouseleave="showCopyIcon = false"
         >
           Version: {{ version }} - Commit: {{ lastCommitHash }}
-          <v-icon v-if="showCopyIcon" @click="copyCitation" aria-label="Copy Citation">
-            mdi-content-copy
-          </v-icon>
+          <v-btn
+            v-if="showCopyIcon"
+            icon="mdi-content-copy"
+            size="x-small"
+            variant="text"
+            density="compact"
+            @click="copyCitation"
+            aria-label="Copy Citation"
+            class="ml-1"
+          ></v-btn>
         </span>
       </v-toolbar-title>
 
@@ -316,10 +325,11 @@ export default {
 
 /* Styles for the version info */
 .version-info {
-  display: block;
-  color: rgba(255, 255, 255, 0.7);
+  display: inline-flex;
+  align-items: center;
+  color: rgba(255, 255, 255, 0.9);
   font-size: 0.8rem;
-  margin-top: -10px;
+  margin-top: -6px;
   white-space: nowrap;
 }
 

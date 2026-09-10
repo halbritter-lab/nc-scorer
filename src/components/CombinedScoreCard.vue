@@ -1,6 +1,6 @@
 <template>
   <v-card class="combined-score-card">
-    <v-card-title>Nephro Candidate Score (NSC)</v-card-title>
+    <v-card-title>Nephro Candidate Score (NCS)</v-card-title>
     <v-card-text>
       <v-chip :color="scoreColor" class="score-chip" large elevation="2">
         {{ combinedScoreFormatted }}
@@ -203,6 +203,7 @@ export default {
 <style scoped>
 .combined-score-card {
   width: 100%;
+  min-height: 200px;
   margin: auto;
   padding: 16px;
   text-align: center;
@@ -214,7 +215,7 @@ export default {
 .score-tooltip {
   margin-left: 8px;
   font-size: 0.8rem;
-  color: #555;
+  color: rgba(var(--v-theme-on-surface), 0.75);
   cursor: pointer;
   text-decoration: underline dotted;
 }

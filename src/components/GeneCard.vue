@@ -269,10 +269,11 @@ export default {
 }
 
 .loading-container {
-  min-height: 200px; /* Or adjust based on content */
+  min-height: 360px;
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 100%;
 }
 
 .cache-indicator {

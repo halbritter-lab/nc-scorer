@@ -55,34 +55,29 @@
           </v-col>
         </v-row>
         
-        <!-- Loading, Error, and Empty States -->
-        <v-card v-if="loadingState.loading" class="mb-3">
-          <v-card-text class="text-center py-6">
-            <v-progress-circular indeterminate color="primary" size="24" class="mr-2"></v-progress-circular>
-            Loading gene scores...
-          </v-card-text>
-        </v-card>
-        
-        <v-alert v-else-if="loadingState.error" type="error" class="mb-3">
+        <!-- Error and Empty States -->
+        <v-alert v-if="loadingState.error" type="error" class="mb-3">
           Failed to load gene scores: {{ loadingState.errorMessage }}
           <template v-slot:append>
             <v-btn variant="text" @click="fetchGeneScores">Retry</v-btn>
           </template>
         </v-alert>
         
-        <v-alert v-else-if="filteredGenes.length === 0 && searchQuery" type="info" class="mb-3">
+        <v-alert v-else-if="!loadingState.loading && filteredGenes.length === 0 && searchQuery" type="info" class="mb-3">
           No genes found matching "{{ searchQuery }}". Try a different search term.
         </v-alert>
         
-        <!-- Gene Scores Table -->
-        <v-data-table
-          v-model:items-per-page="itemsPerPage"
-          :headers="headers"
-          :items="filteredGenes"
-          :loading="loadingState.loading"
-          :search="searchQuery"
-          class="elevation-1"
-        >
+        <!-- Gene Scores Table Container with stable min-height -->
+        <div class="gene-table-wrapper">
+          <v-data-table
+            v-model:items-per-page="itemsPerPage"
+            :headers="headers"
+            :items="filteredGenes"
+            :loading="loadingState.loading"
+            loading-text="Loading gene scores..."
+            :search="searchQuery"
+            class="elevation-1 gene-data-table"
+          >
           <!-- Custom column for gene symbol with router-link -->
           <template #[`item.symbol`]="{ item }">
             <router-link :to="{ name: 'GeneView', params: { symbol: item.symbol } }">
@@ -110,7 +105,8 @@
               {{ formatGeneSet(item.geneSet) }}
             </v-chip>
           </template>
-        </v-data-table>
+          </v-data-table>
+        </div>
       </v-col>
     </v-row>
   </ContentContainer>
@@ -344,15 +340,28 @@ export default {
 </script>
 
 <style scoped>
+.gene-table-wrapper {
+  min-height: 580px;
+  width: 100%;
+}
+
+.gene-data-table :deep(.v-table__wrapper) {
+  min-height: 520px;
+}
+
+.gene-data-table :deep(table) {
+  min-width: 600px;
+}
+
 .text-success {
-  color: #4caf50;
+  color: #2e7d32;
 }
 
 .text-warning {
-  color: #ff9800;
+  color: #ed6c02;
 }
 
 .text-grey {
-  color: #757575;
+  color: rgba(var(--v-theme-on-surface), 0.75);
 }
 </style>

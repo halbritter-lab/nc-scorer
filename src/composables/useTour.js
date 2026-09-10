@@ -258,7 +258,7 @@ export default function useTour() {
     if (elementExists('.combined-score-card')) {
       tour.value.addStep({
         id: 'combined-score',
-        text: '<h3>Nephro Candidate Score (NSC)</h3><p>This is the final combined score for your variant. It ranges from 0-10, with higher scores indicating variants of greater interest.</p><p>The score is calculated based on gene relevance, variant impact, and inheritance pattern.</p>',
+        text: '<h3>Nephro Candidate Score (NCS)</h3><p>This is the final combined score for your variant. It ranges from 0-10, with higher scores indicating variants of greater interest.</p><p>The score is calculated based on gene relevance, variant impact, and inheritance pattern.</p>',
         attachTo: {
           element: '.combined-score-card',
           on: 'bottom',
@@ -280,7 +280,7 @@ export default function useTour() {
     if (elementExists('.gene-card')) {
       tour.value.addStep({
         id: 'gene-card',
-        text: '<h3>Gene Details</h3><p>This card shows information about the gene containing your variant.</p><p>The <strong>Nephro Candidate Gene Score</strong> is a key component of the final NSC score.</p>',
+        text: '<h3>Gene Details</h3><p>This card shows information about the gene containing your variant.</p><p>The <strong>Nephro Candidate Gene Score</strong> is a key component of the final NCS score.</p>',
         attachTo: {
           element: '.gene-card',
           on: 'left',
@@ -302,7 +302,7 @@ export default function useTour() {
     if (elementExists('.variant-card')) {
       tour.value.addStep({
         id: 'variant-card',
-        text: '<h3>Variant Details</h3><p>This card displays annotations and frequency data for your variant.</p><p>The <strong>Nephro Variant Score</strong> is another key component of the final NSC score.</p>',
+        text: '<h3>Variant Details</h3><p>This card displays annotations and frequency data for your variant.</p><p>The <strong>Nephro Variant Score</strong> is another key component of the final NCS score.</p>',
         attachTo: {
           element: '.variant-card',
           on: 'right',
@@ -324,7 +324,7 @@ export default function useTour() {
     if (elementExists('.inheritance-card')) {
       tour.value.addStep({
         id: 'inheritance-card',
-        text: '<h3>Inheritance Parameters</h3><p>This card shows your selected inheritance pattern and segregation probability.</p><p>The <strong>Inheritance Score</strong> is the third key component of the final NSC score.</p>',
+        text: '<h3>Inheritance Parameters</h3><p>This card shows your selected inheritance pattern and segregation probability.</p><p>The <strong>Inheritance Score</strong> is the third key component of the final NCS score.</p>',
         attachTo: {
           element: '.inheritance-card',
           on: 'left',

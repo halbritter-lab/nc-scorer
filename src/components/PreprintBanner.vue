@@ -5,6 +5,7 @@
     variant="tonal"
     color="info"
     closable
+    close-label="Dismiss preprint banner"
     @click:close="dismissBanner"
     class="preprint-banner"
     elevation="4"
@@ -17,7 +18,7 @@
       <div class="d-flex align-center flex-wrap">
         <v-chip
           size="small"
-          color="primary"
+          color="teal-darken-3"
           variant="flat"
           class="mr-2 mb-1"
           prepend-icon="mdi-new-box"

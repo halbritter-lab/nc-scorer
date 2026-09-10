@@ -48,7 +48,7 @@ describe('ScoringView View (ScoringView.vue)', () => {
 
     // Score is not yet available
     expect(wrapper.find('.combined-score-card').exists()).toBe(true);
-    expect(wrapper.text()).toContain('Nephro Candidate Score (NSC)');
+    expect(wrapper.text()).toContain('Nephro Candidate Score (NCS)');
   });
 
   it('computes combined score and displays action buttons once all sub-scores are received', async () => {

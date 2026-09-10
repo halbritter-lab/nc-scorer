@@ -25,13 +25,13 @@ export const scoreInterpretationConfig = {
   subScoreColors: {
     gene: 'indigo', // Blue-based theme for gene scores
     variant: 'deep-purple', // Purple-based theme for variant scores
-    inheritance: 'teal', // Teal-based theme for inheritance scores
+    inheritance: 'teal-darken-3', // Teal-based theme for inheritance scores
   },
-  // Skeleton loader configurations
+  // Skeleton loader configurations matching resolved card geometry
   skeletonLoaders: {
-    gene: { type: 'table-heading, list-item-two-line, list-item-two-line, list-item-two-line' },
-    variant: { type: 'table-heading, list-item-two-line, list-item-two-line, list-item-two-line, list-item-two-line, list-item-two-line' },
+    gene: { type: 'table-heading, list-item-two-line, list-item-two-line, list-item-two-line, list-item-two-line' },
+    variant: { type: 'table-heading, list-item-two-line, list-item-two-line, table-heading, list-item-two-line, list-item-two-line, table-heading, list-item-two-line' },
     inheritance: { type: 'table-heading, list-item-two-line, list-item-two-line, list-item-two-line' },
-    combined: { type: 'chip, image' },
+    combined: { type: 'chip, sentences, image' },
   },
 };

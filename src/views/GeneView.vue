@@ -1,6 +1,7 @@
 <!-- src/views/GeneView.vue -->
 <template>
   <ContentContainer>
+    <h1 class="text-h4 mb-4">Gene Details: {{ symbol }}</h1>
     <GeneCard :symbol="symbol" />
   </ContentContainer>
 </template>

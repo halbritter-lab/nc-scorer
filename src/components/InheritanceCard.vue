@@ -69,7 +69,7 @@
 
 <script>
 // Script section remains unchanged - no logic changes needed for styling
-import { computed, watchEffect, ref, onMounted } from 'vue';
+import { computed, watchEffect, ref } from 'vue';
 import { noSegregationPatterns, baseScores } from '@/config/inheritanceConfig'; // Import for penalty detection and base scores
 import { calculateInheritanceScore } from '@/utils/scoringUtils.js'; // Use centralized scoring
 import DataDisplayRow from '@/components/DataDisplayRow.vue';
@@ -94,8 +94,8 @@ export default {
     },
   },
   setup(props, { emit }) {
-    // Add loading state
-    const loading = ref(true);
+    // Score calculation is synchronous and immediate
+    const loading = ref(false);
 
     // Handle segregation value - preserve null for penalty detection
     const segregationValue = computed(() => {
@@ -114,14 +114,6 @@ export default {
     const baseScore = computed(() =>
       baseScores[props.inheritance] !== undefined ? baseScores[props.inheritance] : 0.1
     );
-
-    // Simulate a brief loading state for better UX
-    onMounted(() => {
-      // Short timeout to show the skeleton (better UX for quick calculations)
-      setTimeout(() => {
-        loading.value = false;
-      }, 500); // Adjust delay if needed
-    });
 
     // Compute the final inheritance score using centralized logic
     const finalScore = computed(() => {

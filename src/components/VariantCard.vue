@@ -113,7 +113,7 @@
         </v-alert>
       </div>
 
-      <div v-else>
+      <div v-else class="variant-content-container">
         <!-- Score Section -->
         <v-card class="mb-2 score-section pa-2" variant="outlined" v-if="activeTab === 0 ? Object.keys(scoreSummary).length > 0 : Object.keys(scoreSummary2).length > 0">
            <v-table class="summary-table">
@@ -1002,10 +1002,16 @@ export default {
 }
 
 .loading-container {
-  min-height: 240px; /* Or adjust based on content */
+  min-height: 560px;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
+  width: 100%;
+}
+
+.variant-content-container {
+  min-height: 560px;
+  width: 100%;
 }
 
 .cache-indicator {
