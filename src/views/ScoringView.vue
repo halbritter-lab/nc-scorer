@@ -113,7 +113,7 @@
 
         <!-- Gene Card Container with stable placeholder -->
         <div class="gene-card-container">
-          <v-card class="mb-4" v-if="geneSymbol && geneSymbol.trim() !== ''">
+          <v-card class="mb-4" v-if="geneSymbol !== ''">
             <GeneCard :symbol="geneSymbol" @gene-score-updated="handleGeneScoreUpdate" />
           </v-card>
           <v-card class="mb-4 gene-placeholder-card" v-else>
@@ -216,16 +216,20 @@ export default {
 
     // Get prioritized gene symbol from the reactive state
     const geneSymbol = computed(() => {
+      let sym = '';
       // Use the prioritizedGeneSymbol if available, which applies our gene prioritization logic
       if (scoreState.variantData && scoreState.variantData.prioritizedGeneSymbol) {
-        return scoreState.variantData.prioritizedGeneSymbol;
-      }
-      // Fallback to the original logic if prioritizedGeneSymbol is not available
-      if (scoreState.variantData && scoreState.variantData.geneSummary) {
+        sym = scoreState.variantData.prioritizedGeneSymbol;
+      } else if (scoreState.variantData && scoreState.variantData.geneSummary) {
         const gs = scoreState.variantData.geneSummary.gene_symbol;
-        return Array.isArray(gs) ? gs[0] : gs;
+        sym = Array.isArray(gs) ? gs[0] : gs;
+      } else {
+        sym = scoreState.geneSymbol || coordinateCache.getGeneSymbol(variantInput, assembly) || '';
       }
-      return scoreState.geneSymbol || coordinateCache.getGeneSymbol(variantInput, assembly) || '';
+      if (Array.isArray(sym)) {
+        sym = sym[0];
+      }
+      return typeof sym === 'string' ? sym.trim() : '';
     });
 
     // Use the reactive state value directly for gene score

@@ -192,7 +192,11 @@ export async function queryVariant(variantInput, options = {}) {
         const topItem = Array.isArray(result) ? result[0] : result;
         const anno = topItem?.annotationData?.[0];
         const vcfKey = topItem?.variantKey || anno?.variantKey || (isAccelerated ? queryInput : null);
-        const geneSymbol = anno?.gene_symbol || (Array.isArray(anno?.gene_symbol) ? anno.gene_symbol[0] : null);
+        let rawGene = anno?.gene_symbol || topItem?.geneSymbol || topItem?.gene_symbol || null;
+        if (Array.isArray(rawGene)) {
+          rawGene = rawGene[0];
+        }
+        const geneSymbol = typeof rawGene === 'string' ? rawGene.trim() : null;
 
         if (vcfKey) {
           coordinateCache.set(normalizedInput, vcfKey, geneSymbol, assembly);

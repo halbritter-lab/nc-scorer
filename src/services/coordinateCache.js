@@ -95,7 +95,23 @@ class CoordinateCacheService {
   set(variant, vcf, gene = null, assembly = 'GRCh38') {
     if (!variant || !vcf) return;
     const key = this._makeKey(variant, assembly);
-    const entry = { vcf: vcf.trim(), gene: gene ? gene.trim() : null, assembly: assembly.toUpperCase() };
+    
+    // Normalize gene symbol to string safely
+    let resolvedGene = null;
+    if (typeof gene === 'string') {
+      resolvedGene = gene.trim();
+    } else if (Array.isArray(gene) && gene.length > 0) {
+      resolvedGene = typeof gene[0] === 'string' ? gene[0].trim() : null;
+    } else if (gene && typeof gene === 'object' && typeof gene.symbol === 'string') {
+      resolvedGene = gene.symbol.trim();
+    }
+
+    const resolvedVcf = typeof vcf === 'string' ? vcf.trim() : String(vcf);
+    const entry = {
+      vcf: resolvedVcf,
+      gene: resolvedGene || null,
+      assembly: assembly ? assembly.toUpperCase() : 'GRCH38',
+    };
 
     // LRU eviction if cache exceeds capacity
     if (this.memoryCache.size >= MAX_ENTRIES) {
