@@ -1,8 +1,9 @@
 # NC-Scorer
 
-[![Version](https://img.shields.io/github/v/release/halbritter-lab/nc-scorer?label=version)](https://github.com/halbritter-lab/nc-scorer/releases/latest)
-[![DOI](https://zenodo.org/badge/745544900.svg)](https://zenodo.org/badge/latestdoi/745544900)
-[![Preprint: medRxiv](https://img.shields.io/badge/medRxiv-10.1101%2F2025.09.29.25336840-0072b2.svg)](https://doi.org/10.1101/2025.09.29.25336840)
+[![Tag](https://img.shields.io/github/v/tag/halbritter-lab/nc-scorer?sort=semver)](https://github.com/halbritter-lab/nc-scorer/tags)
+[![Release](https://img.shields.io/github/v/release/halbritter-lab/nc-scorer)](https://github.com/halbritter-lab/nc-scorer/releases)
+[![DOI](https://img.shields.io/badge/DOI-10.1101%2F2025.09.29.25336840-0072b2.svg)](https://doi.org/10.1101/2025.09.29.25336840)
+[![Zenodo](https://img.shields.io/badge/Zenodo-archive%20pending-lightgrey.svg)](https://github.com/halbritter-lab/nc-scorer/releases)
 [![GitHub Pages](https://github.com/halbritter-lab/nc-scorer/actions/workflows/gh-pages.yml/badge.svg)](https://github.com/halbritter-lab/nc-scorer/actions/workflows/gh-pages.yml)
 [![Semantic Release](https://github.com/halbritter-lab/nc-scorer/actions/workflows/semantic-release.yml/badge.svg)](https://github.com/halbritter-lab/nc-scorer/actions/workflows/semantic-release.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -76,26 +77,27 @@ If you use NC-Scorer or the Nephro Candidate Score framework in academic work, p
 }
 ```
 
-### 2. Software Archive (v3.5.1)
+### 2. Software Release (v3.5.3)
 
 > Rank N, Lukassen S, Anderegg MA, Eckardt KU, Halbritter JP, Popp B.  
-> **NC-Scorer: Automated Variant Prioritization in Suspected Genetic Kidney Disease (v3.5.1).**  
-> Zenodo / GitHub.  
-> DOI: [10.5281/zenodo.745544900](https://zenodo.org/badge/latestdoi/745544900)  
+> **NC-Scorer: Automated Variant Prioritization in Suspected Genetic Kidney Disease (v3.5.3).**  
+> GitHub Release / Zenodo.  
+> Release Tag: [v3.5.3](https://github.com/halbritter-lab/nc-scorer/releases/tag/v3.5.3)  
 > URL: [https://nc-scorer.kidney-genetics.org/](https://nc-scorer.kidney-genetics.org/)
 
 ```bibtex
-@software{nc_scorer_v3_5_1,
-  author    = {Rank, Nina and Lukassen, S{\"o}ren and Anderegg, Manuel A. and Eckardt, Kai-Uwe and Halbritter, Jan P. and Popp, Bernt},
-  title     = {NC-Scorer: Automated Variant Prioritization in Suspected Genetic Kidney Disease},
-  version   = {v3.5.1},
-  year      = {2026},
-  doi       = {10.5281/zenodo.745544900},
-  url       = {https://nc-scorer.kidney-genetics.org/},
-  publisher = {Zenodo},
-  license   = {MIT}
+@software{nc_scorer_v3_5_3,
+  author       = {Rank, Nina and Lukassen, S{\"o}ren and Anderegg, Manuel A. and Eckardt, Kai-Uwe and Halbritter, Jan P. and Popp, Bernt},
+  title        = {NC-Scorer: Automated Variant Prioritization in Suspected Genetic Kidney Disease},
+  version      = {v3.5.3},
+  year         = {2026},
+  howpublished = {\url{https://github.com/halbritter-lab/nc-scorer/releases/tag/v3.5.3}},
+  url          = {https://nc-scorer.kidney-genetics.org/},
+  publisher    = {GitHub / Zenodo},
+  license      = {MIT}
 }
 ```
+*(Zenodo DOI archiving is configured via `.zenodo.json` and will be automatically minted on Zenodo upon integration activation).*
 
 Machine-readable citation metadata is provided via [`CITATION.cff`](CITATION.cff) and [`.zenodo.json`](.zenodo.json). You can also click GitHub's **"Cite this repository"** button in the sidebar to export citations directly.
 

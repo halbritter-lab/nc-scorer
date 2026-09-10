@@ -121,9 +121,9 @@ If you use NC-Scorer in your research, please cite both our preprint publication
    > *Automatic variant prioritization in suspected genetic kidney disease using the Nephro Candidate Score (N-CS).*  
    > medRxiv 2025. DOI: [10.1101/2025.09.29.25336840](https://doi.org/10.1101/2025.09.29.25336840)
 
-2. **Software Archive:**
-   > NC-Scorer: Nephro Candidate Score Web Application and Framework (v3.5.1).  
-   > DOI: [10.5281/zenodo.745544900](https://zenodo.org/badge/latestdoi/745544900).  
+2. **Software Release:**
+   > NC-Scorer: Nephro Candidate Score Web Application and Framework (v3.5.3).  
+   > Release Tag: [v3.5.3](https://github.com/halbritter-lab/nc-scorer/releases/tag/v3.5.3).  
    > URL: [https://nc-scorer.kidney-genetics.org/](https://nc-scorer.kidney-genetics.org/)
 
 See our dedicated [Citation Guide](./guide/citation) and [`CITATION.cff`](https://github.com/halbritter-lab/nc-scorer/blob/main/CITATION.cff) for BibTeX snippets and GitHub citation export.

@@ -7,7 +7,7 @@
         <v-card elevation="2" class="mb-6">
           <v-card-text>
             <p class="mb-2">Browse, search, and download the complete set of Nephro Candidate Gene Scores.</p>
-            <p class="text-caption text-grey">Data source: <a href="https://github.com/halbritter-lab/nephro_candidate_score" target="_blank">Nephro Candidate Score</a></p>
+            <p class="text-caption text-grey">Data source: <a href="https://github.com/halbritter-lab/nephro_candidate_score" target="_blank" rel="noopener noreferrer">Nephro Candidate Score</a></p>
           </v-card-text>
         </v-card>
         
@@ -374,7 +374,8 @@ export default {
   display: inline-flex;
   align-items: center;
   min-height: 44px;
-  padding: 4px 4px;
+  min-width: 44px;
+  padding: 4px 8px;
   text-decoration: underline;
   text-underline-offset: 3px;
 }

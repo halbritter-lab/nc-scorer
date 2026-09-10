@@ -12,7 +12,6 @@ const faqPath = path.join(rootDir, 'docs/faq.md');
 const citationDocPath = path.join(rootDir, 'docs/guide/citation.md');
 
 const PREPRINT_DOI = '10.1101/2025.09.29.25336840';
-const ZENODO_REPO_ID = '745544900';
 
 describe('Citation & Research Best Practices Metadata', () => {
   describe('CITATION.cff Specification (v1.2.0)', () => {
@@ -110,29 +109,35 @@ describe('Citation & Research Best Practices Metadata', () => {
   });
 
   describe('Documentation & README Citation Consistency', () => {
-    it('README.md includes Zenodo badge, preprint badge, and citation section', () => {
+    it('README.md includes Zenodo badge, preprint badge, and citation section without broken 404s', () => {
       const readme = fs.readFileSync(readmePath, 'utf8');
-      expect(readme).toContain(ZENODO_REPO_ID);
+      expect(readme).toContain('Zenodo');
       expect(readme).toContain(PREPRINT_DOI);
+      expect(readme).toContain('github/v/tag');
+      expect(readme).toContain('github/v/release');
+      expect(readme).not.toContain('zenodo.org/badge/latestdoi');
+      expect(readme).not.toContain('zenodo.org/badge/745544900');
       expect(readme).toContain('## 📚 Citation');
       expect(readme).toContain('@article{rank2025nephro');
       expect(readme).toContain('@software{nc_scorer');
       expect(readme).toContain('CITATION.cff');
     });
 
-    it('docs/faq.md references the preprint and software citation without placeholders', () => {
+    it('docs/faq.md references the preprint and software citation without placeholders or 404s', () => {
       const faq = fs.readFileSync(faqPath, 'utf8');
       expect(faq).toContain(PREPRINT_DOI);
       expect(faq).not.toContain('Citation details to be added after publication');
+      expect(faq).not.toContain('zenodo.org/badge/latestdoi');
       expect(faq).toContain('guide/citation');
     });
 
-    it('docs/guide/citation.md provides full citation guide with BibTeX', () => {
+    it('docs/guide/citation.md provides full citation guide with BibTeX and no broken 404s', () => {
       expect(fs.existsSync(citationDocPath)).toBe(true);
       const doc = fs.readFileSync(citationDocPath, 'utf8');
       expect(doc).toContain(PREPRINT_DOI);
       expect(doc).toContain('## Primary Research Publication');
       expect(doc).toContain('## Software Archive & Versioned Tool');
+      expect(doc).not.toContain('zenodo.org/badge/latestdoi');
       expect(doc).toContain('@article{rank2025nephro');
       expect(doc).toContain('@software{nc_scorer');
       expect(doc).toContain('CITATION.cff');

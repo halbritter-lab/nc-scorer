@@ -10,7 +10,16 @@
 }
 
 /* Accessibility & Touch Target Hygiene (WCAG 2.1 AAA >= 44x44px) */
+.v-field {
+  min-height: 44px;
+}
+
 .v-field__input {
+  min-height: 44px;
+}
+
+.v-field__input input,
+.v-input input {
   min-height: 44px;
 }
 
