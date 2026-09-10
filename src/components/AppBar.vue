@@ -203,7 +203,7 @@ export default {
 
     // Method to copy citation to the clipboard
     const copyCitation = () => {
-      const citation = `NC-scorer, Version: ${version} - Commit: ${lastCommitHash.value}, an open-source platform designed for the curation and management of genetic information. Code available at https://github.com/halbritter-lab/nc-scorer (accessed ${new Date().toISOString().split('T')[0]}).`;
+      const citation = `Rank N, Lukassen S, Anderegg MA, Eckardt KU, Halbritter JP, Popp B. Automatic variant prioritization in suspected genetic kidney disease using the Nephro Candidate Score (N-CS). medRxiv 2025. doi:10.1101/2025.09.29.25336840. NC-Scorer (v${version}, Commit: ${lastCommitHash.value}, https://nc-scorer.kidney-genetics.org/).`;
       navigator.clipboard
         .writeText(citation)
         .then(() => {

@@ -71,6 +71,7 @@ export default defineConfig({
       { text: 'Guide', link: '/guide/', activeMatch: '^/guide/' },
       { text: 'API Reference', link: '/api/', activeMatch: '^/api/' },
       { text: 'FAQ', link: '/faq', activeMatch: '^/faq' },
+      { text: 'Citation', link: '/guide/citation', activeMatch: '^/guide/citation' },
       { text: 'NC-Scorer App', link: 'https://nc-scorer.kidney-genetics.org' }
     ],
     
@@ -82,7 +83,8 @@ export default defineConfig({
           items: [
             { text: 'Introduction', link: '/guide/' },
             { text: 'Quick Start', link: '/guide/quick-start' },
-            { text: 'Installation', link: '/guide/installation' }
+            { text: 'Installation', link: '/guide/installation' },
+            { text: 'Citation & DOI', link: '/guide/citation' }
           ]
         },
         {

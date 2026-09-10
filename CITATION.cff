@@ -1,0 +1,86 @@
+cff-version: 1.2.0
+message: "If you use NC-Scorer or the Nephro Candidate Score framework in your research, please cite it as below."
+type: software
+title: "NC-Scorer"
+abstract: >-
+  NC-Scorer (Nephro Candidate Scorer) is an open-source web application and
+  computational platform for standardized, automated prioritization of candidate
+  genetic variants and novel disease gene discovery in patients with suspected
+  inherited kidney disease (IKD) and chronic kidney disease of unknown etiology
+  (CKDu). It combines a machine learning-based Nephro Gene Score (N-GS), a
+  Nephro Variant Score (N-VS), and a heuristic Inheritance Score into a unified
+  Nephro Candidate Score (NCS) on a 0-10 scale.
+version: 3.4.0
+date-released: "2026-09-10"
+url: "https://nc-scorer.kidney-genetics.org/"
+repository-code: "https://github.com/halbritter-lab/nc-scorer"
+license: MIT
+doi: "10.5281/zenodo.745544900"
+identifiers:
+  - type: doi
+    value: "10.1101/2025.09.29.25336840"
+    description: "Primary research preprint on medRxiv"
+  - type: url
+    value: "https://github.com/halbritter-lab/nc-scorer"
+    description: "NC-Scorer web application and CLI repository"
+  - type: url
+    value: "https://github.com/halbritter-lab/nephro_candidate_score"
+    description: "Nephro Candidate Score feature acquisition, preprocessing, and model training repository"
+keywords:
+  - kidney disease
+  - variant prioritization
+  - candidate gene discovery
+  - exome sequencing
+  - machine learning
+  - genomics
+  - nephrology
+  - bioinformatics
+  - rare diseases
+  - clinical genetics
+authors:
+  - family-names: Rank
+    given-names: Nina
+    orcid: "https://orcid.org/0000-0002-5984-4836"
+    affiliation: "Department of Nephrology and Medical Intensive Care, Charité – Universitätsmedizin Berlin, Berlin, Germany; Berlin Institute of Health at Charité – Universitätsmedizin Berlin, Center of Functional Genomics, Berlin, Germany"
+  - family-names: Lukassen
+    given-names: Sören
+    orcid: "https://orcid.org/0000-0001-7045-6327"
+    affiliation: "Berlin Institute of Health at Charité – Universitätsmedizin Berlin, Center of Digital Health, Berlin, Germany"
+  - family-names: Anderegg
+    given-names: "Manuel A."
+    affiliation: "Department of Nephrology and Medical Intensive Care, Charité – Universitätsmedizin Berlin, Berlin, Germany; Department of Nephrology and Hypertension, Bern University Hospital, Bern, Switzerland"
+  - family-names: Eckardt
+    given-names: "Kai-Uwe"
+    affiliation: "Department of Nephrology and Medical Intensive Care, Charité – Universitätsmedizin Berlin, Berlin, Germany"
+  - family-names: Halbritter
+    given-names: "Jan P."
+    orcid: "https://orcid.org/0000-0002-1377-9880"
+    affiliation: "Department of Nephrology and Medical Intensive Care, Charité – Universitätsmedizin Berlin, Berlin, Germany; Department of Nephrology, Universitätsklinikum Freiburg, Freiburg, Germany"
+  - family-names: Popp
+    given-names: Bernt
+    orcid: "https://orcid.org/0000-0002-3679-1081"
+    affiliation: "Berlin Institute of Health at Charité – Universitätsmedizin Berlin, Center of Functional Genomics, Berlin, Germany; Labor Berlin – Charité Vivantes GmbH, Berlin, Germany"
+preferred-citation:
+  type: article
+  title: "Automatic variant prioritization in suspected genetic kidney disease using the Nephro Candidate Score (N-CS)"
+  authors:
+    - family-names: Rank
+      given-names: Nina
+      orcid: "https://orcid.org/0000-0002-5984-4836"
+    - family-names: Lukassen
+      given-names: Sören
+      orcid: "https://orcid.org/0000-0001-7045-6327"
+    - family-names: Anderegg
+      given-names: "Manuel A."
+    - family-names: Eckardt
+      given-names: "Kai-Uwe"
+    - family-names: Halbritter
+      given-names: "Jan P."
+      orcid: "https://orcid.org/0000-0002-1377-9880"
+    - family-names: Popp
+      given-names: Bernt
+      orcid: "https://orcid.org/0000-0002-3679-1081"
+  journal: "medRxiv"
+  year: 2025
+  doi: "10.1101/2025.09.29.25336840"
+  url: "https://doi.org/10.1101/2025.09.29.25336840"
