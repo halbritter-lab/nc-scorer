@@ -1,3 +1,10 @@
+# [3.6.0](https://github.com/halbritter-lab/nc-scorer/compare/v3.5.4...v3.6.0) (2026-09-11)
+
+
+### Features
+
+* **app:** modernize variant prioritization workflows and design ([#82](https://github.com/halbritter-lab/nc-scorer/issues/82)) ([71bc275](https://github.com/halbritter-lab/nc-scorer/commit/71bc275d16285e949eb461365a9f96856070823a))
+
 ## [3.5.4](https://github.com/halbritter-lab/nc-scorer/compare/v3.5.3...v3.5.4) (2026-09-10)
 
 
