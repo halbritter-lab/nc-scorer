@@ -19,7 +19,11 @@
         <v-tab value="variant">Variant details</v-tab>
         <v-tab value="gene">Find a gene</v-tab>
       </v-tabs>
-      <div class="search-panel">
+      <div
+        ref="searchPanel"
+        class="search-panel"
+        :style="{ minHeight: `${reservedPanelHeight}px` }"
+      >
         <v-tabs-window v-model="activeTab">
           <v-tabs-window-item value="scoring"
             ><ScoringSearch
@@ -40,7 +44,7 @@
 </template>
 
 <script setup>
-import { ref, defineAsyncComponent } from 'vue';
+import { ref, defineAsyncComponent, watch, onMounted, onUnmounted } from 'vue';
 import ScoringSearch from '@/components/ScoringSearch.vue';
 import ContentContainer from '@/components/ContentContainer.vue';
 import PreprintBanner from '@/components/PreprintBanner.vue';
@@ -52,6 +56,36 @@ const VariantSearch = defineAsyncComponent(
   () => import('@/components/VariantSearch.vue'),
 );
 const activeTab = ref('scoring');
+const searchPanel = ref(null);
+const reservedPanelHeight = ref(0);
+let resizeObserver;
+
+// Measure before the outgoing tab disappears, including on the first lazy load.
+watch(
+  activeTab,
+  () => {
+    reservedPanelHeight.value = Math.max(
+      reservedPanelHeight.value,
+      searchPanel.value?.getBoundingClientRect().height || 0,
+    );
+  },
+  { flush: 'sync' },
+);
+
+onMounted(() => {
+  const panel = searchPanel.value;
+  let width = panel.getBoundingClientRect().width;
+  resizeObserver = new ResizeObserver(() => {
+    const nextWidth = panel.getBoundingClientRect().width;
+    if (nextWidth !== width) {
+      width = nextWidth;
+      reservedPanelHeight.value = 0;
+    }
+  });
+  resizeObserver.observe(panel);
+});
+
+onUnmounted(() => resizeObserver?.disconnect());
 </script>
 
 <style scoped>
