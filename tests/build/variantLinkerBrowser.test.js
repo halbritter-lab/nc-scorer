@@ -15,25 +15,48 @@ const upstream = readFileSync(apiFilename, 'utf8');
 
 function loadApi(code) {
   const requests = [];
+  const axiosClient = {
+    async get(url) {
+      requests.push(url);
+      return { status: 200, data: { url } };
+    },
+    async post(url) {
+      requests.push(url);
+      return { status: 200, data: { url } };
+    },
+    isCancel: () => false,
+  };
   const context = {
     module: { exports: {} },
     URLSearchParams,
+    URL,
+    AbortController,
+    setTimeout,
+    clearTimeout,
+    Date,
+    Set,
+    Map,
+    Math,
+    JSON,
     require(name) {
       if (name === 'axios')
         return {
-          async get(url) {
-            requests.push(url);
-            return { status: 200, data: { url } };
-          },
-          async post(url) {
-            requests.push(url);
-            return { status: 200, data: { url } };
-          },
+          default: axiosClient,
+          ...axiosClient,
         };
       if (name === 'debug') return () => () => {};
-      if (name === './cache') return { getCache() {}, setCache() {} };
+      if (name === './cache')
+        return {
+          getCache() {},
+          setCache() {},
+          getCacheAsync: async () => null,
+        };
       if (name === '../config/apiConfig.json')
         return require('variant-linker/config/apiConfig.json');
+      if (name === './api/requestContext')
+        return require('variant-linker/src/api/requestContext.js');
+      if (name === './api/originScheduler')
+        return require('variant-linker/src/api/originScheduler.js');
       throw new Error(`Unexpected dependency: ${name}`);
     },
   };
@@ -99,7 +122,14 @@ describe('variant-linker browser adapter', () => {
       write: false,
       format: 'cjs',
       platform: 'browser',
-      external: ['axios', 'debug', './cache', '../config/apiConfig.json'],
+      external: [
+        'axios',
+        'debug',
+        './cache',
+        '../config/apiConfig.json',
+        './api/requestContext',
+        './api/originScheduler',
+      ],
       plugins: [variantLinkerBrowserOptimizer()],
     });
     const { fetchApi, requests } = loadApi(result.outputFiles[0].text);

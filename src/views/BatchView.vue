@@ -270,6 +270,10 @@ import {
 } from '@/utils/scoringUtils.js';
 import { normalizeVariant, validateVariant } from '@/utils/validationUtils.js';
 
+const hasTranscriptVersion = (variant) => /^[A-Z]{2}_\d+\.\d+:/i.test(variant);
+const stripTranscriptVersion = (variant) =>
+  variant.replace(/(\.[0-9]+)(:)/, '$2');
+
 const MAX_VARIANTS = 200;
 
 // Component State
@@ -288,6 +292,7 @@ const successfulCount = computed(
   () => batchResults.value.filter((row) => row.ncs !== 'N/A').length,
 );
 let activeRun = 0;
+let activeAbortController = null;
 onBeforeUnmount(clearResults);
 
 // Assembly options for selection
@@ -329,45 +334,9 @@ function parseInputLine(line) {
   return {
     variant: parts[0]?.trim() || '',
     inheritance: parts[1]?.trim() || 'Unknown',
-    segregation: parts[2]?.trim() || null, // Use null for missing segregation data
+    segregation:
+      parts[2] !== undefined && parts[2].trim() !== '' ? parts[2].trim() : null,
   };
-}
-
-async function processVariants() {
-  if (isLoading.value) return;
-  clearResults();
-  const run = activeRun;
-  const selectedAssembly = assembly.value;
-  const geneResults = new Map();
-  isLoading.value = true;
-
-  const lines = variantsInput.value
-    .split('\n')
-    .map((line) => line.trim())
-    .filter((line) => line.length > 0);
-  if (lines.length > MAX_VARIANTS) {
-    errorMsg.value = `Maximum ${MAX_VARIANTS} variants allowed. You entered ${lines.length}.`;
-    isLoading.value = false;
-    return;
-  }
-
-  // Process variants sequentially to avoid reactivity issues
-  for (let i = 0; i < lines.length; i++) {
-    if (run !== activeRun) return;
-    await processSingleVariant(
-      lines[i],
-      i,
-      lines.length,
-      run,
-      selectedAssembly,
-      geneResults,
-    );
-  }
-
-  if (run === activeRun) {
-    isLoading.value = false;
-    processingStatus.value = 'Processing complete.';
-  }
 }
 
 function parseApiScore(value, name) {
@@ -380,145 +349,388 @@ function parseApiScore(value, name) {
   return score;
 }
 
-async function processSingleVariant(
-  line,
-  index,
-  total,
-  run,
-  selectedAssembly,
-  geneResults,
-) {
-  const { variant, inheritance, segregation } = parseInputLine(line);
-  const resultRow = {
-    variant,
-    inheritance,
-    segregation,
-    variantScore: 'N/A',
-    geneSymbol: 'N/A',
-    geneScore: 'N/A',
-    inheritanceScore: 'N/A',
-    ncs: 'N/A',
-    error: '',
-  };
-
+function assignAnnotationToRow(row, annotation) {
+  if (!annotation) {
+    row.error = 'No annotation data found in response';
+    return;
+  }
+  if (annotation.error) {
+    row.error =
+      typeof annotation.error === 'string'
+        ? annotation.error
+        : annotation.error.message || 'Annotation failed';
+    return;
+  }
   try {
-    const normalizedVariant = normalizeVariant(variant);
-    if (/^[A-Za-z][A-Za-z0-9]*$/.test(variant)) {
-      throw new Error(
-        'Gene symbols alone cannot be scored. Enter a specific HGVS variant or chromosome-position-reference-alternate coordinates.',
-      );
-    }
-    const validation = validateVariant(normalizedVariant);
-    if (validation !== true) throw new Error(validation);
-    logService.info(`Processing variant ${index + 1}/${total}: "${variant}"`);
-    processingStatus.value = `Annotating ${variant}.`;
-
-    // Call queryVariant with batch-specific options
-    const variantResult = await queryVariant(normalizedVariant, {
-      skipCache: true,
-      assembly: selectedAssembly,
-    });
-    if (run !== activeRun) return;
-
-    logService.debug('Raw variant result:', variantResult);
-
-    // Handle the response data structure
-    let responseData = variantResult.data;
-
-    // Handle case where response.data might be an array
-    if (Array.isArray(responseData)) {
-      logService.debug('Response data is an array, taking first item');
-      responseData = responseData[0];
-    }
-
-    if (!responseData) {
-      throw new Error('No response data returned from variant API');
-    }
-
-    // Ensure we have annotationData array structure
-    if (!responseData.annotationData) {
-      logService.debug('No annotationData found in response, restructuring...');
-      // If the response itself looks like annotation data, wrap it
-      if (responseData.most_severe_consequence || responseData.gene_symbol) {
-        responseData = { annotationData: [responseData] };
-      } else {
-        responseData = { annotationData: [] };
-      }
-    }
-
-    // Extract annotation from the first item in annotationData
-    const annotation = responseData.annotationData?.[0];
-    if (!annotation) {
-      throw new Error('No annotation data found in response');
-    }
-
-    logService.debug('Extracted annotation:', annotation);
-
-    // Extract variant score
-    resultRow.variantScore = parseApiScore(
+    row.variantScore = parseApiScore(
       annotation.nephro_variant_score,
       'variant',
     );
-    logService.debug(`Variant score: ${resultRow.variantScore}`);
+  } catch (err) {
+    row.error = err.message || 'Invalid variant score';
+    return;
+  }
+  row.geneSymbol = getPrioritizedGeneSymbol(annotation) || 'N/A';
+}
 
-    // Extract gene symbol using prioritization logic
-    resultRow.geneSymbol = getPrioritizedGeneSymbol(annotation) || 'N/A';
-    logService.debug(`Gene symbol: ${resultRow.geneSymbol}`);
+async function processVariants() {
+  if (isLoading.value) return;
+  clearResults();
+  const run = activeRun;
+  const selectedAssembly = assembly.value;
+  const geneResults = new Map();
+  isLoading.value = true;
+  activeAbortController = new AbortController();
+  const signal = activeAbortController.signal;
 
-    // Get gene score if we have a valid gene symbol
-    if (resultRow.geneSymbol !== 'N/A') {
-      processingStatus.value = `Loading gene evidence for ${resultRow.geneSymbol} (${variant}).`;
-      logService.debug(`Fetching gene details for: ${resultRow.geneSymbol}`);
-      let geneResult = geneResults.get(resultRow.geneSymbol);
-      if (!geneResult) {
-        geneResult = await fetchGeneDetails(resultRow.geneSymbol, {
-          skipCache: true,
-        });
-        geneResults.set(resultRow.geneSymbol, geneResult);
-      }
-      if (run !== activeRun) return;
-      resultRow.geneScore = parseApiScore(geneResult?.data?.ngs, 'gene');
-      logService.debug('Gene result:', geneResult);
-      logService.debug(`Gene score: ${resultRow.geneScore}`);
-    } else {
-      throw new Error(
-        'No gene could be resolved. Check the variant and genome assembly before processing again.',
-      );
-    }
+  const lines = variantsInput.value
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0);
+  if (lines.length > MAX_VARIANTS) {
+    errorMsg.value = `Maximum ${MAX_VARIANTS} variants allowed. You entered ${lines.length}.`;
+    isLoading.value = false;
+    return;
+  }
 
-    // Calculate inheritance score
-    resultRow.inheritanceScore = calculateInheritanceScore(
+  // Preallocate rows in exact input order
+  const rows = lines.map((line) => {
+    const { variant, inheritance, segregation } = parseInputLine(line);
+    return {
+      variant,
       inheritance,
       segregation,
-    );
-    logService.debug(`Inheritance score: ${resultRow.inheritanceScore}`);
+      normalizedVariant: null,
+      variantScore: 'N/A',
+      geneSymbol: 'N/A',
+      geneScore: 'N/A',
+      inheritanceScore: 'N/A',
+      ncs: 'N/A',
+      error: '',
+    };
+  });
 
-    // Calculate final NCS score
-    if (resultRow.geneScore !== 'N/A' && resultRow.variantScore !== 'N/A') {
-      resultRow.ncs = calculateNCS(
-        resultRow.geneScore,
-        resultRow.variantScore,
-        resultRow.inheritanceScore,
-      ).toFixed(3);
-      logService.debug(`Final NCS: ${resultRow.ncs}`);
+  // Local validation per row
+  for (const row of rows) {
+    if (!row.variant) {
+      row.error = 'Empty variant input.';
+      continue;
+    }
+    if (/^[A-Za-z][A-Za-z0-9]*$/.test(row.variant)) {
+      row.error =
+        'Gene symbols alone cannot be scored. Enter a specific HGVS variant or chromosome-position-reference-alternate coordinates.';
+      continue;
+    }
+    const normalized = normalizeVariant(row.variant);
+    const validation = validateVariant(normalized);
+    if (validation !== true) {
+      row.error =
+        typeof validation === 'string' ? validation : 'Invalid variant format';
+    } else {
+      row.normalizedVariant = normalized;
+    }
+  }
+
+  // Immediately bind results so input order and local validation errors are rendered reactively
+  batchResults.value = rows;
+
+  const validRows = rows.filter((r) => r.normalizedVariant && !r.error);
+
+  if (validRows.length === 0) {
+    if (run !== activeRun) return;
+    progress.value = 100;
+    isLoading.value = false;
+    processingStatus.value = 'Processing complete.';
+    return;
+  }
+
+  // Single variant path: when only 1 row is valid and input length is 1
+  if (validRows.length === 1 && rows.length === 1) {
+    const row = validRows[0];
+    processingStatus.value = `Annotating ${row.variant}.`;
+    try {
+      const variantResult = await queryVariant(row.normalizedVariant, {
+        skipCache: true,
+        assembly: selectedAssembly,
+        signal,
+      });
+      if (signal.aborted || run !== activeRun) return;
+
+      let responseData = variantResult?.data;
+      if (Array.isArray(responseData)) responseData = responseData[0];
+      if (!responseData)
+        throw new Error('No response data returned from variant API');
+
+      if (!responseData.annotationData) {
+        if (responseData.most_severe_consequence || responseData.gene_symbol) {
+          responseData = { annotationData: [responseData] };
+        } else {
+          responseData = { annotationData: [] };
+        }
+      }
+
+      const annotation = responseData.annotationData?.[0];
+      assignAnnotationToRow(row, annotation);
+
+      if (!row.error) {
+        if (row.geneSymbol !== 'N/A') {
+          processingStatus.value = `Loading gene evidence for ${row.geneSymbol} (${row.variant}).`;
+          let geneResult = geneResults.get(row.geneSymbol);
+          if (!geneResult) {
+            geneResult = await fetchGeneDetails(row.geneSymbol, {
+              skipCache: true,
+            });
+            geneResults.set(row.geneSymbol, geneResult);
+          }
+          if (signal.aborted || run !== activeRun) return;
+          row.geneScore = parseApiScore(geneResult?.data?.ngs, 'gene');
+        } else {
+          throw new Error(
+            'No gene could be resolved. Check the variant and genome assembly before processing again.',
+          );
+        }
+
+        row.inheritanceScore = calculateInheritanceScore(
+          row.inheritance,
+          row.segregation,
+        );
+        if (row.geneScore !== 'N/A' && row.variantScore !== 'N/A') {
+          row.ncs = calculateNCS(
+            row.geneScore,
+            row.variantScore,
+            row.inheritanceScore,
+          ).toFixed(3);
+        }
+      }
+    } catch (e) {
+      if (signal.aborted || run !== activeRun) return;
+      const serviceError = e.response?.data?.error;
+      row.error =
+        typeof serviceError === 'string'
+          ? serviceError
+          : e.message || 'Unknown processing error';
     }
 
-    logService.info(
-      `Successfully processed variant "${variant}" - NCS: ${resultRow.ncs}`,
-    );
+    if (run !== activeRun) return;
+    progress.value = 100;
+    isLoading.value = false;
+    processingStatus.value = 'Processing complete.';
+    return;
+  }
+
+  // Official batch path: when multiple variants are processed
+  try {
+    processingStatus.value = `Annotating batch of ${validRows.length} variants.`;
+    progress.value = 25;
+
+    const batchVariants = validRows.map((r) => r.normalizedVariant);
+    let variantResult;
+    try {
+      variantResult = await queryVariant(batchVariants, {
+        skipCache: true,
+        assembly: selectedAssembly,
+        signal,
+      });
+    } catch (batchError) {
+      if (signal.aborted || run !== activeRun) return;
+      // If batch rejection was input-specific (HTTP 400 or message indicates reference/allele/unresolved mismatch),
+      // gracefully recover by querying valid rows individually so 1 bad variant doesn't ruin the whole batch.
+      const isInputRejection =
+        batchError.response?.status === 400 ||
+        /mismatch|unresolved|transcript|reference/i.test(batchError.message);
+      if (isInputRejection && validRows.length > 1) {
+        for (const row of validRows) {
+          if (signal.aborted || run !== activeRun) return;
+          try {
+            const singleResult = await queryVariant(row.normalizedVariant, {
+              skipCache: true,
+              assembly: selectedAssembly,
+              signal,
+            });
+            let singleData = singleResult?.data;
+            if (Array.isArray(singleData)) singleData = singleData[0];
+            const anno = singleData?.annotationData?.[0] || singleData;
+            assignAnnotationToRow(row, anno);
+          } catch (singleErr) {
+            const srvErr = singleErr.response?.data?.error;
+            row.error =
+              typeof srvErr === 'string'
+                ? srvErr
+                : singleErr.message || 'Annotation failed';
+          }
+        }
+      } else {
+        throw batchError;
+      }
+    }
+
+    if (signal.aborted || run !== activeRun) return;
+    progress.value = 50;
+
+    let responseData = variantResult?.data;
+    if (
+      Array.isArray(responseData) &&
+      responseData.length === 1 &&
+      responseData[0]?.annotationData
+    ) {
+      responseData = responseData[0];
+    }
+    const annotations = Array.isArray(responseData)
+      ? responseData
+      : responseData?.annotationData || [];
+
+    // Map annotations by variant identity to avoid misattributing consequences
+    // and correctly handle duplicate inputs
+    if (annotations.length > 0) {
+      const annotationsByVariant = new Map();
+      for (const anno of annotations) {
+        if (!anno) continue;
+        const keys = [
+          anno.originalInput,
+          anno.input,
+          anno.variantKey,
+          anno.vcfString,
+        ].filter(Boolean);
+        for (const key of keys) {
+          if (!annotationsByVariant.has(key)) {
+            annotationsByVariant.set(key, anno);
+          }
+        }
+      }
+
+      const hasExplicitKeys = annotationsByVariant.size > 0;
+
+      for (let i = 0; i < validRows.length; i++) {
+        const row = validRows[i];
+        if (row.error) continue;
+
+        let matchedAnno = null;
+        if (hasExplicitKeys) {
+          matchedAnno =
+            annotationsByVariant.get(row.normalizedVariant) ||
+            annotationsByVariant.get(row.variant) ||
+            null;
+        } else if (annotations.length === validRows.length) {
+          matchedAnno = annotations[i];
+        }
+
+        if (matchedAnno) {
+          assignAnnotationToRow(row, matchedAnno);
+        } else {
+          row.error =
+            'No matching annotation data returned for this variant in batch response';
+        }
+      }
+    }
+
+    // Check for versioned HGVS rows that failed due to transcript versioning and retry without version
+    for (const row of validRows) {
+      if (
+        row.error &&
+        hasTranscriptVersion(row.normalizedVariant) &&
+        /No valid VCF string found/i.test(row.error)
+      ) {
+        if (signal.aborted || run !== activeRun) return;
+        const unversioned = stripTranscriptVersion(row.normalizedVariant);
+        try {
+          const fallbackRes = await queryVariant(unversioned, {
+            skipCache: true,
+            assembly: selectedAssembly,
+            signal,
+          });
+          let fbData = fallbackRes?.data;
+          if (Array.isArray(fbData)) fbData = fbData[0];
+          const fbAnno = fbData?.annotationData?.[0] || fbData;
+          row.error = '';
+          assignAnnotationToRow(row, fbAnno);
+        } catch {
+          // Keep original error if fallback also fails
+        }
+      }
+    }
+
+    // Deduplicated gene fetching across batch with bounded concurrency
+    const uniqueGenes = [
+      ...new Set(
+        validRows
+          .filter((r) => r.geneSymbol !== 'N/A' && !r.error)
+          .map((r) => r.geneSymbol),
+      ),
+    ];
+
+    if (uniqueGenes.length > 0) {
+      processingStatus.value = `Loading gene evidence for ${uniqueGenes.length} gene${uniqueGenes.length === 1 ? '' : 's'}.`;
+      progress.value = 75;
+
+      const CONCURRENCY_LIMIT = 5;
+      for (let i = 0; i < uniqueGenes.length; i += CONCURRENCY_LIMIT) {
+        if (signal.aborted || run !== activeRun) return;
+        const chunk = uniqueGenes.slice(i, i + CONCURRENCY_LIMIT);
+        await Promise.all(
+          chunk.map(async (sym) => {
+            if (!geneResults.has(sym)) {
+              try {
+                const res = await fetchGeneDetails(sym, { skipCache: true });
+                geneResults.set(sym, res);
+              } catch (err) {
+                geneResults.set(sym, {
+                  error: err.message || 'Failed to fetch gene details',
+                });
+              }
+            }
+          }),
+        );
+      }
+      if (signal.aborted || run !== activeRun) return;
+    }
+
+    // Score calculation
+    for (const row of validRows) {
+      if (row.error) continue;
+      if (row.geneSymbol === 'N/A') {
+        row.error =
+          'No gene could be resolved. Check the variant and genome assembly before processing again.';
+        continue;
+      }
+      const geneRes = geneResults.get(row.geneSymbol);
+      if (geneRes?.error) {
+        row.error = geneRes.error;
+        continue;
+      }
+      try {
+        row.geneScore = parseApiScore(geneRes?.data?.ngs, 'gene');
+        row.inheritanceScore = calculateInheritanceScore(
+          row.inheritance,
+          row.segregation,
+        );
+        if (row.variantScore !== 'N/A' && row.geneScore !== 'N/A') {
+          row.ncs = calculateNCS(
+            row.geneScore,
+            row.variantScore,
+            row.inheritanceScore,
+          ).toFixed(3);
+        }
+      } catch (err) {
+        row.error = err.message || 'Scoring calculation failed';
+      }
+    }
   } catch (e) {
-    logService.error(`Failed to process variant "${variant}":`, e);
+    if (signal.aborted || run !== activeRun) return;
     const serviceError = e.response?.data?.error;
-    resultRow.error =
+    const msg =
       typeof serviceError === 'string'
         ? serviceError
         : e.message || 'Unknown processing error';
+    for (const r of validRows) {
+      if (!r.error) r.error = msg;
+    }
   }
 
-  // Add to results and update progress
-  if (run !== activeRun) return;
-  batchResults.value.push(resultRow);
-  progress.value = ((index + 1) / total) * 100;
+  if (run === activeRun) {
+    progress.value = 100;
+    isLoading.value = false;
+    processingStatus.value = 'Processing complete.';
+  }
 }
 
 function downloadResults(format) {
@@ -561,6 +773,8 @@ function downloadResults(format) {
 
 function clearResults() {
   activeRun += 1;
+  activeAbortController?.abort();
+  activeAbortController = null;
   isLoading.value = false;
   batchResults.value = [];
   progress.value = 0;
@@ -570,6 +784,8 @@ function clearResults() {
 
 function cancelProcessing() {
   activeRun += 1;
+  activeAbortController?.abort();
+  activeAbortController = null;
   isLoading.value = false;
   processingStatus.value = 'Processing cancelled.';
 }

@@ -43,6 +43,7 @@ export async function queryVariant(variantInput, options = {}) {
     output = 'JSON',
     filter = '',
     assembly = 'GRCh38', // Default to GRCh38
+    signal = null, // Optional AbortSignal for network cancellation
     onRetry = null, // Add callback for retry events
     onSuccess = null, // Add callback for success after retries
     retryState,
@@ -173,6 +174,13 @@ export async function queryVariant(variantInput, options = {}) {
     formulaConfig,
   );
 
+  const combinedRequestOptions = {
+    baseUrl,
+    assembly,
+    ...(signal ? { signal } : {}),
+    ...options.requestOptions,
+  };
+
   return retryWithBackoff(
     async () => {
       // Return the result of the variant analysis
@@ -183,6 +191,7 @@ export async function queryVariant(variantInput, options = {}) {
           variants: variantInput, // Pass the array of variants
           recoderOptions: requestRecoderOptions,
           vepOptions: requestVepOptions,
+          requestOptions: combinedRequestOptions,
           scoringConfig,
           cache: false,
           output,
@@ -194,6 +203,7 @@ export async function queryVariant(variantInput, options = {}) {
           variant: queryInput,
           recoderOptions: requestRecoderOptions,
           vepOptions: requestVepOptions,
+          requestOptions: combinedRequestOptions,
           scoringConfig,
           cache: false,
           output,
