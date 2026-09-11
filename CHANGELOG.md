@@ -1,3 +1,10 @@
+# [3.7.0](https://github.com/halbritter-lab/nc-scorer/compare/v3.6.0...v3.7.0) (2026-09-11)
+
+
+### Features
+
+* **scoring:** upgrade variant-linker to v4 and optimize batch processing ([#83](https://github.com/halbritter-lab/nc-scorer/issues/83)) ([7c0c9bd](https://github.com/halbritter-lab/nc-scorer/commit/7c0c9bd0ff6a56b261871dbf62aa515a800d5d84))
+
 # [3.6.0](https://github.com/halbritter-lab/nc-scorer/compare/v3.5.4...v3.6.0) (2026-09-11)
 
 
