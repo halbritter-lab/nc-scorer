@@ -28,7 +28,7 @@
           treated as missing.
           <br />
           <strong>Note:</strong> Omitting segregation data for inheritance
-          patterns that expect it may result in a penalty (20% score reduction).
+          patterns that expect it reduces the inheritance component by 20%.
         </p>
         <v-textarea
           v-model="variantsInput"
