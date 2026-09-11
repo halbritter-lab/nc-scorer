@@ -1,6 +1,8 @@
 import { readFile } from 'node:fs/promises';
 
 const apiHelperPattern = /[\\/]variant-linker[\\/]src[\\/]apiHelper\.js$/;
+const fsHelperPattern =
+  /[\\/]variant-linker[\\/]src[\\/](pedReader|featureParser)\.js$/;
 
 // variant-linker 4.x supports requestOptions.baseUrl and requestOptions.assembly directly.
 // The browser adapter ensures that:
@@ -57,13 +59,31 @@ export function transformVariantLinkerApi(code) {
     );
 }
 
+// Guard eager require('fs').promises in unused Node-only helpers to prevent Vite externalization warnings in browser
+export function transformVariantLinkerFs(code) {
+  const fsAnchor = "const fs = require('fs').promises;";
+  if (!code.includes(fsAnchor)) {
+    throw new Error(
+      'variant-linker filesystem helper changed; review the browser fs adapter.',
+    );
+  }
+  return code.replace(
+    fsAnchor,
+    "const fs = typeof window === 'undefined' ? require('fs').promises : null;",
+  );
+}
+
 export function variantLinkerBrowserPlugin() {
   return {
     name: 'variant-linker-browser-assembly',
     enforce: 'pre',
     transform(code, id) {
-      if (apiHelperPattern.test(id.split('?')[0])) {
+      const cleanId = id.split('?')[0];
+      if (apiHelperPattern.test(cleanId)) {
         return { code: transformVariantLinkerApi(code), map: null };
+      }
+      if (fsHelperPattern.test(cleanId)) {
+        return { code: transformVariantLinkerFs(code), map: null };
       }
     },
   };
@@ -77,6 +97,10 @@ export function variantLinkerBrowserOptimizer() {
     setup(build) {
       build.onLoad({ filter: apiHelperPattern }, async ({ path }) => ({
         contents: transformVariantLinkerApi(await readFile(path, 'utf8')),
+        loader: 'js',
+      }));
+      build.onLoad({ filter: fsHelperPattern }, async ({ path }) => ({
+        contents: transformVariantLinkerFs(await readFile(path, 'utf8')),
         loader: 'js',
       }));
     },

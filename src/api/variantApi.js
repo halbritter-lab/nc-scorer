@@ -175,10 +175,10 @@ export async function queryVariant(variantInput, options = {}) {
   );
 
   const combinedRequestOptions = {
+    ...options.requestOptions,
     baseUrl,
     assembly,
     ...(signal ? { signal } : {}),
-    ...options.requestOptions,
   };
 
   return retryWithBackoff(
@@ -283,7 +283,7 @@ export async function queryVariant(variantInput, options = {}) {
     },
     {
       retryState,
-      maxRetries: 3,
+      maxRetries: options.maxRetries ?? 3,
       initialDelay: 500,
       maxDelay: 5000,
       // Custom error configuration for variant-specific behavior

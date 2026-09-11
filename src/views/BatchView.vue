@@ -77,8 +77,13 @@
           </p>
         </div>
 
+        <p v-if="variantCountExceeded" class="text-caption text-error mb-2">
+          Maximum {{ MAX_VARIANTS }} variants allowed. You entered
+          {{ inputCount }}.
+        </p>
+
         <p v-if="processingStatus" class="progress-label" role="status">
-          {{ processingStatus }} {{ batchResults.length }} of
+          {{ processingStatus }} {{ completedCount }} of
           {{ inputCount }} completed.
         </p>
         <v-progress-linear
@@ -113,7 +118,7 @@
           type="error"
           class="mt-4"
           closable
-          @input="errorMsg = ''"
+          @click:close="errorMsg = ''"
         >
           {{ errorMsg }}
         </v-alert>
@@ -130,8 +135,13 @@
         <div>
           <h2 class="section-heading">Batch Results</h2>
           <p role="status" class="results-summary">
-            {{ successfulCount }} scored ·
-            {{ batchResults.length - successfulCount }} unavailable
+            <template v-if="isLoading">
+              Processing variants · {{ completedCount }} of
+              {{ inputCount }} finished
+            </template>
+            <template v-else>
+              {{ successfulCount }} scored · {{ unavailableCount }} unavailable
+            </template>
           </p>
         </div>
         <div
@@ -148,7 +158,7 @@
             :disabled="isLoading"
             >Clear Results</v-btn
           >
-          <v-menu>
+          <v-menu :disabled="isLoading">
             <template v-slot:activator="{ props }">
               <v-btn
                 color="primary"
@@ -157,6 +167,7 @@
                 min-height="44"
                 min-width="120"
                 prepend-icon="mdi-download"
+                :disabled="isLoading"
               >
                 Download
               </v-btn>
@@ -192,61 +203,116 @@
           :headers="tableHeaders"
           :items="batchResults"
           :search="tableSearch"
+          :loading="isLoading"
+          loading-text="Processing batch variants..."
           class="results-table"
           density="compact"
           :items-per-page="10"
         >
           <template #[`item.geneSymbol`]="{ item }">
             <router-link
-              v-if="item.geneSymbol !== 'N/A'"
+              v-if="item.status === 'scored' && item.geneSymbol !== 'N/A'"
               :to="{ name: 'GeneView', params: { symbol: item.geneSymbol } }"
             >
               {{ item.geneSymbol }}
             </router-link>
-            <span v-else>N/A</span>
+            <span
+              v-else-if="
+                item.status === 'scored' ||
+                item.status === 'failed' ||
+                item.geneSymbol !== 'N/A'
+              "
+            >
+              {{ item.geneSymbol }}
+            </span>
+            <span
+              v-else
+              class="text-medium-emphasis d-inline-flex align-center"
+            >
+              <v-progress-circular
+                indeterminate
+                size="14"
+                width="2"
+                color="primary"
+                class="mr-1"
+              />
+              Pending
+            </span>
           </template>
           <template #[`item.ncs`]="{ item }">
             <strong
-              v-if="item.ncs !== 'N/A'"
+              v-if="item.status === 'scored' && item.ncs !== 'N/A'"
               class="score-value"
               :title="`NCS Score: ${item.ncs}`"
             >
               {{ item.ncs }}
             </strong>
-            <span v-else>N/A</span>
+            <span
+              v-else-if="item.status === 'failed' || item.status === 'scored'"
+            >
+              N/A
+            </span>
+            <span v-else class="text-medium-emphasis">—</span>
           </template>
           <template #[`item.geneScore`]="{ item }">
             <span
-              v-if="item.geneScore !== 'N/A'"
+              v-if="item.status === 'scored' && item.geneScore !== 'N/A'"
               class="score-value"
               :title="`Gene Score: ${item.geneScore}`"
             >
               {{ formatScore(item.geneScore) }}
             </span>
-            <span v-else>N/A</span>
+            <span
+              v-else-if="item.status === 'failed' || item.status === 'scored'"
+            >
+              N/A
+            </span>
+            <span v-else class="text-medium-emphasis">—</span>
           </template>
           <template #[`item.variantScore`]="{ item }">
             <span
-              v-if="item.variantScore !== 'N/A'"
+              v-if="item.status === 'scored' && item.variantScore !== 'N/A'"
               class="score-value"
               :title="`Variant Score: ${item.variantScore}`"
             >
               {{ formatScore(item.variantScore) }}
             </span>
-            <span v-else>N/A</span>
+            <span
+              v-else-if="item.status === 'failed' || item.status === 'scored'"
+            >
+              N/A
+            </span>
+            <span v-else class="text-medium-emphasis">—</span>
           </template>
           <template #[`item.inheritanceScore`]="{ item }">
             <span
-              v-if="item.inheritanceScore !== 'N/A'"
+              v-if="item.status === 'scored' && item.inheritanceScore !== 'N/A'"
               class="score-value"
               :title="`Inheritance Score: ${item.inheritanceScore}`"
             >
               {{ formatScore(item.inheritanceScore) }}
             </span>
-            <span v-else>N/A</span>
+            <span
+              v-else-if="item.status === 'failed' || item.status === 'scored'"
+            >
+              N/A
+            </span>
+            <span v-else class="text-medium-emphasis">—</span>
           </template>
           <template #[`item.error`]="{ item }">
-            <p v-if="item.error" class="row-error">{{ item.error }}</p>
+            <span
+              v-if="item.status === 'cancelled'"
+              class="text-medium-emphasis"
+            >
+              Cancelled
+            </span>
+            <p v-else-if="item.error" class="row-error">{{ item.error }}</p>
+            <span
+              v-else-if="item.status !== 'scored' && isLoading"
+              class="text-medium-emphasis"
+            >
+              In progress...
+            </span>
           </template>
         </v-data-table>
       </v-card-text>
@@ -255,7 +321,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onBeforeUnmount } from 'vue';
+import { ref, reactive, computed, onBeforeUnmount } from 'vue';
 import ContentContainer from '@/components/ContentContainer.vue';
 import { queryVariant } from '@/api/variantApi.js';
 import { fetchGeneDetails } from '@/api/geneApi.js';
@@ -288,8 +354,27 @@ const processingStatus = ref('');
 const inputCount = computed(
   () => variantsInput.value.split('\n').filter((line) => line.trim()).length,
 );
+const variantCountExceeded = computed(() => inputCount.value > MAX_VARIANTS);
+const completedCount = computed(
+  () =>
+    batchResults.value.filter(
+      (row) => row.status === 'scored' || row.status === 'failed',
+    ).length,
+);
 const successfulCount = computed(
-  () => batchResults.value.filter((row) => row.ncs !== 'N/A').length,
+  () =>
+    batchResults.value.filter(
+      (row) => row.status === 'scored' || (row.ncs !== 'N/A' && !row.error),
+    ).length,
+);
+const unavailableCount = computed(
+  () =>
+    batchResults.value.filter(
+      (row) =>
+        row.status === 'failed' ||
+        Boolean(row.error) ||
+        (row.status !== 'pending' && row.ncs === 'N/A'),
+    ).length,
 );
 let activeRun = 0;
 let activeAbortController = null;
@@ -352,6 +437,7 @@ function parseApiScore(value, name) {
 function assignAnnotationToRow(row, annotation) {
   if (!annotation) {
     row.error = 'No annotation data found in response';
+    row.status = 'failed';
     return;
   }
   if (annotation.error) {
@@ -359,6 +445,7 @@ function assignAnnotationToRow(row, annotation) {
       typeof annotation.error === 'string'
         ? annotation.error
         : annotation.error.message || 'Annotation failed';
+    row.status = 'failed';
     return;
   }
   try {
@@ -368,6 +455,7 @@ function assignAnnotationToRow(row, annotation) {
     );
   } catch (err) {
     row.error = err.message || 'Invalid variant score';
+    row.status = 'failed';
     return;
   }
   row.geneSymbol = getPrioritizedGeneSymbol(annotation) || 'N/A';
@@ -393,32 +481,37 @@ async function processVariants() {
     return;
   }
 
-  // Preallocate rows in exact input order
-  const rows = lines.map((line) => {
-    const { variant, inheritance, segregation } = parseInputLine(line);
-    return {
-      variant,
-      inheritance,
-      segregation,
-      normalizedVariant: null,
-      variantScore: 'N/A',
-      geneSymbol: 'N/A',
-      geneScore: 'N/A',
-      inheritanceScore: 'N/A',
-      ncs: 'N/A',
-      error: '',
-    };
-  });
+  // Preallocate rows in exact input order as reactive objects
+  const rows = reactive(
+    lines.map((line) => {
+      const { variant, inheritance, segregation } = parseInputLine(line);
+      return {
+        variant,
+        inheritance,
+        segregation,
+        normalizedVariant: null,
+        variantScore: 'N/A',
+        geneSymbol: 'N/A',
+        geneScore: 'N/A',
+        inheritanceScore: 'N/A',
+        ncs: 'N/A',
+        error: '',
+        status: 'pending',
+      };
+    }),
+  );
 
   // Local validation per row
   for (const row of rows) {
     if (!row.variant) {
       row.error = 'Empty variant input.';
+      row.status = 'failed';
       continue;
     }
     if (/^[A-Za-z][A-Za-z0-9]*$/.test(row.variant)) {
       row.error =
         'Gene symbols alone cannot be scored. Enter a specific HGVS variant or chromosome-position-reference-alternate coordinates.';
+      row.status = 'failed';
       continue;
     }
     const normalized = normalizeVariant(row.variant);
@@ -426,8 +519,10 @@ async function processVariants() {
     if (validation !== true) {
       row.error =
         typeof validation === 'string' ? validation : 'Invalid variant format';
+      row.status = 'failed';
     } else {
       row.normalizedVariant = normalized;
+      row.status = 'pending';
     }
   }
 
@@ -500,6 +595,7 @@ async function processVariants() {
             row.variantScore,
             row.inheritanceScore,
           ).toFixed(3);
+          row.status = 'scored';
         }
       }
     } catch (e) {
@@ -509,6 +605,7 @@ async function processVariants() {
         typeof serviceError === 'string'
           ? serviceError
           : e.message || 'Unknown processing error';
+      row.status = 'failed';
     }
 
     if (run !== activeRun) return;
@@ -547,16 +644,19 @@ async function processVariants() {
               assembly: selectedAssembly,
               signal,
             });
+            if (signal.aborted || run !== activeRun) return;
             let singleData = singleResult?.data;
             if (Array.isArray(singleData)) singleData = singleData[0];
             const anno = singleData?.annotationData?.[0] || singleData;
             assignAnnotationToRow(row, anno);
           } catch (singleErr) {
+            if (signal.aborted || run !== activeRun) return;
             const srvErr = singleErr.response?.data?.error;
             row.error =
               typeof srvErr === 'string'
                 ? srvErr
                 : singleErr.message || 'Annotation failed';
+            row.status = 'failed';
           }
         }
       } else {
@@ -619,6 +719,7 @@ async function processVariants() {
         } else {
           row.error =
             'No matching annotation data returned for this variant in batch response';
+          row.status = 'failed';
         }
       }
     }
@@ -638,6 +739,7 @@ async function processVariants() {
             assembly: selectedAssembly,
             signal,
           });
+          if (signal.aborted || run !== activeRun) return;
           let fbData = fallbackRes?.data;
           if (Array.isArray(fbData)) fbData = fbData[0];
           const fbAnno = fbData?.annotationData?.[0] || fbData;
@@ -686,15 +788,20 @@ async function processVariants() {
 
     // Score calculation
     for (const row of validRows) {
-      if (row.error) continue;
+      if (row.error) {
+        row.status = 'failed';
+        continue;
+      }
       if (row.geneSymbol === 'N/A') {
         row.error =
           'No gene could be resolved. Check the variant and genome assembly before processing again.';
+        row.status = 'failed';
         continue;
       }
       const geneRes = geneResults.get(row.geneSymbol);
       if (geneRes?.error) {
         row.error = geneRes.error;
+        row.status = 'failed';
         continue;
       }
       try {
@@ -709,9 +816,11 @@ async function processVariants() {
             row.variantScore,
             row.inheritanceScore,
           ).toFixed(3);
+          row.status = 'scored';
         }
       } catch (err) {
         row.error = err.message || 'Scoring calculation failed';
+        row.status = 'failed';
       }
     }
   } catch (e) {
@@ -722,7 +831,10 @@ async function processVariants() {
         ? serviceError
         : e.message || 'Unknown processing error';
     for (const r of validRows) {
-      if (!r.error) r.error = msg;
+      if (!r.error) {
+        r.error = msg;
+        r.status = 'failed';
+      }
     }
   }
 
@@ -734,6 +846,7 @@ async function processVariants() {
 }
 
 function downloadResults(format) {
+  if (isLoading.value) return;
   if (!['CSV', 'TSV', 'JSON'].includes(format)) {
     errorMsg.value = 'Unsupported export format. Use CSV, TSV, or JSON.';
     return;
@@ -780,6 +893,7 @@ function clearResults() {
   progress.value = 0;
   errorMsg.value = '';
   processingStatus.value = '';
+  tableSearch.value = '';
 }
 
 function cancelProcessing() {
@@ -788,6 +902,11 @@ function cancelProcessing() {
   activeAbortController = null;
   isLoading.value = false;
   processingStatus.value = 'Processing cancelled.';
+  for (const row of batchResults.value) {
+    if (row.status !== 'scored' && row.status !== 'failed') {
+      row.status = 'cancelled';
+    }
+  }
 }
 
 function formatScore(score) {

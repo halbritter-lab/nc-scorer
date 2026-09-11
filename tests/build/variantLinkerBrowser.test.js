@@ -141,4 +141,22 @@ describe('variant-linker browser adapter', () => {
       '/ensembl_grch37/vep/homo_sapiens/id/rs123?CADD=1',
     ]);
   });
+
+  it('guards fs.promises in filesystem helpers to eliminate browser warnings', () => {
+    const pedFilename = require.resolve('variant-linker/src/pedReader.js');
+    const featureFilename = require.resolve(
+      'variant-linker/src/featureParser.js',
+    );
+    const plugin = variantLinkerBrowserPlugin();
+
+    for (const file of [pedFilename, featureFilename]) {
+      const code = readFileSync(file, 'utf8');
+      const transformed = plugin.transform(code, file);
+      expect(transformed).toBeDefined();
+      expect(transformed.code).not.toContain("require('fs').promises;");
+      expect(transformed.code).toContain(
+        "const fs = typeof window === 'undefined' ? require('fs').promises : null;",
+      );
+    }
+  });
 });

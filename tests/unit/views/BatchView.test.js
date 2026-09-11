@@ -512,4 +512,69 @@ describe('batch scoring integrity', () => {
     expect(wrapper.vm.batchResults[0].error).toBe('');
     wrapper.unmount();
   });
+
+  it('displays a loading state and does not show premature N/A or unavailable counts during processing', async () => {
+    let resolveBatch;
+    queryVariant.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveBatch = resolve;
+        }),
+    );
+    const wrapper = mountBatch();
+    wrapper.vm.variantsInput = '16-2090952-G-A\n12-88101183-A-G';
+    const pending = wrapper.vm.processVariants();
+    await flushPromises();
+
+    // While loading:
+    expect(wrapper.vm.isLoading).toBe(true);
+    // completedCount must be 0, not 2
+    expect(wrapper.vm.completedCount).toBe(0);
+    // Summary must say "Processing variants", NOT "unavailable"
+    expect(wrapper.text()).toContain('Processing variants · 0 of 2 finished');
+    expect(wrapper.text()).not.toContain('unavailable');
+    // Progress label
+    expect(wrapper.text()).toContain('0 of 2 completed');
+    // In-flight rows must have pending status
+    expect(wrapper.vm.batchResults.every((r) => r.status === 'pending')).toBe(
+      true,
+    );
+
+    // Rendered table check
+    expect(wrapper.find('.results-table').exists()).toBe(true);
+    expect(wrapper.text()).toContain('Pending');
+
+    // Complete the batch request
+    resolveBatch({
+      data: {
+        annotationData: [
+          {
+            input: '16-2090952-G-A',
+            variantKey: '16-2090952-G-A',
+            nephro_variant_score: 0.5,
+            transcript_consequences: [{ gene_symbol: 'PKD1' }],
+          },
+          {
+            input: '12-88101183-A-G',
+            variantKey: '12-88101183-A-G',
+            nephro_variant_score: 0.5,
+            transcript_consequences: [{ gene_symbol: 'PKD1' }],
+          },
+        ],
+      },
+    });
+    await pending;
+    await flushPromises();
+
+    // After completion:
+    expect(wrapper.vm.isLoading).toBe(false);
+    expect(wrapper.vm.completedCount).toBe(2);
+    expect(wrapper.vm.successfulCount).toBe(2);
+    expect(wrapper.text()).toContain('2 scored · 0 unavailable');
+    expect(wrapper.text()).toContain('Processing complete. 2 of 2 completed.');
+    expect(wrapper.vm.batchResults.every((r) => r.status === 'scored')).toBe(
+      true,
+    );
+    wrapper.unmount();
+  });
 });
