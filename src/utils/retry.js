@@ -21,7 +21,12 @@ export async function retryWithBackoff(fn, options = {}) {
   // Default error configuration - can be overridden by options.errorConfig
   const defaultErrorConfig = {
     // Network error patterns
-    networkErrorPatterns: ['network', 'timeout', 'Failed to fetch', 'Network Error'],
+    networkErrorPatterns: [
+      'network',
+      'timeout',
+      'Failed to fetch',
+      'Network Error',
+    ],
     // Network error codes
     networkErrorCodes: ['ECONNABORTED', 'ECONNREFUSED', 'ECONNRESET'],
     // Always retry these status codes
@@ -29,7 +34,7 @@ export async function retryWithBackoff(fn, options = {}) {
     // Never retry these status codes
     nonRetryableStatusCodes: [400, 401, 403, 404, 405, 422],
   };
-  
+
   const {
     maxRetries = 4, // Cap at maximum 4 retries
     initialDelay = 1000, // Start with 1 second
@@ -41,37 +46,44 @@ export async function retryWithBackoff(fn, options = {}) {
     retryState = { attempts: 0, lastError: null },
   } = options;
 
-  // Initialize attempt counter if not already set
-  retryState.attempts = retryState.attempts || 0;
+  // Feedback may be reused between requests; each operation gets its own budget.
+  let attempts = 0;
+  retryState.attempts = 0;
+  retryState.lastError = null;
 
   while (true) {
     try {
       const result = await fn();
 
       // Call onSuccess if we had previous attempts and finally succeeded
-      if (retryState.attempts > 0 && onSuccess) {
-        onSuccess(retryState.attempts);
+      if (attempts > 0 && onSuccess) {
+        onSuccess(attempts);
       }
 
       return result;
     } catch (error) {
-      retryState.attempts++;
+      attempts++;
+      retryState.attempts = attempts;
       retryState.lastError = error;
 
       // If we've reached max retries, throw
-      if (retryState.attempts >= maxRetries) {
+      if (attempts > maxRetries) {
         throw error;
       }
 
       // Determine if we should retry based on the error
-      let shouldRetryError = false;
+      let shouldRetryError;
 
       // Use override function if provided
       if (typeof shouldRetry === 'function') {
         shouldRetryError = shouldRetry(error);
-      } else {
+      }
+      if (shouldRetryError === undefined) {
         // Use default retry logic
-        shouldRetryError = determineRetryBehavior(error, { ...defaultErrorConfig, ...errorConfig });
+        shouldRetryError = determineRetryBehavior(error, {
+          ...defaultErrorConfig,
+          ...errorConfig,
+        });
       }
 
       // If error isn't retryable, throw
@@ -80,10 +92,13 @@ export async function retryWithBackoff(fn, options = {}) {
       }
 
       // Calculate delay with exponential backoff, but cap at maxDelay
-      const delay = Math.min(initialDelay * Math.pow(2, retryState.attempts - 1), maxDelay);
+      const delay = Math.min(
+        initialDelay * Math.pow(2, attempts - 1),
+        maxDelay,
+      );
 
       // Call the onRetry callback
-      onRetry(error, retryState.attempts);
+      if (typeof onRetry === 'function') onRetry(error, attempts);
 
       // Wait for the calculated delay
       await new Promise((resolve) => setTimeout(resolve, delay));
@@ -100,22 +115,28 @@ export async function retryWithBackoff(fn, options = {}) {
  */
 function determineRetryBehavior(error, config) {
   // Extract configurations
-  const { networkErrorPatterns, networkErrorCodes, retryableStatusCodes, nonRetryableStatusCodes } = config;
+  const {
+    networkErrorPatterns,
+    networkErrorCodes,
+    retryableStatusCodes,
+    nonRetryableStatusCodes,
+  } = config;
 
   // Handle network errors (no response object)
   if (!error.response) {
     // Check for network error patterns in message
     const hasNetworkErrorPattern = networkErrorPatterns.some(
-      (pattern) => error.message && error.message.includes(pattern)
+      (pattern) => error.message && error.message.includes(pattern),
     );
 
     // Check for specific error codes
-    const hasNetworkErrorCode = networkErrorCodes.some((code) => error.code === code);
+    const hasNetworkErrorCode = networkErrorCodes.some(
+      (code) => error.code === code,
+    );
 
-    // Check for TypeError (often indicates network issues)
-    const isTypeError = error instanceof TypeError;
-
-    const isNetworkError = hasNetworkErrorPattern || hasNetworkErrorCode || isTypeError;
+    // A TypeError may also come from local annotation/scoring code. Retry only
+    // when the error actually identifies a transport failure.
+    const isNetworkError = hasNetworkErrorPattern || hasNetworkErrorCode;
     if (isNetworkError) {
       return true;
     }

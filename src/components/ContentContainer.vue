@@ -16,6 +16,12 @@ export default {
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 16px;
+  padding: 32px 24px;
+}
+
+@media (max-width: 600px) {
+  .content-container {
+    padding: 24px 16px;
+  }
 }
 </style>

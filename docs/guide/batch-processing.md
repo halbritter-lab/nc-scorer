@@ -1,47 +1,50 @@
 # Batch Processing
 
-NC-Scorer includes a powerful batch processing feature to analyze multiple variants simultaneously.
+Use **Batch** in the application navigation to score up to **200 variants** in one run. Each line is processed as a separate assessment.
 
 ## Accessing Batch Mode
 
-Click the "Batch" item in the main navigation menu or navigate to `/batch`.
+Click **Batch** in the main navigation menu or open the application's `/batch` page.
 
 ## Input Format
 
-Enter variants one per line with optional inheritance and segregation data:
+Enter one variant per line. Optional inheritance and segregation values follow the variant, separated by **tab characters**:
 
+```text
+1-55051215-G-GA	Inherited dominant	0.05
+NM_001009944.3:c.11935C>T	Inherited dominant
+NM_033380.3:c.1871G>A	Denovo
 ```
-# Basic format (variant only)
-NM_001009944.3:c.11798G>A
 
-# With inheritance pattern
-NM_001009944.3:c.11798G>A	Inherited dominant
-
-# With inheritance and segregation
-NM_001009944.3:c.11798G>A	Inherited dominant	0.05
-```
+Paste the lines without a header or comment lines. Blank lines are ignored. A variant alone is also accepted: omitted inheritance becomes **Unknown**, and omitted segregation is treated as missing.
 
 ### Supported Variant Formats
 
-- **HGVS**: `NM_001009944.3:c.11798G>A`
-- **Genomic**: `chr16:2138253:G:A`
-- **rsID**: `rs121913240`
+- **HGVS**: `NM_001009944.3:c.11935C>T`
+- **VCF-style identifier**: `1-55051215-G-GA`
 
 ### Inheritance Patterns
 
 - Denovo
 - Inherited dominant
 - Homozygous recessive
-- Compound heterozygous (confirmed/suspected)
-- X-linked dominant/recessive
+- X-linked dominant
+- X-linked recessive
 - Unknown
+
+Use these exact labels. For a compound heterozygous assessment with two variants, use **Score a variant** on the home page; the batch format has no second-variant column.
+
+Segregation values must be between **0 and 1**. When a pattern expects segregation evidence and the value is missing, the inheritance component receives a **20% reduction**. See [Usage](./usage#segregation-evidence) for how the value is interpreted.
 
 ## Processing
 
-1. Enter variants in the text area
-2. Or click "Fill with Examples" for sample data
-3. Select output format (CSV, TSV, JSON, VCF)
-4. Click "Process & Download"
+1. Paste your lines, or select one of the example-list buttons.
+2. Choose **GRCh38 / hg38** or **GRCh37 / hg19**. One assembly applies to the whole run, so separate lists that use different assemblies.
+3. Select **Process Variants**.
+4. Review the **Batch Results** table as rows appear. Requests run sequentially, and progress depends on external API response times.
+5. Check any error icons and unavailable (`N/A`) scores, then open **Download** to save the results.
+
+**Filter Results** helps find rows in the table. Downloads contain all result rows collected so far, including rows outside the current filter or page. Wait until processing finishes to export the full run. **Clear Results** discards the displayed results and stops further rows from being added to that run.
 
 ## Limits
 
@@ -51,30 +54,30 @@ NM_001009944.3:c.11798G>A	Inherited dominant	0.05
 
 ## Export Formats
 
-### CSV/TSV
-Spreadsheet-compatible format with all scores and annotations.
+| Format | Contents                                                                           |
+| ------ | ---------------------------------------------------------------------------------- |
+| CSV    | Variant, gene symbol, NCS, gene score, variant score, and inheritance score        |
+| TSV    | The same six columns, separated by tabs                                            |
+| JSON   | All row fields, including input inheritance, segregation, and any processing error |
 
-### JSON
-Structured data format for programmatic processing:
+CSV and TSV are summary exports. Use JSON when you need to retain the supplied inheritance information and error messages. Batch downloads do not contain the full annotation response.
+
+The JSON download is an array of row objects. This illustrative row shows the structure and score scales; it is not an annotation result for a real variant:
+
 ```json
-{
-  "variant": "NM_001009944.3:c.11798G>A",
-  "gene": "PKD1",
-  "scores": {
-    "ncs": 8.5,
-    "gene": 0.9,
-    "variant": 0.85,
-    "inheritance": 0.8
+[
+  {
+    "variant": "example-variant",
+    "inheritance": "Unknown",
+    "segregation": null,
+    "variantScore": 0.5,
+    "geneSymbol": "EXAMPLE",
+    "geneScore": 0.5,
+    "inheritanceScore": 0.1,
+    "ncs": "4.200",
+    "error": ""
   }
-}
+]
 ```
 
-### VCF
-Standard variant call format for genomic pipelines.
-
-## Tips
-
-- Pre-validate variant formats to avoid errors
-- Include segregation data for inherited patterns to avoid penalties
-- Use consistent inheritance terminology
-- Export results immediately after processing
+The combined NCS uses the same formula and interpretation tiers as an individual assessment. See [Scoring System](./scoring-system).

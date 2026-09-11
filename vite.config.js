@@ -6,6 +6,12 @@ import { visualizer } from 'rollup-plugin-visualizer';
 import path from 'node:path';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import {
+  variantLinkerBrowserPlugin,
+  variantLinkerBrowserOptimizer,
+} from './scripts/variant-linker-browser.js';
+import { docsDevServer } from './scripts/docs-dev-server.js';
+import { vuetifyMotionPlugin } from './scripts/vuetify-motion.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -13,42 +19,16 @@ const __dirname = path.dirname(__filename);
 // https://vitejs.dev/config/
 export default defineConfig(async ({ mode }) => {
   const isProd = mode === 'production';
-  
+
   // Dynamic import for the sitemap plugin (ESM module)
   const { default: VitePluginSitemap } = await import('vite-plugin-sitemap');
-  
+
   return {
     plugins: [
       vue(),
-      {
-        name: 'mdi-font-display-swap',
-        transform(code, id) {
-          if (id.includes('materialdesignicons') && id.endsWith('.css')) {
-            return {
-              code: code.replace(/@font-face\s*\{/g, '@font-face {\n  font-display: swap;'),
-              map: null,
-            };
-          }
-        },
-      },
-      {
-        name: 'variant-linker-proxy-fix',
-        transform(code, id) {
-          if (id.includes('variant-linker') && (id.includes('apiHelper') || id.includes('configHelper'))) {
-            let transformed = code;
-            if (transformed.includes('process.env.ENSEMBL_BASE_URL || apiConfig.ensembl.baseUrl')) {
-              transformed = transformed.replace(
-                'process.env.ENSEMBL_BASE_URL || apiConfig.ensembl.baseUrl',
-                '(typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") ? "/ensembl" : apiConfig.ensembl.baseUrl)'
-              );
-            }
-            return {
-              code: transformed,
-              map: null,
-            };
-          }
-        },
-      },
+      docsDevServer(),
+      variantLinkerBrowserPlugin(),
+      vuetifyMotionPlugin(),
       vuetify({
         autoImport: true,
         // Disable Vuetify's built-in sass handling to avoid sass-embedded issues
@@ -69,10 +49,15 @@ export default defineConfig(async ({ mode }) => {
         urls: async () => {
           if (isProd) {
             try {
-              const { generateSitemapRoutes } = await import('./scripts/generate-sitemap-routes.js');
+              const { generateSitemapRoutes } = await import(
+                './scripts/generate-sitemap-routes.js'
+              );
               return generateSitemapRoutes();
             } catch (error) {
-              console.warn('Could not generate dynamic sitemap routes:', error.message);
+              console.warn(
+                'Could not generate dynamic sitemap routes:',
+                error.message,
+              );
             }
           }
           // Fallback routes for development or if generation fails
@@ -92,7 +77,7 @@ export default defineConfig(async ({ mode }) => {
           if (fs.existsSync('CNAME')) {
             fs.copyFileSync('CNAME', path.join('dist', 'CNAME'));
           }
-        }
+        },
       },
     ],
     css: {
@@ -102,13 +87,18 @@ export default defineConfig(async ({ mode }) => {
         },
       },
     },
+    optimizeDeps: {
+      esbuildOptions: {
+        plugins: [variantLinkerBrowserOptimizer()],
+      },
+    },
     resolve: {
       alias: {
         '@': path.resolve(__dirname, 'src'), // Setup '@' alias to point to src directory
       },
     },
     base: '/', // Custom domain doesn't need subdirectory
-    
+
     // Optimize build output for better caching
     build: {
       cssCodeSplit: true, // Split CSS by chunk for better caching
@@ -122,7 +112,11 @@ export default defineConfig(async ({ mode }) => {
               if (id.includes('variant-linker')) {
                 return 'variant-linker';
               }
-              if (id.includes('vue') || id.includes('pinia') || id.includes('@unhead')) {
+              if (
+                id.includes('vue') ||
+                id.includes('pinia') ||
+                id.includes('@unhead')
+              ) {
                 return 'vue-core';
               }
             }
@@ -154,7 +148,11 @@ export default defineConfig(async ({ mode }) => {
     },
     server: {
       watch: {
-        usePolling: true,
+        ignored: [
+          '**/.impeccable/**',
+          `${__dirname.replaceAll('\\', '/')}/.worktrees/**`,
+          '**/docs/.vitepress/{dist,cache,temp}/**',
+        ],
       },
       proxy: {
         '/ensembl/': {
@@ -166,10 +164,18 @@ export default defineConfig(async ({ mode }) => {
               console.log('proxy error', err);
             });
             proxy.on('proxyReq', (_proxyReq, req) => {
-              console.log('Sending Request to the Target:', req.method, req.url);
+              console.log(
+                'Sending Request to the Target:',
+                req.method,
+                req.url,
+              );
             });
             proxy.on('proxyRes', (proxyRes, req) => {
-              console.log('Received Response from the Target:', proxyRes.statusCode, req.url);
+              console.log(
+                'Received Response from the Target:',
+                proxyRes.statusCode,
+                req.url,
+              );
             });
           },
         },
@@ -182,10 +188,18 @@ export default defineConfig(async ({ mode }) => {
               console.log('GRCh37 proxy error', err);
             });
             proxy.on('proxyReq', (_proxyReq, req) => {
-              console.log('Sending GRCh37 Request to the Target:', req.method, req.url);
+              console.log(
+                'Sending GRCh37 Request to the Target:',
+                req.method,
+                req.url,
+              );
             });
             proxy.on('proxyRes', (proxyRes, req) => {
-              console.log('Received GRCh37 Response from the Target:', proxyRes.statusCode, req.url);
+              console.log(
+                'Received GRCh37 Response from the Target:',
+                proxyRes.statusCode,
+                req.url,
+              );
             });
           },
         },
@@ -195,6 +209,6 @@ export default defineConfig(async ({ mode }) => {
       // Make process.env properties specifically available without clobbering third-party libraries
       'process.env.NODE_ENV': JSON.stringify(mode),
       'process.env.BASE_URL': JSON.stringify('/'),
-    }
+    },
   };
 });

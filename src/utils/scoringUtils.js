@@ -1,7 +1,12 @@
 // src/utils/scoringUtils.js
 // Centralized scoring logic for batch processing and component reuse
 
-import { baseScores, scoringParameters, noSegregationPatterns, missingSegregationPenalty } from '@/config/inheritanceConfig.js';
+import {
+  baseScores,
+  scoringParameters,
+  noSegregationPatterns,
+  missingSegregationPenalty,
+} from '@/config/inheritanceConfig.js';
 
 /**
  * Computes the final genetic variant score based on a base inheritance score and a segregation p-value.
@@ -16,14 +21,34 @@ import { baseScores, scoringParameters, noSegregationPatterns, missingSegregatio
  * @returns {number} - Final inheritance score, scaled between baseScore and 1.0.
  * @throws {Error} - If baseScore or pValue are out of the [0,1] range.
  */
-function computeVariantScore(baseScore, pValue = 1, gamma = 0.001, epsilon = 1e-10) {
-  if (typeof baseScore !== 'number' || !Number.isFinite(baseScore) || baseScore < 0 || baseScore > 1) {
+function computeVariantScore(
+  baseScore,
+  pValue = 1,
+  gamma = 0.001,
+  epsilon = 1e-10,
+) {
+  if (
+    typeof baseScore !== 'number' ||
+    !Number.isFinite(baseScore) ||
+    baseScore < 0 ||
+    baseScore > 1
+  ) {
     throw new Error('baseScore must be between 0 and 1');
   }
-  if (typeof pValue !== 'number' || !Number.isFinite(pValue) || pValue < 0 || pValue > 1) {
+  if (
+    typeof pValue !== 'number' ||
+    !Number.isFinite(pValue) ||
+    pValue < 0 ||
+    pValue > 1
+  ) {
     throw new Error('pValue must be between 0 and 1');
   }
-  if (typeof gamma !== 'number' || !Number.isFinite(gamma) || gamma <= 0 || gamma >= 1) {
+  if (
+    typeof gamma !== 'number' ||
+    !Number.isFinite(gamma) ||
+    gamma <= 0 ||
+    gamma >= 1
+  ) {
     throw new Error('gamma must be between 0 and 1 (exclusive)');
   }
   const adjustedP = Math.max(pValue, epsilon);
@@ -39,31 +64,42 @@ function computeVariantScore(baseScore, pValue = 1, gamma = 0.001, epsilon = 1e-
 /**
  * Calculates the final inheritance score from a pattern and segregation value.
  * This is extracted from InheritanceCard.vue for reuse in batch processing.
- * 
+ *
  * Implements penalty for missing segregation data when it's expected:
  * - If segregation is null/missing and the inheritance pattern requires segregation data,
  *   the final score is penalized by multiplying with missingSegregationPenalty
  * - This reflects increased uncertainty when expected evidence is not provided
- * 
+ *
  * @param {string} inheritance - Inheritance pattern (e.g., 'Denovo', 'Inherited dominant')
  * @param {string|number|null} segregation - Segregation probability value, or null if missing
  * @returns {number} - Final inheritance score (0-1 range)
  */
 export function calculateInheritanceScore(inheritance, segregation) {
-  const baseScore = baseScores[inheritance] ?? 0.1;
-  
+  const baseScore = Object.hasOwn(baseScores, inheritance)
+    ? baseScores[inheritance]
+    : 0.1;
+
   // Determine if segregation data was missing (null) or provided
-  const isSegregationMissing = segregation === null || segregation === undefined || segregation === '';
-  
+  const isSegregationMissing =
+    segregation === null ||
+    segregation === undefined ||
+    (typeof segregation === 'string' && segregation.trim() === '');
+
   // If data is missing, use a neutral p-value of 1 for the core calculation.
   // If provided, convert to a number.
   const pValueForCalculation = isSegregationMissing ? 1.0 : Number(segregation);
-  
+
   // Check if a penalty should be applied for this inheritance type
-  const penaltyShouldApply = !noSegregationPatterns.includes(inheritance) && isSegregationMissing;
-  
+  const penaltyShouldApply =
+    !noSegregationPatterns.includes(inheritance) && isSegregationMissing;
+
   // Calculate the raw score
-  const rawScore = computeVariantScore(baseScore, pValueForCalculation, scoringParameters.gamma, scoringParameters.epsilon);
+  const rawScore = computeVariantScore(
+    baseScore,
+    pValueForCalculation,
+    scoringParameters.gamma,
+    scoringParameters.epsilon,
+  );
 
   // Apply the penalty only if the conditions are met
   return penaltyShouldApply ? rawScore * missingSegregationPenalty : rawScore;
@@ -72,21 +108,25 @@ export function calculateInheritanceScore(inheritance, segregation) {
 /**
  * Calculates the final Nephro Candidate Score (NCS).
  * This is extracted from CombinedScoreCard.vue for reuse in batch processing.
- * 
+ *
  * Formula: (Gene × 4 + Variant × 4 + Inheritance × 2)
  * Maximum possible score: 10 (when all component scores are 1.0)
- * 
+ *
  * @param {number} geneScore - Gene score (0-1 range)
- * @param {number} variantScore - Variant score (0-1 range) 
+ * @param {number} variantScore - Variant score (0-1 range)
  * @param {number} inheritanceScore - Inheritance score (0-1 range)
  * @returns {number} - Final NCS score (0-10 range)
  */
 export function calculateNCS(geneScore, variantScore, inheritanceScore) {
-  if (!Number.isFinite(geneScore) || !Number.isFinite(variantScore) || !Number.isFinite(inheritanceScore)) {
+  if (
+    ![geneScore, variantScore, inheritanceScore].every(
+      (score) => Number.isFinite(score) && score >= 0 && score <= 1,
+    )
+  ) {
     return 0;
   }
   // Formula: (Gene × 4 + Variant × 4 + Inheritance × 2)
-  return (geneScore * 4) + (variantScore * 4) + (inheritanceScore * 2);
+  return geneScore * 4 + variantScore * 4 + inheritanceScore * 2;
 }
 
 /**
@@ -101,7 +141,9 @@ export function validateScore(score, scoreName = 'score') {
     return 0;
   }
   if (score < 0 || score > 1) {
-    console.warn(`${scoreName} out of range [0,1]: ${score}. Clamping to valid range.`);
+    console.warn(
+      `${scoreName} out of range [0,1]: ${score}. Clamping to valid range.`,
+    );
     return Math.max(0, Math.min(1, score));
   }
   return score;
@@ -118,5 +160,13 @@ export function safeParseScore(value, defaultValue = 0) {
     return defaultValue;
   }
   const parsed = Number(value);
-  return isNaN(parsed) ? defaultValue : parsed;
+  return Number.isFinite(parsed) ? parsed : defaultValue;
+}
+
+/** Parse measured sub-scores without treating missing evidence as numeric zero. */
+export function parseUnitScore(value) {
+  if (typeof value !== 'number' && typeof value !== 'string') return null;
+  if (typeof value === 'string' && value.trim() === '') return null;
+  const score = Number(value);
+  return Number.isFinite(score) && score >= 0 && score <= 1 ? score : null;
 }

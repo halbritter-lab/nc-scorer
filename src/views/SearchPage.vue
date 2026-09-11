@@ -1,72 +1,84 @@
-<!-- src/views/SearchPage.vue -->
 <template>
   <ContentContainer>
-    <v-row>
-      <v-col cols="12">
-        <v-alert
-          border="start"
-          variant="flat"
-          color="primary-darken-1"
-          class="mb-4 text-white"
-        >
-          <h1 class="text-h6 font-weight-bold">Welcome to NC-Scorer</h1>
-          <p class="mt-2 text-body-2">
-            This tool helps standardize and automate the assessment of candidate variants found via
-            high throughput sequencing (e.g., exome or genome Sequencing) for patients with Chronic
-            Kidney Disease of unknown etiology (CKDu). It uses the Nephro Candidate Score (NCS) to
-            prioritize variants for further investigation. Use the tabs below to search for genes,
-            variants, or directly calculate a score.
-          </p>
-        </v-alert>
-      </v-col>
-    </v-row>
-    <v-card class="elevation-2">
-      <v-tabs v-model="activeTab" fixed-tabs>
-        <v-tab value="scoring" min-height="48" class="font-weight-medium">Scoring Search</v-tab>
-        <v-tab value="variant" min-height="48" class="font-weight-medium">Variant Search</v-tab>
-        <v-tab value="gene" min-height="48" class="font-weight-medium">Gene Search</v-tab>
+    <header class="page-header">
+      <div>
+        <h1 class="page-title">Prioritize kidney disease variants</h1>
+        <p>
+          Prioritize candidate variants using gene, variant, and inheritance
+          evidence.
+        </p>
+      </div>
+      <router-link class="page-header-link" to="/methodology"
+        >How the score works
+        <v-icon size="18">mdi-arrow-right</v-icon></router-link
+      >
+    </header>
+    <section class="search-workspace" aria-label="Variant and gene search">
+      <v-tabs v-model="activeTab" grow color="primary" aria-label="Search type">
+        <v-tab value="scoring">Score a variant</v-tab>
+        <v-tab value="variant">Variant details</v-tab>
+        <v-tab value="gene">Find a gene</v-tab>
       </v-tabs>
-
-      <v-card-text>
+      <div class="search-panel">
         <v-tabs-window v-model="activeTab">
-          <v-tabs-window-item value="scoring">
-            <ScoringSearch />
-          </v-tabs-window-item>
-          <v-tabs-window-item value="variant">
-            <VariantSearch />
-          </v-tabs-window-item>
-          <v-tabs-window-item value="gene">
-            <GeneSearch />
-          </v-tabs-window-item>
+          <v-tabs-window-item value="scoring"
+            ><ScoringSearch
+          /></v-tabs-window-item>
+          <v-tabs-window-item value="variant"
+            ><VariantSearch
+          /></v-tabs-window-item>
+          <v-tabs-window-item value="gene"><GeneSearch /></v-tabs-window-item>
         </v-tabs-window>
-      </v-card-text>
-    </v-card>
+      </div>
+    </section>
+    <p class="batch-shortcut">
+      Working with a list?
+      <router-link to="/batch">Score variants in batch</router-link>
+    </p>
+    <PreprintBanner />
   </ContentContainer>
 </template>
 
-<script>
-import { ref } from 'vue';
-import GeneSearch from '../components/GeneSearch.vue';
-import VariantSearch from '../components/VariantSearch.vue';
-import ScoringSearch from '../components/ScoringSearch.vue';
+<script setup>
+import { ref, defineAsyncComponent } from 'vue';
+import ScoringSearch from '@/components/ScoringSearch.vue';
 import ContentContainer from '@/components/ContentContainer.vue';
+import PreprintBanner from '@/components/PreprintBanner.vue';
 
-export default {
-  name: 'SearchPage',
-  components: {
-    GeneSearch,
-    VariantSearch,
-    ScoringSearch,
-    ContentContainer,
-  },
-  setup() {
-    // Set activeTab to 'scoring' by default.
-    const activeTab = ref('scoring');
-    return { activeTab };
-  },
-};
+const GeneSearch = defineAsyncComponent(
+  () => import('@/components/GeneSearch.vue'),
+);
+const VariantSearch = defineAsyncComponent(
+  () => import('@/components/VariantSearch.vue'),
+);
+const activeTab = ref('scoring');
 </script>
 
 <style scoped>
-/* Additional styling if needed */
+.search-workspace {
+  border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+  border-radius: 12px;
+  background: rgb(var(--v-theme-surface));
+  overflow: hidden;
+}
+.search-workspace :deep(.v-tabs) {
+  border-bottom: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+}
+.search-panel {
+  padding: 28px;
+}
+.batch-shortcut {
+  padding: 20px 0 28px;
+  font-size: 0.95rem;
+}
+@media (max-width: 600px) {
+  .search-panel {
+    padding: 20px 16px;
+  }
+  .search-workspace :deep(.v-tab) {
+    min-width: 0;
+    padding-inline: 10px;
+    font-size: 0.8rem;
+  }
+}
 </style>

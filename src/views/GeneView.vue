@@ -2,7 +2,7 @@
 <template>
   <ContentContainer>
     <h1 class="text-h4 mb-4">Gene Details: {{ symbol }}</h1>
-    <GeneCard :symbol="symbol" />
+    <GeneCard :key="symbol" :symbol="symbol" />
   </ContentContainer>
 </template>
 

@@ -1,8 +1,9 @@
 // tests/unit/composables/useApiCache.test.js
+/* global window, sessionStorage */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { ref } from 'vue';
+import { createApp, ref } from 'vue';
 import { createPinia, setActivePinia } from 'pinia';
-import { useApiCache } from '@/composables/useApiCache.js';
+import { API_CACHE_KEY, useApiCache } from '@/composables/useApiCache.js';
 
 // Mock useCacheSettings to control cacheEnabled directly
 const mockCacheEnabled = ref(true);
@@ -21,6 +22,20 @@ describe('API Cache Composable (useApiCache.js)', () => {
   });
 
   describe('generateCacheKey', () => {
+    it('uses the same key for equivalent nested options regardless of insertion order', () => {
+      const { generateCacheKey } = useApiCache();
+      expect(
+        generateCacheKey('variant', '1-1-A-G', {
+          vep: { hgvs: 1, CADD: 1 },
+          assembly: 'GRCh38',
+        }),
+      ).toBe(
+        generateCacheKey('variant', '1-1-A-G', {
+          assembly: 'GRCh38',
+          vep: { CADD: 1, hgvs: 1 },
+        }),
+      );
+    });
     it('generates key without params', () => {
       const { generateCacheKey } = useApiCache();
       const key = generateCacheKey('variant', 'chr16-2138714-C-T');
@@ -33,11 +48,91 @@ describe('API Cache Composable (useApiCache.js)', () => {
         assembly: 'GRCh38',
         output: 'JSON',
       });
-      expect(key).toBe('variant-chr16-2138714-C-T-{"assembly":"GRCh38","output":"JSON"}');
+      expect(key).toBe(
+        'variant-chr16-2138714-C-T-{"assembly":"GRCh38","output":"JSON"}',
+      );
     });
   });
 
   describe('setCachedItem and getCachedItem', () => {
+    it('shares the provided cache and its reactive statistics with descendants', () => {
+      const cache = useApiCache();
+      const app = createApp({});
+      app.provide(API_CACHE_KEY, cache);
+      const childCache = app.runWithContext(() => useApiCache());
+      childCache.setCachedItem('gene-PKD1', { symbol: 'PKD1' });
+      expect(cache.getCachedItem('gene-PKD1').data.symbol).toBe('PKD1');
+      expect(childCache.stats.value).toMatchObject({
+        itemCount: 1,
+        hits: 1,
+        hitRate: 100,
+      });
+      expect(childCache).toBe(cache);
+    });
+
+    it('continues caching in memory if browser storage is unavailable', () => {
+      sessionStorage.getItem.mockImplementationOnce(() => {
+        throw new Error('Storage unavailable');
+      });
+      const cache = useApiCache();
+      sessionStorage.setItem.mockImplementationOnce(() => {
+        throw new Error('Storage unavailable');
+      });
+      cache.setCachedItem('gene-PKD1', { symbol: 'PKD1' });
+      expect(cache.getCachedItem('gene-PKD1').data.symbol).toBe('PKD1');
+    });
+    it('does not reuse legacy annotations produced with unverified assembly routing', () => {
+      sessionStorage.setItem(
+        'nc-scorer-api-cache',
+        JSON.stringify({
+          'variant-legacy': {
+            data: { assembly: 'unknown' },
+            cached: Date.now(),
+            expires: null,
+          },
+        }),
+      );
+      expect(useApiCache().getCachedItem('variant-legacy')).toBeNull();
+    });
+    it.each(['null', '[]', '42', '"invalid"'])(
+      'recovers from a valid JSON value with an invalid cache shape: %s',
+      (stored) => {
+        sessionStorage.setItem('nc-scorer-api-cache-v2', stored);
+        const apiCache = useApiCache();
+        apiCache.setCachedItem('gene-PKD1', { symbol: 'PKD1' });
+        expect(apiCache.getCachedItem('gene-PKD1').data).toEqual({
+          symbol: 'PKD1',
+        });
+        expect(apiCache.getCacheStats().itemCount).toBe(1);
+      },
+    );
+
+    it('ignores corrupt and expired persisted entries', () => {
+      sessionStorage.setItem(
+        'nc-scorer-api-cache-v2',
+        JSON.stringify({
+          'gene-broken': { data: { symbol: 'wrong' } },
+          'gene-expired': { data: {}, cached: 1, expires: 2 },
+          'gene-valid': {
+            data: { symbol: 'PKD1' },
+            cached: Date.now(),
+            expires: null,
+          },
+        }),
+      );
+      const apiCache = useApiCache();
+      expect(apiCache.getCachedItem('gene-broken')).toBeNull();
+      expect(apiCache.getCacheStats().itemCount).toBe(1);
+      expect(apiCache.getCachedItem('gene-valid').data.symbol).toBe('PKD1');
+    });
+
+    it('does not treat inherited object properties as cached responses', () => {
+      const apiCache = useApiCache();
+      expect(apiCache.getCachedItem('constructor')).toBeNull();
+      apiCache.setCachedItem('__proto__', { symbol: 'PKD1' });
+      expect(apiCache.getCacheStats().itemCount).toBe(1);
+      expect(apiCache.getCachedItem('__proto__').data.symbol).toBe('PKD1');
+    });
     it('caches item and returns it on subsequent retrieval', () => {
       const apiCache = useApiCache();
       const testData = { gene: 'PKD1', score: 0.95 };
@@ -86,7 +181,9 @@ describe('API Cache Composable (useApiCache.js)', () => {
       const apiCache = useApiCache();
       apiCache.setCachedItem('variant-1', { id: 'var1' }, 60000);
 
-      const rawStorage = window.sessionStorage.getItem('nc-scorer-api-cache');
+      const rawStorage = window.sessionStorage.getItem(
+        'nc-scorer-api-cache-v2',
+      );
       expect(rawStorage).toBeDefined();
       const parsed = JSON.parse(rawStorage);
       expect(parsed['variant-1'].data).toEqual({ id: 'var1' });

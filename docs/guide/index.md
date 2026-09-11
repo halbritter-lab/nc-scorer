@@ -4,21 +4,21 @@ NC-Scorer is a tool developed to standardize and automate the assessment of cand
 
 ## Overview
 
-The tool leverages a scoring system called the Nephro Candidate Score (NCS) to prioritize candidate variants for further investigation, accelerating the discovery of new genetic associations in CKD.
+The Nephro Candidate Score (NCS) combines gene, variant, and inheritance evidence to prioritize candidate variants for further investigation.
 
 ## Key Features
 
 - **Automated Scoring**: Uses the NCS algorithm to assess genetic variants
-- **Batch Processing**: Analyze multiple variants simultaneously
-- **Modern Architecture**: Built with Vue 3, Vuetify 3, and Vite
+- **Batch Processing**: Score up to 200 variants in one run
+- **Evidence Review**: Inspect gene scores, variant annotations, and transcript details
 - **API Integration**: Fetches data from Ensembl and other genomic databases
-- **Export Options**: Multiple formats including CSV, TSV, JSON, and VCF
+- **Export Options**: CSV and Excel for individual assessments; CSV, TSV, and JSON for batch results
 
 ## Quick Start
 
 1. Visit the [NC-Scorer application](https://nc-scorer.kidney-genetics.org/)
-2. Search for a gene or variant using the search interface
-3. Review the calculated scores and annotations
+2. Choose **Score a variant**, **Variant details**, or **Find a gene**
+3. For a combined score, select the assembly and inheritance pattern, then review the scores and annotations
 4. Export results for further analysis
 
-For local development, see the [Installation guide](./installation).
+See [Usage](./usage) for the complete workflow and [Batch Processing](./batch-processing) for lists of variants. For local development, see the [Installation guide](./installation).

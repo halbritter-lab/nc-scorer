@@ -2,62 +2,63 @@
   <!-- Wrap entire app in API cache provider to ensure inject() is always used within proper context -->
   <ApiCacheProvider>
     <v-app>
-    <!-- Include the AppBar component -->
-    <AppBar />
+      <a href="#main-content" class="skip-link">Skip to content</a>
+      <!-- Include the AppBar component -->
+      <AppBar />
 
-    <!-- Application content -->
-    <v-main>
-      <router-view></router-view>
-    </v-main>
+      <!-- Application content -->
+      <v-main id="main-content" tabindex="-1">
+        <router-view></router-view>
+      </v-main>
 
-    <!-- Include the FooterBar component -->
-    <FooterBar />
+      <!-- Include the FooterBar component -->
+      <FooterBar />
 
-    <!-- Preprint Banner (fixed at bottom above footer) -->
-    <PreprintBanner />
+      <!-- Global notification system -->
+      <GlobalNotification />
 
-    <!-- Global notification system -->
-    <GlobalNotification />
-    
-    <!-- Log Viewer (lazy loaded) -->
-    <Suspense v-if="showLogViewer">
-      <template #default>
-        <LogViewer />
-      </template>
-      <template #fallback>
-        <v-card class="log-viewer-loading" elevation="10">
-          <v-card-title class="log-viewer-loading-header">
-            <span>Log Viewer</span>
-            <v-spacer></v-spacer>
-            <v-btn
-              icon="mdi-close"
-              variant="text"
-              min-width="44"
-              min-height="44"
-              aria-label="Close Log Viewer"
-              @click="closeLogViewer"
-            ></v-btn>
-          </v-card-title>
-          <v-divider></v-divider>
-          <v-card-text class="text-center pa-8">
-            <v-progress-circular 
-              indeterminate 
-              color="primary"
-              size="32"
-              class="mb-3"
-            ></v-progress-circular>
-            <div>Loading log viewer...</div>
-          </v-card-text>
-        </v-card>
-      </template>
-    </Suspense>
-    
-    <!-- Disclaimer dialog -->
-    <DisclaimerDialog v-if="!isDisclaimerAcknowledged" @acknowledged="onDisclaimerAcknowledged" />
-    
-    <!-- Global Structured Data -->
-    <JsonLd :data="structuredData" />
-  </v-app>
+      <!-- Log Viewer (lazy loaded) -->
+      <Suspense v-if="showLogViewer">
+        <template #default>
+          <LogViewer />
+        </template>
+        <template #fallback>
+          <v-card class="log-viewer-loading" elevation="10">
+            <v-card-title class="log-viewer-loading-header">
+              <span>Log Viewer</span>
+              <v-spacer></v-spacer>
+              <v-btn
+                icon="mdi-close"
+                variant="text"
+                min-width="44"
+                min-height="44"
+                aria-label="Close Log Viewer"
+                @click="closeLogViewer"
+              ></v-btn>
+            </v-card-title>
+            <v-divider></v-divider>
+            <v-card-text class="text-center pa-8">
+              <v-progress-circular
+                indeterminate
+                color="primary"
+                size="32"
+                class="mb-3"
+              ></v-progress-circular>
+              <div>Loading log viewer...</div>
+            </v-card-text>
+          </v-card>
+        </template>
+      </Suspense>
+
+      <!-- Disclaimer dialog -->
+      <DisclaimerDialog
+        v-if="!isDisclaimerAcknowledged"
+        @acknowledged="onDisclaimerAcknowledged"
+      />
+
+      <!-- Global Structured Data -->
+      <JsonLd :data="structuredData" />
+    </v-app>
   </ApiCacheProvider>
 </template>
 
@@ -68,8 +69,7 @@ import GlobalNotification from './components/GlobalNotification.vue';
 import DisclaimerDialog from './components/DisclaimerDialog.vue';
 import ApiCacheProvider from './components/ApiCacheProvider.vue';
 import JsonLd from './components/JsonLd.vue';
-import PreprintBanner from './components/PreprintBanner.vue';
-import useTour from '@/composables/useTour.js';
+import '@/assets/css/app.css';
 import { useDisclaimer } from '@/composables/useDisclaimer.js';
 import { useSeo } from '@/composables/useSeo.js';
 import { onMounted, ref, defineAsyncComponent, computed } from 'vue';
@@ -77,15 +77,17 @@ import { useUiStore } from '@/stores/uiStore';
 import { useSettingsStore } from '@/stores/settingsStore';
 import { useTheme } from 'vuetify';
 import { logService } from '@/services/logService';
-import { 
-  generateOrganizationSchema, 
-  generateWebApplicationSchema, 
+import {
+  generateOrganizationSchema,
+  generateWebApplicationSchema,
   generateSearchActionSchema,
-  combineSchemas 
+  combineSchemas,
 } from '@/utils/jsonLd';
 
 // Lazy load the LogViewer component for better initial loading performance
-const LogViewer = defineAsyncComponent(() => import('./components/LogViewer.vue'));
+const LogViewer = defineAsyncComponent(
+  () => import('./components/LogViewer.vue'),
+);
 
 export default {
   name: 'NCScorer',
@@ -97,28 +99,26 @@ export default {
     LogViewer,
     ApiCacheProvider,
     JsonLd,
-    PreprintBanner,
   },
   setup() {
-    const { startTour, shouldShowTour } = useTour();
     const { checkDisclaimerStatus } = useDisclaimer();
     const uiStore = useUiStore();
     const settingsStore = useSettingsStore();
     const theme = useTheme();
-    
+
     // Initialize SEO
     useSeo();
-    
+
     // Generate global structured data
     const structuredData = combineSchemas(
       generateOrganizationSchema(),
       generateWebApplicationSchema(),
-      generateSearchActionSchema()
+      generateSearchActionSchema(),
     );
-    
+
     const isDisclaimerAcknowledged = ref(checkDisclaimerStatus());
     const showLogViewer = computed(() => uiStore.showLogViewer);
-    
+
     const closeLogViewer = () => {
       uiStore.closeLogViewer();
     };
@@ -133,35 +133,12 @@ export default {
     onMounted(() => {
       // Set the initial theme from the persisted store state
       theme.global.name.value = settingsStore.isDarkMode ? 'dark' : 'light';
-      
+
       // Check if disclaimer has been acknowledged
       isDisclaimerAcknowledged.value = checkDisclaimerStatus();
-      
-      // Only show tour if disclaimer is acknowledged and tour should be shown
-      if (isDisclaimerAcknowledged.value && shouldShowTour()) {
-        // Delay tour start to ensure all components are mounted
-        setTimeout(() => {
-          startTour();
-        }, 1500);
-      }
-      
+
       // Create a single info log entry at app startup
       logService.info('Application initialized - NC-Scorer');
-
-      // Accessibility: ensure Vuetify tooltips rendered into overlay container have accessible names
-      if (typeof window !== 'undefined' && typeof MutationObserver !== 'undefined') {
-        const syncTooltipAccessibility = () => {
-          document.querySelectorAll('[role="tooltip"]:not([aria-label])').forEach((el) => {
-            const text = el.textContent?.trim();
-            if (text) {
-              el.setAttribute('aria-label', text);
-            }
-          });
-        };
-        syncTooltipAccessibility();
-        const tooltipObserver = new MutationObserver(syncTooltipAccessibility);
-        tooltipObserver.observe(document.body, { childList: true, subtree: true });
-      }
     });
 
     return {
@@ -169,7 +146,7 @@ export default {
       onDisclaimerAcknowledged,
       showLogViewer,
       closeLogViewer,
-      structuredData
+      structuredData,
     };
   },
 };

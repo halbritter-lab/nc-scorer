@@ -39,3 +39,6 @@ docs/.vitepress/temp
 
 # Git worktrees
 .worktrees/
+
+# Local design and browser audit artifacts
+.impeccable/

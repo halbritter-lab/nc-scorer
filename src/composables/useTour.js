@@ -1,11 +1,11 @@
 // src/composables/useTour.js
-import { ref, onMounted, onUnmounted } from 'vue';
-import Shepherd from 'shepherd.js';
-import 'shepherd.js/dist/css/shepherd.css';
+import { shallowRef, ref, onUnmounted } from 'vue';
 import { useSettingsStore } from '@/stores/settingsStore';
 
 export default function useTour() {
-  const tour = ref(null);
+  const tour = shallowRef(null);
+  let disposed = false;
+  let pendingStart = null;
   const isTourActive = ref(false);
   const settingsStore = useSettingsStore(); // Instantiate the store
 
@@ -19,7 +19,13 @@ export default function useTour() {
   };
 
   // Initialize Shepherd tour
-  const initTour = () => {
+  const initTour = async () => {
+    const [{ default: Shepherd }] = await Promise.all([
+      import('shepherd.js'),
+      import('shepherd.js/dist/css/shepherd.css'),
+      import('@/assets/css/shepherd-custom.css'),
+    ]);
+    if (disposed) return;
     // Create new tour instance if it doesn't exist
     if (!tour.value) {
       tour.value = new Shepherd.Tour({
@@ -36,6 +42,14 @@ export default function useTour() {
 
       // Define the tour steps
       defineTourSteps();
+      tour.value.on('cancel', () => {
+        isTourActive.value = false;
+        settingsStore.setTourStatus('skipped');
+      });
+      tour.value.on('complete', () => {
+        isTourActive.value = false;
+        settingsStore.setTourStatus('completed');
+      });
     }
   };
 
@@ -65,7 +79,7 @@ export default function useTour() {
     // App Logo step
     tour.value.addStep({
       id: 'app-logo',
-      text: "<h3>NC-Scorer Logo</h3><p>Click on the logo to navigate to the home page from anywhere in the application.</p><p>There's also a hidden easter egg message when you hover over it!</p>",
+      text: '<h3>NC-Scorer Logo</h3><p>Click on the logo to navigate to the home page from anywhere in the application.</p>',
       attachTo: {
         element: '.app-logo',
         on: 'bottom',
@@ -87,7 +101,7 @@ export default function useTour() {
       id: 'menu-items',
       text: '<h3>Navigation Menu</h3><p>These menu items help you navigate through different sections of the application:</p><ul><li>Genes - Browse all gene scores</li><li>Batch - Process multiple variants</li><li>Docs - View documentation</li></ul>',
       attachTo: {
-        element: '.menu-items',
+        element: '.header-actions',
         on: 'bottom',
       },
       buttons: [
@@ -107,7 +121,7 @@ export default function useTour() {
       id: 'cache-toggle',
       text: '<h3>API Cache Toggle</h3><p>Toggle API caching on/off with this button.</p><p>When enabled, repeated API calls use cached data for faster performance. When disabled, fresh data is fetched from the API each time.</p>',
       attachTo: {
-        element: '.v-btn .mdi-database-check, .v-btn .mdi-database-off',
+        element: '.header-actions',
         on: 'bottom',
       },
       buttons: [
@@ -166,12 +180,12 @@ export default function useTour() {
 
     // -- Search page input steps - only show if elements exist --
     // Variant input step
-    if (elementExists('.variant-input')) {
+    if (elementExists('#scoring-variant-input')) {
       tour.value.addStep({
         id: 'variant-input',
         text: '<h3>Enter a Variant</h3><p>Type a variant in either VCF or HGVS format here.</p><p>Example: <code>NM_033380.3:c.1871G>A</code></p>',
         attachTo: {
-          element: '.variant-input',
+          element: '#scoring-variant-input',
           on: 'bottom',
         },
         buttons: [
@@ -188,12 +202,12 @@ export default function useTour() {
     }
 
     // Inheritance pattern step
-    if (elementExists('.inheritance-select')) {
+    if (elementExists('#inheritance-pattern-select')) {
       tour.value.addStep({
         id: 'inheritance-pattern',
         text: '<h3>Inheritance Pattern</h3><p>Select the inheritance pattern for your variant (e.g., Denovo, Dominant, Recessive).</p><p>This affects how the variant is scored.</p>',
         attachTo: {
-          element: '.inheritance-select',
+          element: '#inheritance-pattern-select',
           on: 'bottom',
         },
         buttons: [
@@ -210,12 +224,12 @@ export default function useTour() {
     }
 
     // Segregation probability step
-    if (elementExists('.segregation-input')) {
+    if (elementExists('#segregation-probability-input')) {
       tour.value.addStep({
         id: 'segregation-probability',
         text: '<h3>Segregation Probability</h3><p>For family studies, enter the segregation probability value (0-1).</p><p>This field is not always required, depending on the inheritance pattern selected.</p>',
         attachTo: {
-          element: '.segregation-input',
+          element: '#segregation-probability-input',
           on: 'bottom',
         },
         buttons: [
@@ -232,12 +246,12 @@ export default function useTour() {
     }
 
     // Search button step
-    if (elementExists('.search-button')) {
+    if (elementExists('.scoring-search-card button[type="submit"]')) {
       tour.value.addStep({
         id: 'search-button',
-        text: "<h3>Start Your Search</h3><p>Once you've entered your variant details, click the Search button to analyze and score the variant.</p>",
+        text: "<h3>Start Your Search</h3><p>Once you've entered your variant details, click Calculate score to analyze and score the variant.</p>",
         attachTo: {
-          element: '.search-button',
+          element: '.scoring-search-card button[type="submit"]',
           on: 'bottom',
         },
         buttons: [
@@ -349,7 +363,7 @@ export default function useTour() {
       id: 'footer-links',
       text: '<h3>Additional Resources</h3><p>Find more information in these links:</p><ul><li>GitHub repository for the source code</li><li>Documentation for detailed usage guides</li><li>License information</li></ul>',
       attachTo: {
-        element: 'v-footer',
+        element: '.v-footer',
         on: 'top',
       },
       buttons: [
@@ -366,8 +380,12 @@ export default function useTour() {
   };
 
   // Start the tour
-  const startTour = () => {
-    if (tour.value) {
+  const startTour = async () => {
+    pendingStart ||= initTour().finally(() => {
+      pendingStart = null;
+    });
+    await pendingStart;
+    if (!disposed && tour.value) {
       // Re-initialize the tour to ensure steps match current page
       tour.value.steps = [];
       defineTourSteps();
@@ -400,26 +418,9 @@ export default function useTour() {
     startTour();
   };
 
-  // Check local storage and initialize on component mount
-  onMounted(() => {
-    initTour();
-
-    // Set up event listeners
-    if (tour.value) {
-      tour.value.on('cancel', () => {
-        isTourActive.value = false;
-        settingsStore.setTourStatus('skipped'); // Use store action
-      });
-
-      tour.value.on('complete', () => {
-        isTourActive.value = false;
-        settingsStore.setTourStatus('completed'); // Use store action
-      });
-    }
-  });
-
   // Clean up on component unmount
   onUnmounted(() => {
+    disposed = true;
     if (tour.value) {
       tour.value.cancel();
       tour.value = null;

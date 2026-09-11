@@ -34,6 +34,56 @@ describe('GeneCard Component (GeneCard.vue)', () => {
     vi.clearAllMocks();
   });
 
+  it('shows loaded gene evidence on one card surface', async () => {
+    fetchGeneDetails.mockResolvedValueOnce({ data: mockGeneData });
+    const wrapper = mountWithPlugins(GeneCard, {
+      props: { symbol: 'PKD1' },
+      global: { provide: { retryState: createMockRetryState() } },
+    });
+    await flushPromises();
+    expect(wrapper.text()).toContain('PKD1');
+    expect(wrapper.find('table').exists()).toBe(true);
+    expect(wrapper.findAll('.v-card .v-card')).toHaveLength(0);
+    wrapper.unmount();
+  });
+
+  it.each([undefined, null, NaN, '', ' ', 2])(
+    'reports missing or invalid gene score %s as unavailable',
+    async (score) => {
+      fetchGeneDetails.mockResolvedValueOnce({
+        data: { ...mockGeneData, ngs: score },
+      });
+      const wrapper = mountWithPlugins(GeneCard, {
+        props: { symbol: 'PKD1' },
+        global: { provide: { retryState: createMockRetryState() } },
+      });
+      await flushPromises();
+      expect(wrapper.emitted('gene-score-updated')?.at(-1)?.[0]).toEqual(
+        expect.objectContaining({
+          score: null,
+          symbol: 'PKD1',
+          error: expect.any(String),
+        }),
+      );
+      expect(wrapper.text()).toContain('Gene score is missing or invalid');
+      wrapper.unmount();
+    },
+  );
+
+  it('preserves a measured zero gene score', async () => {
+    fetchGeneDetails.mockResolvedValueOnce({
+      data: { ...mockGeneData, ngs: 0 },
+    });
+    const wrapper = mountWithPlugins(GeneCard, {
+      props: { symbol: 'PKD1' },
+      global: { provide: { retryState: createMockRetryState() } },
+    });
+    await flushPromises();
+    expect(wrapper.emitted('gene-score-updated').at(-1)[0].score).toBe(0);
+    expect(wrapper.text()).not.toContain('Gene score is missing or invalid');
+    wrapper.unmount();
+  });
+
   it('renders title and shows skeleton loader while loading', async () => {
     // Delay resolution to check loading state
     fetchGeneDetails.mockImplementation(() => new Promise(() => {}));
@@ -79,7 +129,7 @@ describe('GeneCard Component (GeneCard.vue)', () => {
         symbol: 'PKD1',
         score: 0.85,
         formattedData: expect.any(Object),
-      })
+      }),
     );
   });
 
@@ -118,6 +168,13 @@ describe('GeneCard Component (GeneCard.vue)', () => {
     await flushPromises();
 
     expect(wrapper.text()).toContain('Network failure');
+    expect(wrapper.emitted('gene-score-updated')?.at(-1)?.[0]).toEqual(
+      expect.objectContaining({
+        score: null,
+        symbol: 'PKD1',
+        error: 'Network failure',
+      }),
+    );
   });
 
   it('displays max retries message when attempts reach threshold', async () => {
@@ -137,6 +194,8 @@ describe('GeneCard Component (GeneCard.vue)', () => {
 
     await flushPromises();
 
-    expect(wrapper.text()).toContain('Failed to load gene data after multiple attempts');
+    expect(wrapper.text()).toContain(
+      'Failed to load gene data after multiple attempts',
+    );
   });
 });

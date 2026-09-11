@@ -30,10 +30,13 @@
     }
   },
   "overrides": {
-    "deepmerge-ts": "^8.0.0"
+    "deepmerge-ts": "^8.0.0",
+    "vitepress": {
+      "vite": "$vite"
+    }
   },
   "dependencies": {
-    "@mdi/font": "^7.4.47",
+    "@mdi/js": "^7.4.47",
     "@unhead/vue": "^2.1.17",
     "axios": "^1.18.0",
     "pinia": "^3.0.4",
@@ -68,6 +71,7 @@
     "husky": "^9.1.7",
     "lighthouse": "^12.8.2",
     "playwright": "^1.63.0",
+    "postcss": "^8.5.28",
     "prettier": "^3.5.3",
     "rollup-plugin-visualizer": "^5.14.0",
     "sass": "^1.86.3",

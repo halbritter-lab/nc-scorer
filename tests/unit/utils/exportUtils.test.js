@@ -19,6 +19,32 @@ describe('Export Utilities (exportUtils.js)', () => {
   });
 
   describe('generateCSV', () => {
+    it('escapes quotes and line breaks in headers and data', () => {
+      expect(generateCSV(['A"B', 'C\nD'], ['x"y', 'a\rb'])).toBe(
+        '"A""B","C\nD"\n"x""y","a\rb"',
+      );
+    });
+
+    it.each([
+      '=1+1',
+      '+SUM(1)',
+      '-2+3',
+      '@SUM(1)',
+      '  =1+1',
+      '\t=1+1',
+      '＝1+1',
+      '＋1+1',
+      '－1+1',
+      '＠SUM(1)',
+    ])('neutralizes spreadsheet formula text: %s', (value) => {
+      const csv = generateCSV(['Value'], [value]);
+      expect(csv.split('\n')[1]).toBe(`'${value}`);
+    });
+
+    it('keeps numeric negative values numeric', () => {
+      expect(generateCSV(['Value'], [-2])).toBe('Value\n-2');
+    });
+
     it('generates standard CSV with 1D row data', () => {
       const headers = ['Gene', 'Score', 'Inheritance'];
       const data = ['PKD1', 8.5, 'Dominant'];
@@ -45,7 +71,9 @@ describe('Export Utilities (exportUtils.js)', () => {
       const data = ['PKD1', 'chr16:2138714', 9.5];
 
       const csv = generateCSV(headers, data);
-      expect(csv).toBe('Gene Symbol,"Variant, Position",Combined Score\nPKD1,chr16:2138714,9.5');
+      expect(csv).toBe(
+        'Gene Symbol,"Variant, Position",Combined Score\nPKD1,chr16:2138714,9.5',
+      );
     });
 
     it('properly quotes data values containing commas', () => {
@@ -53,7 +81,9 @@ describe('Export Utilities (exportUtils.js)', () => {
       const data = ['PKD1', 'Polycystic kidney, hepatic cysts, hypertension'];
 
       const csv = generateCSV(headers, data);
-      expect(csv).toBe('Gene,Phenotypes\nPKD1,"Polycystic kidney, hepatic cysts, hypertension"');
+      expect(csv).toBe(
+        'Gene,Phenotypes\nPKD1,"Polycystic kidney, hepatic cysts, hypertension"',
+      );
     });
 
     it('substitutes null and undefined values with "NA"', () => {
@@ -73,7 +103,9 @@ describe('Export Utilities (exportUtils.js)', () => {
       ];
 
       const csv = generateCSV(headers, data);
-      expect(csv).toBe('ID,Desc,Value\n1,"Normal, typical",10\n2,NA,20\n3,NA,"A, B"');
+      expect(csv).toBe(
+        'ID,Desc,Value\n1,"Normal, typical",10\n2,NA,20\n3,NA,"A, B"',
+      );
     });
   });
 
@@ -137,7 +169,11 @@ describe('Export Utilities (exportUtils.js)', () => {
       expect(sheetData[0]).toEqual([
         { value: 'Gene', fontWeight: 'bold', backgroundColor: '#f5f5f5' },
         { value: 'Score', fontWeight: 'bold', backgroundColor: '#f5f5f5' },
-        { value: 'IsCandidate', fontWeight: 'bold', backgroundColor: '#f5f5f5' },
+        {
+          value: 'IsCandidate',
+          fontWeight: 'bold',
+          backgroundColor: '#f5f5f5',
+        },
         { value: 'Notes', fontWeight: 'bold', backgroundColor: '#f5f5f5' },
       ]);
 

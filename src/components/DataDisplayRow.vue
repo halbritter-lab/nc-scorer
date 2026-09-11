@@ -4,8 +4,10 @@
     :class="{
       'key-score-row': config.isKeyScore,
       'key-score-gene-row': config.isKeyScore && config.scoreType === 'gene',
-      'key-score-variant-row': config.isKeyScore && config.scoreType === 'variant',
-      'key-score-inheritance-row': config.isKeyScore && config.scoreType === 'inheritance',
+      'key-score-variant-row':
+        config.isKeyScore && config.scoreType === 'variant',
+      'key-score-inheritance-row':
+        config.isKeyScore && config.scoreType === 'inheritance',
     }"
   >
     <td class="info-col">
@@ -26,18 +28,21 @@
           'italic-font': config.font === 'italic',
           'bold-font': config.font === 'bold',
           'key-score-chip': config.isKeyScore,
-          'key-score-gene-chip': config.isKeyScore && config.scoreType === 'gene',
-          'key-score-variant-chip': config.isKeyScore && config.scoreType === 'variant',
-          'key-score-inheritance-chip': config.isKeyScore && config.scoreType === 'inheritance',
+          'key-score-gene-chip':
+            config.isKeyScore && config.scoreType === 'gene',
+          'key-score-variant-chip':
+            config.isKeyScore && config.scoreType === 'variant',
+          'key-score-inheritance-chip':
+            config.isKeyScore && config.scoreType === 'inheritance',
         }"
         :color="chipColor"
         :size="config.isKeyScore ? 'large' : 'small'"
         :elevation="config.isKeyScore ? 2 : 0"
       >
-        <a 
-          v-if="config.linkPattern && isValidLinkValue" 
-          :href="generatedLink" 
-          target="_blank" 
+        <a
+          v-if="config.linkPattern && isValidLinkValue"
+          :href="generatedLink"
+          target="_blank"
           rel="noopener noreferrer"
           class="link-no-decoration"
         >
@@ -46,12 +51,12 @@
         </a>
         <template v-else>{{ formattedValue }}</template>
       </v-chip>
-      
+
       <template v-else>
-        <a 
-          v-if="config.linkPattern && isValidLinkValue" 
-          :href="generatedLink" 
-          target="_blank" 
+        <a
+          v-if="config.linkPattern && isValidLinkValue"
+          :href="generatedLink"
+          target="_blank"
           rel="noopener noreferrer"
           class="external-link"
         >
@@ -87,6 +92,10 @@ export default {
       type: [String, Number, Boolean, Array, Object],
       default: null,
     },
+    linkValue: {
+      type: [String, Number],
+      default: undefined,
+    },
     /**
      * Optional override for the default NA display
      */
@@ -108,7 +117,7 @@ export default {
     const colorValue = computed(() => {
       return getColor(props.value, props.config);
     });
-    
+
     // Determine chip color based on score type and key score status
     const chipColor = computed(() => {
       if (props.config.isKeyScore) {
@@ -127,16 +136,18 @@ export default {
 
     // Generate an external link if link pattern is available
     const generatedLink = computed(() => {
-      if (!props.config.linkPattern || !props.value) return '';
-      return generateExternalLink(props.value, props.config.linkPattern);
+      const value = props.linkValue ?? props.value;
+      return generateExternalLink(value, props.config.linkPattern);
     });
-    
+
     // Check if we have a valid value for the link
     const isValidLinkValue = computed(() => {
-      return props.value !== null && 
-             props.value !== undefined && 
-             props.value !== '' &&
-             formattedValue.value !== 'NA';
+      return (
+        props.value !== null &&
+        props.value !== undefined &&
+        props.value !== '' &&
+        formattedValue.value !== 'NA'
+      );
     });
 
     return {
@@ -186,7 +197,6 @@ export default {
 /* General key score styling */
 .key-score-row {
   background-color: rgba(var(--v-theme-primary), 0.05);
-  border-left: 4px solid var(--v-theme-primary);
 }
 
 .key-score-chip {
@@ -198,16 +208,13 @@ export default {
 /* Score type specific styling */
 .key-score-gene-row {
   background-color: rgba(var(--v-theme-indigo), 0.05);
-  border-left: 4px solid var(--v-theme-indigo);
 }
 
 .key-score-variant-row {
   background-color: rgba(var(--v-theme-deep-purple), 0.05);
-  border-left: 4px solid var(--v-theme-deep-purple);
 }
 
 .key-score-inheritance-row {
   background-color: rgba(var(--v-theme-teal), 0.05);
-  border-left: 4px solid var(--v-theme-teal);
 }
 </style>

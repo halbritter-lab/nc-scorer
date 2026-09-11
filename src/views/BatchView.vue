@@ -1,26 +1,41 @@
 <template>
-  <ContentContainer>
-    <h1 class="text-h4 mb-4">Batch Variant Scoring</h1>
-    <v-card class="mb-6">
-      <v-card-title class="text-h6">
-        Variant Input & Settings
-      </v-card-title>
-      <v-card-text>
+  <ContentContainer class="batch-page">
+    <header class="page-header">
+      <div>
+        <h1 class="page-title">Batch variant scoring</h1>
+        <p>
+          Assess up to 200 variants together and download their scores and
+          evidence.
+        </p>
+      </div>
+    </header>
+    <v-card class="batch-input" variant="outlined">
+      <v-card-title tag="h2" class="section-heading"
+        >Variant input</v-card-title
+      >
+      <v-card-text class="section-body">
         <p class="mb-2">
-          Enter genetic variants, one per line. You can optionally provide inheritance and segregation data using tabs.
+          Enter genetic variants, one per line. You can optionally provide
+          inheritance and segregation data using tabs. Gene symbols alone cannot
+          be scored; provide a specific HGVS variant or
+          chromosome-position-reference-alternate coordinates.
         </p>
         <p class="text-caption mb-4">
-          Format: <code>Variant &lt;TAB&gt; Inheritance &lt;TAB&gt; Segregation</code>
-          <br>
-          If inheritance and segregation are omitted, they will default to 'Unknown' and '1'.
-          <br>
-          <strong>Note:</strong> Omitting segregation data for inheritance patterns that expect it may result in a penalty (20% score reduction).
+          Format:
+          <code>Variant &lt;TAB&gt; Inheritance &lt;TAB&gt; Segregation</code>
+          <br />
+          Omitted inheritance defaults to 'Unknown'; omitted segregation is
+          treated as missing.
+          <br />
+          <strong>Note:</strong> Omitting segregation data for inheritance
+          patterns that expect it may result in a penalty (20% score reduction).
         </p>
         <v-textarea
           v-model="variantsInput"
           label="Paste Variants (One per line)"
           rows="10"
-          placeholder="e.g., NM_004380.3:c.589G>T    Inherited dominant    0.95"
+          placeholder="NM_001009944.3:c.11935C>T"
+          variant="outlined"
           hint="Enter up to 200 variants."
           persistent-hint
           :disabled="isLoading"
@@ -29,7 +44,7 @@
 
         <div class="mb-4">
           <p class="text-subtitle-1 mb-2">Or use an example list:</p>
-          <div class="d-flex flex-wrap" style="gap: 8px;">
+          <div class="d-flex flex-wrap" style="gap: 8px">
             <v-btn
               v-for="example in exampleLists"
               :key="example.name"
@@ -38,14 +53,14 @@
               min-height="44"
               class="font-weight-medium"
               :title="example.description"
+              :disabled="isLoading"
             >
               {{ example.name }}
             </v-btn>
           </div>
         </div>
 
-        <div class="mb-4">
-          <p class="text-subtitle-1 mb-2">Genome Assembly:</p>
+        <div class="assembly-setting">
           <v-select
             v-model="assembly"
             :items="assemblyOptions"
@@ -53,132 +68,185 @@
             variant="outlined"
             density="comfortable"
             :disabled="isLoading"
-            class="mb-2"
-            style="max-width: 300px;"
+            class="assembly-select"
+            hide-details
           ></v-select>
           <p class="text-caption">
-            Select GRCh37 for variants with hg19 coordinates, or GRCh38 for hg38 coordinates.
+            Select GRCh37 for variants with hg19 coordinates, or GRCh38 for hg38
+            coordinates.
           </p>
         </div>
-        
-        <v-progress-linear v-if="isLoading" :model-value="progress" class="mb-4"></v-progress-linear>
 
-        <v-btn 
-          color="primary" 
-          :loading="isLoading" 
+        <p v-if="processingStatus" class="progress-label" role="status">
+          {{ processingStatus }} {{ batchResults.length }} of
+          {{ inputCount }} completed.
+        </p>
+        <v-progress-linear
+          v-if="isLoading"
+          :model-value="progress"
+          class="mb-4"
+        ></v-progress-linear>
+
+        <v-btn
+          color="primary"
+          :loading="isLoading"
           :disabled="!hasValidInput"
           @click="processVariants"
-          class="mb-4 font-weight-bold"
+          class="process-button"
+          variant="flat"
           min-height="44"
           min-width="160"
         >
           Process Variants
         </v-btn>
-        
-        <v-alert v-if="errorMsg" type="error" class="mt-4" closable @input="errorMsg = ''">
+        <v-btn
+          v-if="isLoading"
+          variant="outlined"
+          min-height="44"
+          class="cancel-button"
+          @click="cancelProcessing"
+          >Cancel processing</v-btn
+        >
+
+        <v-alert
+          v-if="errorMsg"
+          type="error"
+          class="mt-4"
+          closable
+          @input="errorMsg = ''"
+        >
           {{ errorMsg }}
         </v-alert>
       </v-card-text>
     </v-card>
 
     <!-- Interactive Results Table -->
-    <v-card v-if="batchResults.length > 0" class="mb-6">
-      <v-card-title class="d-flex justify-space-between align-center">
-        <span>Batch Results</span>
-        <div class="d-flex" style="gap: 8px;">
-          <v-btn color="secondary" @click="clearResults" variant="outlined" min-height="44" min-width="120">Clear Results</v-btn>
-          <v-menu>
-              <template v-slot:activator="{ props }">
-                <v-btn color="primary" v-bind="props" variant="flat" min-height="44" min-width="120" prepend-icon="mdi-download">
-                  Download
-                </v-btn>
-              </template>
-              <v-list density="compact">
-                <v-list-item @click="downloadResults('CSV')" title="Download as CSV" />
-                <v-list-item @click="downloadResults('TSV')" title="Download as TSV" />
-                <v-list-item @click="downloadResults('JSON')" title="Download as JSON" />
-                <v-list-item @click="downloadResults('VCF')" title="Download as VCF" />
-              </v-list>
-            </v-menu>
+    <v-card
+      v-if="batchResults.length > 0"
+      class="batch-results"
+      variant="outlined"
+    >
+      <div class="results-header">
+        <div>
+          <h2 class="section-heading">Batch Results</h2>
+          <p role="status" class="results-summary">
+            {{ successfulCount }} scored ·
+            {{ batchResults.length - successfulCount }} unavailable
+          </p>
         </div>
-      </v-card-title>
-      <v-card-text>
-        <v-text-field
-            v-model="tableSearch"
-            label="Filter Results"
-            prepend-inner-icon="mdi-magnify"
+        <div
+          class="results-actions"
+          role="group"
+          aria-label="Batch result actions"
+        >
+          <v-btn
+            color="primary"
+            @click="clearResults"
             variant="outlined"
-            density="compact"
-            hide-details
-            class="mb-4"
+            min-height="44"
+            min-width="120"
+            :disabled="isLoading"
+            >Clear Results</v-btn
+          >
+          <v-menu>
+            <template v-slot:activator="{ props }">
+              <v-btn
+                color="primary"
+                v-bind="props"
+                variant="flat"
+                min-height="44"
+                min-width="120"
+                prepend-icon="mdi-download"
+              >
+                Download
+              </v-btn>
+            </template>
+            <v-list density="compact">
+              <v-list-item
+                @click="downloadResults('CSV')"
+                title="Download as CSV"
+              />
+              <v-list-item
+                @click="downloadResults('TSV')"
+                title="Download as TSV"
+              />
+              <v-list-item
+                @click="downloadResults('JSON')"
+                title="Download as JSON"
+              />
+            </v-list>
+          </v-menu>
+        </div>
+      </div>
+      <v-card-text class="section-body">
+        <v-text-field
+          v-model="tableSearch"
+          label="Filter Results"
+          prepend-inner-icon="mdi-magnify"
+          variant="outlined"
+          density="compact"
+          hide-details
+          class="mb-4"
         ></v-text-field>
         <v-data-table
           :headers="tableHeaders"
           :items="batchResults"
           :search="tableSearch"
-          class="elevation-1"
+          class="results-table"
           density="compact"
           :items-per-page="10"
         >
           <template #[`item.geneSymbol`]="{ item }">
-            <router-link v-if="item.geneSymbol !== 'N/A'" :to="{ name: 'GeneView', params: { symbol: item.geneSymbol } }">
+            <router-link
+              v-if="item.geneSymbol !== 'N/A'"
+              :to="{ name: 'GeneView', params: { symbol: item.geneSymbol } }"
+            >
               {{ item.geneSymbol }}
             </router-link>
-            <span v-else class="text-grey">N/A</span>
+            <span v-else>N/A</span>
           </template>
           <template #[`item.ncs`]="{ item }">
-            <v-chip 
-              v-if="item.ncs !== 'N/A'" 
-              :color="getScoreColor(item.ncs, 'ncs')" 
-              size="small"
+            <strong
+              v-if="item.ncs !== 'N/A'"
+              class="score-value"
               :title="`NCS Score: ${item.ncs}`"
             >
               {{ item.ncs }}
-            </v-chip>
-            <span v-else class="text-grey">N/A</span>
+            </strong>
+            <span v-else>N/A</span>
           </template>
           <template #[`item.geneScore`]="{ item }">
-            <v-chip 
-              v-if="item.geneScore !== 'N/A'" 
-              :color="getScoreColor(item.geneScore, 'gene')" 
-              size="small"
-              variant="tonal"
+            <span
+              v-if="item.geneScore !== 'N/A'"
+              class="score-value"
               :title="`Gene Score: ${item.geneScore}`"
             >
               {{ formatScore(item.geneScore) }}
-            </v-chip>
-            <span v-else class="text-grey">N/A</span>
+            </span>
+            <span v-else>N/A</span>
           </template>
           <template #[`item.variantScore`]="{ item }">
-            <v-chip 
-              v-if="item.variantScore !== 'N/A'" 
-              :color="getScoreColor(item.variantScore, 'variant')" 
-              size="small"
-              variant="tonal"
+            <span
+              v-if="item.variantScore !== 'N/A'"
+              class="score-value"
               :title="`Variant Score: ${item.variantScore}`"
             >
               {{ formatScore(item.variantScore) }}
-            </v-chip>
-            <span v-else class="text-grey">N/A</span>
+            </span>
+            <span v-else>N/A</span>
           </template>
           <template #[`item.inheritanceScore`]="{ item }">
-            <v-chip 
-              v-if="item.inheritanceScore !== 'N/A'" 
-              :color="getScoreColor(item.inheritanceScore, 'inheritance')" 
-              size="small"
-              variant="tonal"
+            <span
+              v-if="item.inheritanceScore !== 'N/A'"
+              class="score-value"
               :title="`Inheritance Score: ${item.inheritanceScore}`"
             >
               {{ formatScore(item.inheritanceScore) }}
-            </v-chip>
-            <span v-else class="text-grey">N/A</span>
+            </span>
+            <span v-else>N/A</span>
           </template>
           <template #[`item.error`]="{ item }">
-            <v-tooltip v-if="item.error" :text="item.error">
-              <template #activator="{ props }">
-                <v-icon v-bind="props" color="error">mdi-alert-circle</v-icon>
-              </template>
-            </v-tooltip>
+            <p v-if="item.error" class="row-error">{{ item.error }}</p>
           </template>
         </v-data-table>
       </v-card-text>
@@ -187,16 +255,20 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onBeforeUnmount } from 'vue';
 import ContentContainer from '@/components/ContentContainer.vue';
 import { queryVariant } from '@/api/variantApi.js';
 import { fetchGeneDetails } from '@/api/geneApi.js';
 import { getPrioritizedGeneSymbol } from '@/utils/geneSymbolUtils.js';
-import { downloadFile } from '@/utils/exportUtils.js';
+import { downloadFile, generateCSV } from '@/utils/exportUtils.js';
 import { logService } from '@/services/logService.js';
 import { exampleLists } from '@/config/batchViewConfig.js';
-import { calculateInheritanceScore, calculateNCS } from '@/utils/scoringUtils.js';
-import { scoreInterpretationConfig } from '@/config/scoreInterpretationConfig.js';
+import {
+  calculateInheritanceScore,
+  calculateNCS,
+  parseUnitScore,
+} from '@/utils/scoringUtils.js';
+import { normalizeVariant, validateVariant } from '@/utils/validationUtils.js';
 
 const MAX_VARIANTS = 200;
 
@@ -208,6 +280,15 @@ const errorMsg = ref('');
 const progress = ref(0);
 const batchResults = ref([]);
 const tableSearch = ref('');
+const processingStatus = ref('');
+const inputCount = computed(
+  () => variantsInput.value.split('\n').filter((line) => line.trim()).length,
+);
+const successfulCount = computed(
+  () => batchResults.value.filter((row) => row.ncs !== 'N/A').length,
+);
+let activeRun = 0;
+onBeforeUnmount(clearResults);
 
 // Assembly options for selection
 const assemblyOptions = [
@@ -227,14 +308,18 @@ const tableHeaders = [
 ];
 
 const hasValidInput = computed(() => {
-  const lines = variantsInput.value.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+  const lines = variantsInput.value
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0);
   return lines.length > 0 && lines.length <= MAX_VARIANTS;
 });
 
 function prefillTextArea(variants) {
   if (Array.isArray(variants)) {
     variantsInput.value = variants.join('\n');
-    const example = exampleLists.find(e => e.variants === variants);
+    const example = exampleLists.find((e) => e.variants === variants);
+    if (example?.assembly) assembly.value = example.assembly;
     logService.info(`Prefilled batch input with "${example?.name}" example.`);
   }
 }
@@ -249,10 +334,17 @@ function parseInputLine(line) {
 }
 
 async function processVariants() {
+  if (isLoading.value) return;
   clearResults();
+  const run = activeRun;
+  const selectedAssembly = assembly.value;
+  const geneResults = new Map();
   isLoading.value = true;
 
-  const lines = variantsInput.value.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+  const lines = variantsInput.value
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0);
   if (lines.length > MAX_VARIANTS) {
     errorMsg.value = `Maximum ${MAX_VARIANTS} variants allowed. You entered ${lines.length}.`;
     isLoading.value = false;
@@ -261,204 +353,325 @@ async function processVariants() {
 
   // Process variants sequentially to avoid reactivity issues
   for (let i = 0; i < lines.length; i++) {
-    await processSingleVariant(lines[i], i, lines.length);
+    if (run !== activeRun) return;
+    await processSingleVariant(
+      lines[i],
+      i,
+      lines.length,
+      run,
+      selectedAssembly,
+      geneResults,
+    );
   }
 
-  isLoading.value = false;
+  if (run === activeRun) {
+    isLoading.value = false;
+    processingStatus.value = 'Processing complete.';
+  }
 }
 
-async function processSingleVariant(line, index, total) {
-    const { variant, inheritance, segregation } = parseInputLine(line);
-    const resultRow = {
-      variant, inheritance, segregation,
-      variantScore: 'N/A', geneSymbol: 'N/A', geneScore: 'N/A',
-      inheritanceScore: 'N/A', ncs: 'N/A', error: '',
-    };
+function parseApiScore(value, name) {
+  const score = parseUnitScore(value);
+  if (score === null) {
+    throw new Error(
+      `Missing or invalid ${name} score. Try processing this variant again; a measured score between 0 and 1 is required.`,
+    );
+  }
+  return score;
+}
 
-    try {
-      logService.info(`Processing variant ${index + 1}/${total}: "${variant}"`);
-      
-      // Call queryVariant with batch-specific options
-      const variantResult = await queryVariant(variant, { 
-        skipCache: true, 
-        assembly: assembly.value 
-      });
-      
-      logService.debug('Raw variant result:', variantResult);
-      
-      // Handle the response data structure
-      let responseData = variantResult.data;
-      
-      // Handle case where response.data might be an array
-      if (Array.isArray(responseData)) {
-        logService.debug('Response data is an array, taking first item');
-        responseData = responseData[0];
-      }
-      
-      if (!responseData) {
-        throw new Error('No response data returned from variant API');
-      }
-      
-      // Ensure we have annotationData array structure
-      if (!responseData.annotationData) {
-        logService.debug('No annotationData found in response, restructuring...');
-        // If the response itself looks like annotation data, wrap it
-        if (responseData.most_severe_consequence || responseData.gene_symbol) {
-          responseData = { annotationData: [responseData] };
-        } else {
-          responseData = { annotationData: [] };
-        }
-      }
-      
-      // Extract annotation from the first item in annotationData
-      const annotation = responseData.annotationData?.[0];
-      if (!annotation) {
-        throw new Error('No annotation data found in response');
-      }
-      
-      logService.debug('Extracted annotation:', annotation);
-      
-      // Extract variant score
-      resultRow.variantScore = annotation.nephro_variant_score ?? 0;
-      logService.debug(`Variant score: ${resultRow.variantScore}`);
-      
-      // Extract gene symbol using prioritization logic
-      resultRow.geneSymbol = getPrioritizedGeneSymbol(annotation) || 'N/A';
-      logService.debug(`Gene symbol: ${resultRow.geneSymbol}`);
+async function processSingleVariant(
+  line,
+  index,
+  total,
+  run,
+  selectedAssembly,
+  geneResults,
+) {
+  const { variant, inheritance, segregation } = parseInputLine(line);
+  const resultRow = {
+    variant,
+    inheritance,
+    segregation,
+    variantScore: 'N/A',
+    geneSymbol: 'N/A',
+    geneScore: 'N/A',
+    inheritanceScore: 'N/A',
+    ncs: 'N/A',
+    error: '',
+  };
 
-      // Get gene score if we have a valid gene symbol
-      if (resultRow.geneSymbol !== 'N/A') {
-        logService.debug(`Fetching gene details for: ${resultRow.geneSymbol}`);
-        const geneResult = await fetchGeneDetails(resultRow.geneSymbol, { skipCache: true });
-        logService.debug('Gene result:', geneResult);
-        resultRow.geneScore = geneResult.data?.ngs ?? 0;
-        logService.debug(`Gene score: ${resultRow.geneScore}`);
-      }
-
-      // Calculate inheritance score
-      resultRow.inheritanceScore = calculateInheritanceScore(inheritance, segregation);
-      logService.debug(`Inheritance score: ${resultRow.inheritanceScore}`);
-      
-      // Calculate final NCS score
-      if (resultRow.geneScore !== 'N/A' && resultRow.variantScore !== 'N/A') {
-        resultRow.ncs = calculateNCS(resultRow.geneScore, resultRow.variantScore, resultRow.inheritanceScore).toFixed(3);
-        logService.debug(`Final NCS: ${resultRow.ncs}`);
-      }
-      
-      logService.info(`Successfully processed variant "${variant}" - NCS: ${resultRow.ncs}`);
-      
-    } catch (e) {
-      logService.error(`Failed to process variant "${variant}":`, e);
-      resultRow.error = e.message || 'Unknown processing error';
+  try {
+    const normalizedVariant = normalizeVariant(variant);
+    if (/^[A-Za-z][A-Za-z0-9]*$/.test(variant)) {
+      throw new Error(
+        'Gene symbols alone cannot be scored. Enter a specific HGVS variant or chromosome-position-reference-alternate coordinates.',
+      );
     }
-    
-    // Add to results and update progress
-    batchResults.value.push(resultRow);
-    progress.value = ((index + 1) / total) * 100;
-}
+    const validation = validateVariant(normalizedVariant);
+    if (validation !== true) throw new Error(validation);
+    logService.info(`Processing variant ${index + 1}/${total}: "${variant}"`);
+    processingStatus.value = `Annotating ${variant}.`;
 
+    // Call queryVariant with batch-specific options
+    const variantResult = await queryVariant(normalizedVariant, {
+      skipCache: true,
+      assembly: selectedAssembly,
+    });
+    if (run !== activeRun) return;
+
+    logService.debug('Raw variant result:', variantResult);
+
+    // Handle the response data structure
+    let responseData = variantResult.data;
+
+    // Handle case where response.data might be an array
+    if (Array.isArray(responseData)) {
+      logService.debug('Response data is an array, taking first item');
+      responseData = responseData[0];
+    }
+
+    if (!responseData) {
+      throw new Error('No response data returned from variant API');
+    }
+
+    // Ensure we have annotationData array structure
+    if (!responseData.annotationData) {
+      logService.debug('No annotationData found in response, restructuring...');
+      // If the response itself looks like annotation data, wrap it
+      if (responseData.most_severe_consequence || responseData.gene_symbol) {
+        responseData = { annotationData: [responseData] };
+      } else {
+        responseData = { annotationData: [] };
+      }
+    }
+
+    // Extract annotation from the first item in annotationData
+    const annotation = responseData.annotationData?.[0];
+    if (!annotation) {
+      throw new Error('No annotation data found in response');
+    }
+
+    logService.debug('Extracted annotation:', annotation);
+
+    // Extract variant score
+    resultRow.variantScore = parseApiScore(
+      annotation.nephro_variant_score,
+      'variant',
+    );
+    logService.debug(`Variant score: ${resultRow.variantScore}`);
+
+    // Extract gene symbol using prioritization logic
+    resultRow.geneSymbol = getPrioritizedGeneSymbol(annotation) || 'N/A';
+    logService.debug(`Gene symbol: ${resultRow.geneSymbol}`);
+
+    // Get gene score if we have a valid gene symbol
+    if (resultRow.geneSymbol !== 'N/A') {
+      processingStatus.value = `Loading gene evidence for ${resultRow.geneSymbol} (${variant}).`;
+      logService.debug(`Fetching gene details for: ${resultRow.geneSymbol}`);
+      let geneResult = geneResults.get(resultRow.geneSymbol);
+      if (!geneResult) {
+        geneResult = await fetchGeneDetails(resultRow.geneSymbol, {
+          skipCache: true,
+        });
+        geneResults.set(resultRow.geneSymbol, geneResult);
+      }
+      if (run !== activeRun) return;
+      resultRow.geneScore = parseApiScore(geneResult?.data?.ngs, 'gene');
+      logService.debug('Gene result:', geneResult);
+      logService.debug(`Gene score: ${resultRow.geneScore}`);
+    } else {
+      throw new Error(
+        'No gene could be resolved. Check the variant and genome assembly before processing again.',
+      );
+    }
+
+    // Calculate inheritance score
+    resultRow.inheritanceScore = calculateInheritanceScore(
+      inheritance,
+      segregation,
+    );
+    logService.debug(`Inheritance score: ${resultRow.inheritanceScore}`);
+
+    // Calculate final NCS score
+    if (resultRow.geneScore !== 'N/A' && resultRow.variantScore !== 'N/A') {
+      resultRow.ncs = calculateNCS(
+        resultRow.geneScore,
+        resultRow.variantScore,
+        resultRow.inheritanceScore,
+      ).toFixed(3);
+      logService.debug(`Final NCS: ${resultRow.ncs}`);
+    }
+
+    logService.info(
+      `Successfully processed variant "${variant}" - NCS: ${resultRow.ncs}`,
+    );
+  } catch (e) {
+    logService.error(`Failed to process variant "${variant}":`, e);
+    const serviceError = e.response?.data?.error;
+    resultRow.error =
+      typeof serviceError === 'string'
+        ? serviceError
+        : e.message || 'Unknown processing error';
+  }
+
+  // Add to results and update progress
+  if (run !== activeRun) return;
+  batchResults.value.push(resultRow);
+  progress.value = ((index + 1) / total) * 100;
+}
 
 function downloadResults(format) {
-  const headers = tableHeaders.filter(h => h.key !== 'error').map(h => h.title);
-  const data = batchResults.value.map(row => [
-    row.variant, row.geneSymbol, row.ncs, row.geneScore,
-    row.variantScore, row.inheritanceScore,
+  if (!['CSV', 'TSV', 'JSON'].includes(format)) {
+    errorMsg.value = 'Unsupported export format. Use CSV, TSV, or JSON.';
+    return;
+  }
+  const headers = tableHeaders.map((h) => h.title);
+  const data = batchResults.value.map((row) => [
+    row.variant,
+    row.geneSymbol,
+    row.ncs,
+    row.geneScore,
+    row.variantScore,
+    row.inheritanceScore,
+    row.error,
   ]);
-  
+
   const mimeType = {
     CSV: 'text/csv',
     TSV: 'text/tab-separated-values',
     JSON: 'application/json',
-    VCF: 'text/x-vcard'
   }[format];
-  
+
   const extension = format.toLowerCase();
   const filename = `nc_scorer_batch_results_${new Date().toISOString().split('T')[0]}.${extension}`;
-  
+
   if (format === 'JSON') {
-    downloadFile(JSON.stringify(batchResults.value, null, 2), filename, mimeType);
-  } else if (format === 'VCF') {
-    // Generate VCF format with scoring information in INFO field
-    const vcfHeader = [
-      '##fileformat=VCFv4.2',
-      `##fileDate=${new Date().toISOString().split('T')[0].replace(/-/g, '')}`,
-      '##source=NC-Scorer_BatchProcessing',
-      '##INFO=<ID=NCS,Number=1,Type=Float,Description="Nephro Candidate Score">',
-      '##INFO=<ID=VS,Number=1,Type=Float,Description="Variant Score">',
-      '##INFO=<ID=GS,Number=1,Type=Float,Description="Gene Score">',
-      '##INFO=<ID=INH,Number=1,Type=String,Description="Inheritance Pattern">',
-      '##INFO=<ID=GENE,Number=1,Type=String,Description="Gene Symbol">',
-      '#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO'
-    ];
-    
-    const vcfLines = batchResults.value
-      .filter(row => row.variant && row.ncs !== 'N/A')
-      .map(row => {
-        // Parse basic variant info (this is simplified - real implementation would need more robust parsing)
-        const variantParts = row.variant.split(':');
-        const chrom = variantParts[0] || '.';
-        const pos = '1'; // Simplified - would need proper coordinate parsing
-        const id = '.';
-        const ref = '.';
-        const alt = '.';
-        const qual = '.';
-        const filter = 'PASS';
-        const info = [
-          `NCS=${row.ncs}`,
-          `VS=${row.variantScore}`,
-          `GS=${row.geneScore}`,
-          `INH=${row.inheritance}`,
-          `GENE=${row.geneSymbol}`
-        ].join(';');
-        
-        return `${chrom}\t${pos}\t${id}\t${ref}\t${alt}\t${qual}\t${filter}\t${info}`;
-      });
-    
-    const vcfContent = [...vcfHeader, ...vcfLines].join('\n');
-    downloadFile(vcfContent, filename, mimeType);
+    downloadFile(
+      JSON.stringify(batchResults.value, null, 2),
+      filename,
+      mimeType,
+    );
   } else {
     const delimiter = format === 'CSV' ? ',' : '\t';
-    const content = [headers.join(delimiter), ...data.map(row => row.join(delimiter))].join('\n');
+    const content = generateCSV(headers, data, delimiter);
     downloadFile(content, filename, mimeType);
   }
 }
 
 function clearResults() {
+  activeRun += 1;
+  isLoading.value = false;
   batchResults.value = [];
   progress.value = 0;
   errorMsg.value = '';
+  processingStatus.value = '';
 }
 
-function getScoreColor(score, scoreType = 'ncs') {
-  const numericScore = parseFloat(score);
-  if (isNaN(numericScore)) return 'grey';
-  
-  // For NCS (combined) scores, use the standard interpretation ranges
-  if (scoreType === 'ncs') {
-    const ranges = scoreInterpretationConfig.ranges;
-    if (numericScore >= ranges[2].min) return 'error';      // High (7-10): Red
-    if (numericScore >= ranges[1].min) return 'warning';    // Moderate (3-7): Orange
-    return 'grey';                                          // Low (0-3): Grey
-  }
-  
-  // For sub-scores, use theme colors consistent with ScoringView
-  switch (scoreType) {
-    case 'gene':
-      return 'indigo';           // Blue-based for gene scores
-    case 'variant':
-      return 'deep-purple';      // Purple-based for variant scores  
-    case 'inheritance':
-      return 'teal';             // Teal-based for inheritance scores
-    default:
-      return 'grey';
-  }
+function cancelProcessing() {
+  activeRun += 1;
+  isLoading.value = false;
+  processingStatus.value = 'Processing cancelled.';
 }
 
 function formatScore(score) {
   const numericScore = parseFloat(score);
   if (isNaN(numericScore)) return 'N/A';
-  
+
   // Format to 2 decimal places, removing trailing zeros
   return numericScore.toFixed(2).replace(/\.?0+$/, '');
 }
 </script>
+
+<style scoped>
+.batch-input,
+.batch-results {
+  border-color: rgba(var(--v-border-color), var(--v-border-opacity));
+  margin-top: 24px;
+}
+.section-heading {
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.5;
+  padding: 20px 24px 12px;
+}
+.section-body {
+  padding: 0 24px 24px;
+}
+.section-body > p {
+  max-width: 75ch;
+  line-height: 1.6;
+}
+.assembly-setting {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+  margin-bottom: 24px;
+}
+.assembly-select {
+  flex: 0 1 300px;
+  min-width: 230px;
+}
+.assembly-setting p {
+  max-width: 50ch;
+  line-height: 1.6;
+}
+.results-header {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 24px;
+}
+.results-header .section-heading {
+  padding: 0;
+}
+.results-summary {
+  margin-top: 4px;
+  font-size: 0.875rem;
+}
+.results-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.batch-page :deep(.v-btn) {
+  letter-spacing: normal;
+  text-transform: none;
+}
+.score-value {
+  color: rgb(var(--v-theme-on-surface));
+  font-variant-numeric: tabular-nums;
+}
+.row-error {
+  min-width: 220px;
+  max-width: 50ch;
+  padding: 12px 0;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.results-table :deep(th) {
+  white-space: nowrap;
+}
+.progress-label {
+  margin-bottom: 8px;
+  overflow-wrap: anywhere;
+}
+.cancel-button {
+  margin-left: 12px;
+}
+@media (max-width: 600px) {
+  .section-heading,
+  .results-header {
+    padding: 16px;
+  }
+  .section-body {
+    padding: 0 16px 16px;
+  }
+  .assembly-select {
+    flex-basis: 100%;
+  }
+}
+</style>

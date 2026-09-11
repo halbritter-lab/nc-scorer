@@ -1,15 +1,20 @@
 // src/api/variantApi.js
-// Import variant-linker with proper compatibility for Vite
-import variantLinker from 'variant-linker';
+import { toValue } from 'vue';
 import { retryWithBackoff } from '@/utils/retry.js';
 import { useNotifications } from '@/composables/useNotifications';
 import { coordinateCache } from '@/services/coordinateCache.js';
 import { fetchGeneDetails } from '@/api/geneApi.js';
+import {
+  normalizeAssembly,
+  UNSUPPORTED_ASSEMBLY_MESSAGE,
+} from '@/utils/assemblyUtils.js';
 
 // NOTE: Base URL is now set dynamically in each queryVariant call
 // This allows for genome assembly selection (GRCh37 vs GRCh38)
 import variableAssignmentConfig from '@/config/scoring/nephro_variant_score/variable_assignment_config.json';
 import formulaConfig from '@/config/scoring/nephro_variant_score/formula_config.json';
+
+let variantLinkerModule;
 
 /**
  * Query variant-linker to analyze a genetic variant.
@@ -40,8 +45,12 @@ export async function queryVariant(variantInput, options = {}) {
     assembly = 'GRCh38', // Default to GRCh38
     onRetry = null, // Add callback for retry events
     onSuccess = null, // Add callback for success after retries
+    retryState,
     apiCache = null, // Optional API cache instance
   } = options;
+
+  assembly = normalizeAssembly(assembly);
+  if (!assembly) throw new Error(UNSUPPORTED_ASSEMBLY_MESSAGE);
 
   // Initialize notifications system (with fallback for non-component context)
   let notifyRetry, notifySuccess;
@@ -51,53 +60,59 @@ export async function queryVariant(variantInput, options = {}) {
     notifySuccess = notifications.notifySuccess;
   } catch (error) {
     // If we're not in a component context, use console logging instead
-    console.debug('variantApi: Running outside component context, notifications disabled', error.message);
-    notifyRetry = (text, attempt, errorMsg) => console.debug(`Retry ${attempt} for ${text}: ${errorMsg}`);
+    console.debug(
+      'variantApi: Running outside component context, notifications disabled',
+      error.message,
+    );
+    notifyRetry = (text, attempt, errorMsg) =>
+      console.debug(`Retry ${attempt} for ${text}: ${errorMsg}`);
     notifySuccess = (message) => console.debug(`Success: ${message}`);
   }
-  
+
   // **Dynamic URL Configuration based on assembly selection**
-  const isLocalOrDev = import.meta.env.DEV || (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'));
+  const isLocalOrDev =
+    import.meta.env.DEV ||
+    (typeof window !== 'undefined' &&
+      (window.location.hostname === 'localhost' ||
+        window.location.hostname === '127.0.0.1'));
   let baseUrl;
 
   if (isLocalOrDev) {
     baseUrl = assembly === 'GRCh37' ? '/ensembl_grch37' : '/ensembl';
   } else {
-    baseUrl = assembly === 'GRCh37'
-      ? 'https://grch37.rest.ensembl.org'
-      : 'https://rest.ensembl.org';
+    baseUrl =
+      assembly === 'GRCh37'
+        ? 'https://grch37.rest.ensembl.org'
+        : 'https://rest.ensembl.org';
   }
 
-  // Set the base URL dynamically for this request
-  if (variantLinker.config && typeof variantLinker.config.setBaseUrl === 'function') {
-    variantLinker.config.setBaseUrl(baseUrl);
-    console.log(`variantApi: Set Ensembl base URL to ${baseUrl} for assembly ${assembly}`);
-  }
-  
+  // The Vite adapter consumes this internal option before serializing the query.
+  // Keep routing local to each analysis, including overlapping assembly requests.
+  const requestRecoderOptions = {
+    ...recoderOptions,
+    __ncEnsemblBaseUrl: baseUrl,
+  };
+  const requestVepOptions = { ...vepOptions, __ncEnsemblBaseUrl: baseUrl };
+
   // Determine if this is a batch request
   const isBatchRequest = Array.isArray(variantInput);
 
   // For batch requests, disable cache for simplicity
-  if (isBatchRequest) {
+  if (isBatchRequest || toValue(apiCache?.cacheEnabled) === false) {
     skipCache = true;
   }
-  
+
   // Normalize variant ID to use as cache key (only for single variant requests)
   const normalizedInput = isBatchRequest ? null : variantInput.trim();
 
   // Check coordinate cache for accelerated HGVS-to-VCF translation
   let queryInput = normalizedInput;
   let isAccelerated = false;
-  if (!isBatchRequest && normalizedInput) {
+  if (!skipCache && !isBatchRequest && normalizedInput) {
     const cachedVcf = coordinateCache.getVcf(normalizedInput, assembly);
     if (cachedVcf) {
       queryInput = cachedVcf;
       isAccelerated = true;
-      // Speculatively warm cache for gene details if gene symbol is known
-      const prefetchGene = coordinateCache.getGeneSymbol(normalizedInput, assembly);
-      if (prefetchGene && apiCache) {
-        fetchGeneDetails(prefetchGene, { apiCache }).catch(() => {});
-      }
     }
   }
 
@@ -113,36 +128,49 @@ export async function queryVariant(variantInput, options = {}) {
   // Initialize cache key and cached result (only for single variant requests)
   let cacheKey = null;
   let cachedResult = null;
-  
-  // Only attempt to use cache if not explicitly skipping and not a batch request  
+
+  // Only attempt to use cache if not explicitly skipping and not a batch request
   // Check cache first if we have a valid apiCache instance
   if (!skipCache && !isBatchRequest && apiCache) {
     // Generate cache key and check for cached result
-    cacheKey = apiCache.generateCacheKey('variant', normalizedInput, cacheParams);
+    cacheKey = apiCache.generateCacheKey(
+      'variant',
+      normalizedInput,
+      cacheParams,
+    );
     cachedResult = apiCache.getCachedItem(cacheKey);
-    
+
     if (cachedResult) {
       return cachedResult; // Returns {data, source} object
     }
-
-    // Also check if VCF equivalent is cached
-    if (isAccelerated && queryInput !== normalizedInput) {
-      const vcfCacheKey = apiCache.generateCacheKey('variant', queryInput, cacheParams);
-      const vcfCachedResult = apiCache.getCachedItem(vcfCacheKey);
-      if (vcfCachedResult) {
-        return vcfCachedResult;
-      }
-    }
   }
 
+  // Prefetch only on an annotation cache miss and when caching is enabled.
+  if (!skipCache && isAccelerated && apiCache) {
+    const prefetchGene = coordinateCache.getGeneSymbol(
+      normalizedInput,
+      assembly,
+    );
+    if (prefetchGene)
+      fetchGeneDetails(prefetchGene, { apiCache }).catch(() => {});
+  }
+
+  // Load the analysis engine only when an uncached variant is analyzed.
+  variantLinkerModule ||= import('variant-linker').catch((error) => {
+    variantLinkerModule = null;
+    throw error;
+  });
+  const { default: variantLinker } = await variantLinkerModule;
   if (typeof variantLinker.analyzeVariant !== 'function') {
-    throw new Error('analyzeVariant is not a function. Check the variant-linker module exports.');
+    throw new Error(
+      'analyzeVariant is not a function. Check the variant-linker module exports.',
+    );
   }
 
   // Parse the scoring configuration using the provided scoring config JSON files.
   const scoringConfig = variantLinker.scoring.parseScoringConfig(
     variableAssignmentConfig,
-    formulaConfig
+    formulaConfig,
   );
 
   return retryWithBackoff(
@@ -153,8 +181,8 @@ export async function queryVariant(variantInput, options = {}) {
         // For batch requests, use the variants parameter
         result = await variantLinker.analyzeVariant({
           variants: variantInput, // Pass the array of variants
-          recoderOptions,
-          vepOptions,
+          recoderOptions: requestRecoderOptions,
+          vepOptions: requestVepOptions,
           scoringConfig,
           cache: false,
           output,
@@ -164,15 +192,15 @@ export async function queryVariant(variantInput, options = {}) {
         // For single variant requests
         result = await variantLinker.analyzeVariant({
           variant: queryInput,
-          recoderOptions,
-          vepOptions,
+          recoderOptions: requestRecoderOptions,
+          vepOptions: requestVepOptions,
           scoringConfig,
           cache: false,
           output,
           filter,
         });
       }
-      
+
       // Store successful result in cache and get response with source info (only for single variants)
       if (result && !isBatchRequest) {
         // If accelerated from HGVS to VCF, attach original notation metadata
@@ -191,14 +219,35 @@ export async function queryVariant(variantInput, options = {}) {
         // Extract resolved genomic coordinates and gene symbol to warm coordinate cache
         const topItem = Array.isArray(result) ? result[0] : result;
         const anno = topItem?.annotationData?.[0];
-        const vcfKey = topItem?.variantKey || anno?.variantKey || (isAccelerated ? queryInput : null);
-        let rawGene = anno?.gene_symbol || topItem?.geneSymbol || topItem?.gene_symbol || null;
+        const vcfKey =
+          topItem?.variantKey ||
+          anno?.variantKey ||
+          (isAccelerated ? queryInput : null);
+        let rawGene =
+          anno?.gene_symbol ||
+          topItem?.geneSymbol ||
+          topItem?.gene_symbol ||
+          null;
         if (Array.isArray(rawGene)) {
           rawGene = rawGene[0];
         }
         const geneSymbol = typeof rawGene === 'string' ? rawGene.trim() : null;
 
-        if (vcfKey) {
+        const resolvedKeys = new Set(
+          (Array.isArray(result) ? result : [result])
+            .flatMap((item) => item?.annotationData || [])
+            .map((annotation) => annotation?.variantKey)
+            .filter(Boolean),
+        );
+        const hasSingleResolution =
+          (!Array.isArray(result) || result.length === 1) &&
+          resolvedKeys.size <= 1;
+        if (
+          !skipCache &&
+          toValue(apiCache?.cacheEnabled) !== false &&
+          vcfKey &&
+          hasSingleResolution
+        ) {
           coordinateCache.set(normalizedInput, vcfKey, geneSymbol, assembly);
           if (normalizedInput !== queryInput) {
             coordinateCache.set(queryInput, vcfKey, geneSymbol, assembly);
@@ -209,10 +258,6 @@ export async function queryVariant(variantInput, options = {}) {
           if (cacheKey) {
             apiCache.setCachedItem(cacheKey, result, cacheTTL);
           }
-          if (vcfKey && vcfKey !== normalizedInput) {
-            const vcfCacheKey = apiCache.generateCacheKey('variant', vcfKey, cacheParams);
-            apiCache.setCachedItem(vcfCacheKey, result, cacheTTL);
-          }
           return {
             data: result,
             source: { fromCache: false, accelerated: isAccelerated },
@@ -221,12 +266,13 @@ export async function queryVariant(variantInput, options = {}) {
       }
 
       // If skipCache is true or it's a batch request, return result with source info
-      return { 
-        data: result, 
-        source: { fromCache: false, accelerated: isAccelerated } 
+      return {
+        data: result,
+        source: { fromCache: false, accelerated: isAccelerated },
       };
     },
     {
+      retryState,
       maxRetries: 3,
       initialDelay: 500,
       maxDelay: 5000,
@@ -239,23 +285,27 @@ export async function queryVariant(variantInput, options = {}) {
       },
       onRetry: (error, attempt) => {
         // Only show a snackbar notification about the retry
-        const notificationText = isBatchRequest ? 'batch variant request' : normalizedInput;
+        const notificationText = isBatchRequest
+          ? 'batch variant request'
+          : normalizedInput;
         notifyRetry(notificationText, attempt, error.message);
 
         // Call the user-provided onRetry callback if supplied
         if (onRetry) onRetry(error, attempt);
       },
-      onSuccess: (result, attempts) => {
+      onSuccess: (attempts) => {
         if (attempts > 0) {
-          const notificationText = isBatchRequest ? 'batch variant request' : normalizedInput;
+          const notificationText = isBatchRequest
+            ? 'batch variant request'
+            : normalizedInput;
           notifySuccess(
-            `Successfully analyzed ${notificationText} after ${attempts} retries`
+            `Successfully analyzed ${notificationText} after ${attempts} retries`,
           );
         }
 
         // Call the user-provided onSuccess callback if supplied
         if (onSuccess) onSuccess(attempts);
       },
-    }
+    },
   );
 }
