@@ -30,11 +30,11 @@ NC-Scorer integrates three complementary evidence layers into a single interpret
 
 $$\text{NCS} = (N\text{-GS} \times 4) + (N\text{-VS} \times 4) + (\text{IS} \times 2)$$
 
-| Component | Range | Description | Method |
-| :--- | :---: | :--- | :--- |
-| **Nephro Gene Score ($N\text{-GS}$)** | $[0, 1]$ | Prior probability that the gene is implicated in kidney disease | XGBoost classifier trained on functional genomics features |
-| **Nephro Variant Score ($N\text{-VS}$)** | $[0, 1]$ | Pathogenicity likelihood of the specific variant | Regularized Logistic Regression trained on variant features |
-| **Inheritance Score ($\text{IS}$)** | $[0, 1]$ | Compatibility of variant zygosity with the expected disease inheritance model | Rule-based scoring heuristic (with 20% penalty for missing segregation) |
+| Component                                |  Range   | Description                                                                   | Method                                                                  |
+| :--------------------------------------- | :------: | :---------------------------------------------------------------------------- | :---------------------------------------------------------------------- |
+| **Nephro Gene Score ($N\text{-GS}$)**    | $[0, 1]$ | Prior probability that the gene is implicated in kidney disease               | XGBoost classifier trained on functional genomics features              |
+| **Nephro Variant Score ($N\text{-VS}$)** | $[0, 1]$ | Pathogenicity likelihood of the specific variant                              | Regularized Logistic Regression trained on variant features             |
+| **Inheritance Score ($\text{IS}$)**      | $[0, 1]$ | Compatibility of variant zygosity with the expected disease inheritance model | Rule-based scoring heuristic (with 20% penalty for missing segregation) |
 
 ### Score Interpretation Tiers
 
@@ -60,9 +60,9 @@ If you use NC-Scorer or the Nephro Candidate Score framework in academic work, p
 
 ### 1. Primary Research Publication
 
-> Rank N, Lukassen S, Anderegg MA, Eckardt KU, Halbritter JP, Popp B.  
-> **Automatic variant prioritization in suspected genetic kidney disease using the Nephro Candidate Score (N-CS).**  
-> *medRxiv* 2025.  
+> Rank N, Lukassen S, Anderegg MA, Eckardt KU, Halbritter JP, Popp B.\
+> **Automatic variant prioritization in suspected genetic kidney disease using the Nephro Candidate Score (N-CS).**\
+> _medRxiv_ 2025.\
 > DOI: [10.1101/2025.09.29.25336840](https://doi.org/10.1101/2025.09.29.25336840)
 
 ```bibtex
@@ -77,27 +77,28 @@ If you use NC-Scorer or the Nephro Candidate Score framework in academic work, p
 }
 ```
 
-### 2. Software Release (v3.5.4)
+### 2. Software Release (v3.6.0)
 
-> Rank N, Lukassen S, Anderegg MA, Eckardt KU, Halbritter JP, Popp B.  
-> **NC-Scorer: Automated Variant Prioritization in Suspected Genetic Kidney Disease (v3.5.4).**  
-> GitHub Release / Zenodo.  
-> Release Tag: [v3.5.4](https://github.com/halbritter-lab/nc-scorer/releases/tag/v3.5.4)  
+> Rank N, Lukassen S, Anderegg MA, Eckardt KU, Halbritter JP, Popp B.\
+> **NC-Scorer: Automated Variant Prioritization in Suspected Genetic Kidney Disease (v3.6.0).**\
+> GitHub Release / Zenodo.\
+> Release Tag: [v3.6.0](https://github.com/halbritter-lab/nc-scorer/releases/tag/v3.6.0)\
 > URL: [https://nc-scorer.kidney-genetics.org/](https://nc-scorer.kidney-genetics.org/)
 
 ```bibtex
 @software{nc_scorer_v3_5_4,
   author       = {Rank, Nina and Lukassen, S{\"o}ren and Anderegg, Manuel A. and Eckardt, Kai-Uwe and Halbritter, Jan P. and Popp, Bernt},
   title        = {NC-Scorer: Automated Variant Prioritization in Suspected Genetic Kidney Disease},
-  version      = {v3.5.4},
+  version      = {v3.6.0},
   year         = {2026},
-  howpublished = {\url{https://github.com/halbritter-lab/nc-scorer/releases/tag/v3.5.4}},
+  howpublished = {\url{https://github.com/halbritter-lab/nc-scorer/releases/tag/v3.6.0}},
   url          = {https://nc-scorer.kidney-genetics.org/},
   publisher    = {GitHub / Zenodo},
   license      = {MIT}
 }
 ```
-*(Zenodo DOI archiving is configured via `.zenodo.json` and will be automatically minted on Zenodo upon integration activation).*
+
+_(Zenodo DOI archiving is configured via `.zenodo.json` and will be automatically minted on Zenodo upon integration activation)._
 
 Machine-readable citation metadata is provided via [`CITATION.cff`](CITATION.cff) and [`.zenodo.json`](.zenodo.json). You can also click GitHub's **"Cite this repository"** button in the sidebar to export citations directly.
 
