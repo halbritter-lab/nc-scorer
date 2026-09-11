@@ -1,20 +1,20 @@
 # Modernization validation
 
-Validated September 11, 2026 on worktree branch `feat/modernization-audit`, including the gene-directory and lazy search-tab follow-ups to checkpoint `ba78ffa6`.
+Validated September 11, 2026 on worktree branch `feat/modernization-audit`, including the gene-directory, lazy search-tab, methodology, and design-guidance follow-ups to checkpoint `ba78ffa6`. The release candidate is version 3.6.0.
 
 ## Automated verification
 
 - `npm run validate`: lint, type checking, unit/component tests, and application plus VitePress production builds passed.
-- Final integrated and coverage runs: **454 tests passed in 39 files**. The bootstrap integration suite has a 20-second allowance for real plugin loading under coverage; no test assertions were removed.
+- Final integrated and coverage runs: **458 tests passed in 40 files**. The bootstrap integration suite has a 20-second allowance for real plugin loading under coverage; no test assertions were removed.
 - Prettier check passed for all changed supported text files. Additional ESLint checks passed for the browser audit scripts and build adapters.
-- Every one of the 38 changed application/build-helper JavaScript or Vue files has at least 80% line coverage. CSS, JSON scoring configuration, and documentation are verified through browser, configuration, and build tests.
+- Every one of the 39 changed application/build-helper JavaScript or Vue files has at least 80% line coverage. CSS, JSON scoring configuration, and documentation are verified through browser, configuration, and build tests.
 
 | Metric     | Full instrumented application |
 | ---------- | ----------------------------: |
-| lines      |                        85.96% |
-| statements |                        85.18% |
-| branches   |                        81.93% |
-| functions  |                        78.20% |
+| lines      |                        86.05% |
+| statements |                        85.27% |
+| branches   |                        81.98% |
+| functions  |                        78.26% |
 
 The function coverage target remains unmet overall and in several existing large components. The figures include uncovered application modules; no new coverage exclusions were added to hide them.
 
@@ -25,6 +25,7 @@ The function coverage target remains unmet overall and in several existing large
 - Home and scoring headings match font size, weight, line height, horizontal origin, vertical origin, and first-panel position at 1440px and 390px widths, including return navigation.
 - Cold-load tab tests deliberately held each lazy form download in fresh desktop and mobile browser contexts. Before the fix, the panel collapsed from 591px to 56px on desktop and from 859px to 40px on mobile. It now keeps its height through loading, resolution, return, and cached switches. Resizing releases the reservation, and neither lazy form is requested at startup. Focused SearchPage coverage exceeds 95% across all metrics.
 - The redesigned gene directory passed eight settled desktop/mobile/theme/filter scans with zero findings, page errors, or overflow. Tests verify pagination reset, exact prefixed HGNC lookup, and matching visible/exported rows. Headings and toolbar positions align with home; a mobile hint explains horizontal table scrolling. Its 13 focused tests exceed 85% coverage across all metrics.
+- Methodology passed four desktop/mobile/theme scans with zero findings or horizontal overflow. The calculation section fills the shared 1152px desktop content width; interpretation and segregation occupy two equal columns, then stack on mobile. Title position and first-section origin match home. Four regression tests verify the shared structure, exact 4/4/2 formula, non-overlapping tiers, and inheritance-only segregation penalty; focused coverage is 100% across all metrics.
 - Disclaimer and logs passed desktop/mobile acknowledgment, reopen, Escape, focus-return, search, clear, and JSON-download checks. Eight settled dialog/theme/viewport Impeccable scans reported zero findings.
 - Batch passed eight settled loading, input, result, theme, and viewport scans with zero Impeccable findings. A mixed invalid/valid submission preserved the valid result and exposed a useful error for the invalid row.
 - The source scan (`impeccable detect --no-config --json src`) returned no findings. Loaded scoring views passed both themes. Explicit layout-transition scans passed home, scoring, and batch loading/result states.
@@ -46,7 +47,7 @@ External latency remains significant: one PKD1 recoder response arrived about 18
 
 ## Production measurements
 
-Lighthouse 12 mobile emulation ran three times against the production preview at checkpoint `ba78ffa6` on a shared Windows development machine. These are local laboratory measurements, not field Core Web Vitals or a guarantee for other hardware/networks. The final follow-up build contains 1,491,492 bytes of generated application assets, still 72.4% below the baseline.
+Lighthouse 12 mobile emulation ran three times against the production preview at checkpoint `ba78ffa6` on a shared Windows development machine. These are local laboratory measurements, not field Core Web Vitals or a guarantee for other hardware/networks. The final follow-up build contains 1,496,377 bytes of generated application assets, 72.3% below the baseline.
 
 | Measure                              |     Earlier baseline |                  Final checkpoint |
 | ------------------------------------ | -------------------: | --------------------------------: |
@@ -62,6 +63,10 @@ Lighthouse 12 mobile emulation ran three times against the production preview at
 The broad icon-font payload was replaced with explicit SVG icons, and variant analysis plus the guided tour load on demand. The performance score is improved but is below 90; startup scripting remains a measured bottleneck.
 
 ## Dependency and review limits
+
+The repository now has a root [DESIGN.md](https://github.com/halbritter-lab/nc-scorer/blob/main/DESIGN.md) and three discoverable skills under `.agents/skills/`, linked from [AGENTS.md](https://github.com/halbritter-lab/nc-scorer/blob/main/AGENTS.md). Their frontmatter, local guidance links, eight design-token references, canonical sections, and 13 theme colors were checked. Independent application scenarios verified the layout references and audit evidence template; refinements clarified replacement-request ownership and the need to adapt browser scripts to new surfaces. The design definition records existing patterns, including mobile inset and primary export-action exceptions. A concise development skill adds an ownership map, concrete regression cases, score-parser distinctions, and CI/release procedures. GEMINI.md imports AGENTS.md using the [documented Gemini CLI import mechanism](https://geminicli.com/docs/cli/gemini-md/#modularize-context-with-imports), so shared instructions stay in one place; Gemini model execution was not benchmarked.
+
+CI uses Node 22 and 24, matching the installed Vitest toolchain. The citation suite's YAML parser is declared directly; an isolated install omitting optional dependencies still parses the real citation file. The 3.6.0 package, lockfile, citation, README, and citation guide metadata are synchronized before release.
 
 `npm audit --omit=dev --json` reports zero production vulnerabilities. The complete dependency graph still reports **39 development-tool advisories: 19 high, 19 moderate, and 1 low**. Major release-tooling and Lighthouse upgrades were not included.
 
