@@ -32,20 +32,20 @@ The methodology, machine learning models (N-GS and N-VS), and clinical validatio
 To cite the specific version of the **NC-Scorer web application** used for data analysis and scoring:
 
 > Rank N, Lukassen S, Anderegg MA, Eckardt KU, Halbritter JP, Popp B.\
-> **NC-Scorer: Nephro Candidate Score Web Application and Framework (v3.6.0).**\
+> **NC-Scorer: Nephro Candidate Score Web Application and Framework (v3.7.0).**\
 > GitHub Release / Zenodo.\
-> Release Tag: [v3.6.0](https://github.com/halbritter-lab/nc-scorer/releases/tag/v3.6.0)\
+> Release Tag: [v3.7.0](https://github.com/halbritter-lab/nc-scorer/releases/tag/v3.7.0)\
 > URL: [https://nc-scorer.kidney-genetics.org/](https://nc-scorer.kidney-genetics.org/)
 
 ### BibTeX
 
 ```bibtex
-@software{nc_scorer_v3_5_4,
+@software{nc_scorer_v3_7_0,
   author       = {Rank, Nina and Lukassen, S{\"o}ren and Anderegg, Manuel A. and Eckardt, Kai-Uwe and Halbritter, Jan P. and Popp, Bernt},
   title        = {NC-Scorer: Automated Variant Prioritization in Suspected Genetic Kidney Disease},
-  version      = {v3.6.0},
+  version      = {v3.7.0},
   year         = {2026},
-  howpublished = {\url{https://github.com/halbritter-lab/nc-scorer/releases/tag/v3.6.0}},
+  howpublished = {\url{https://github.com/halbritter-lab/nc-scorer/releases/tag/v3.7.0}},
   url          = {https://nc-scorer.kidney-genetics.org/},
   publisher    = {GitHub / Zenodo},
   license      = {MIT}
