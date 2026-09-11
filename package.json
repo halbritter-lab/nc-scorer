@@ -1,6 +1,6 @@
 {
   "name": "nc-scorer",
-  "version": "3.6.0",
+  "version": "3.7.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -41,7 +41,7 @@
     "axios": "^1.18.0",
     "pinia": "^3.0.4",
     "shepherd.js": "^14.5.1",
-    "variant-linker": "^3.12.2",
+    "variant-linker": "^4.0.0",
     "vue": "^3.5.13",
     "vue-router": "^4.5.0",
     "vuetify": "^3.8.1",

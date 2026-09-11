@@ -34,9 +34,9 @@ describe('batch scoring integrity', () => {
     fetchGeneDetails.mockResolvedValue({ data: { ngs: 0.5 } });
   });
 
-  it('identifies the active variant immediately and cancels without losing finished rows or accepting late results', async () => {
+  it('submits variants in batch and cancels via AbortSignal without accepting late results', async () => {
     let finish;
-    queryVariant.mockResolvedValueOnce(annotation()).mockImplementationOnce(
+    queryVariant.mockImplementationOnce(
       () =>
         new Promise((resolve) => {
           finish = resolve;
@@ -46,19 +46,25 @@ describe('batch scoring integrity', () => {
     wrapper.vm.variantsInput = '16-2090952-G-A\n12-88101183-A-G';
     const pending = wrapper.vm.processVariants();
     await flushPromises();
-    expect(wrapper.text()).toContain('Annotating 12-88101183-A-G');
-    expect(wrapper.text()).toContain('1 of 2 completed');
+    expect(wrapper.text()).toContain('Annotating batch of 2 variants');
+    expect(queryVariant).toHaveBeenCalledWith(
+      ['16-2090952-G-A', '12-88101183-A-G'],
+      expect.objectContaining({ signal: expect.any(AbortSignal) }),
+    );
     const cancel = wrapper
       .findAll('button')
       .find((button) => button.text() === 'Cancel processing');
     expect(cancel).toBeDefined();
     await cancel.trigger('click');
     expect(wrapper.vm.isLoading).toBe(false);
-    expect(wrapper.vm.batchResults).toHaveLength(1);
+    expect(queryVariant.mock.calls[0][1].signal.aborted).toBe(true);
+    expect(wrapper.text()).toContain('Processing cancelled');
     finish(annotation());
     await pending;
-    expect(wrapper.vm.batchResults).toHaveLength(1);
-    expect(wrapper.text()).toContain('Processing cancelled');
+    expect(wrapper.vm.batchResults).toHaveLength(2);
+    expect(wrapper.vm.batchResults.every((row) => row.ncs === 'N/A')).toBe(
+      true,
+    );
     wrapper.unmount();
   });
 
@@ -70,9 +76,21 @@ describe('batch scoring integrity', () => {
       '12-88101183-A-G',
     ]);
     queryVariant.mockImplementation(async (input) => {
-      if (!verified.has(input))
-        throw new Error('Unresolved transcript or reference allele mismatch');
-      return annotation();
+      const items = Array.isArray(input) ? input : [input];
+      for (const item of items) {
+        if (!verified.has(item)) {
+          throw new Error('Unresolved transcript or reference allele mismatch');
+        }
+      }
+      return {
+        data: {
+          annotationData: items.map((variantKey) => ({
+            ...annotation().data.annotationData[0],
+            variantKey,
+            input: variantKey,
+          })),
+        },
+      };
     });
     const wrapper = mountBatch();
     wrapper.vm.assembly = 'GRCh37';
@@ -291,11 +309,30 @@ describe('batch scoring integrity', () => {
   });
 
   it('reuses gene evidence within one batch for consistent scores and fewer requests', async () => {
+    queryVariant.mockResolvedValueOnce({
+      data: {
+        annotationData: [
+          {
+            input: '16-2138714-C-T',
+            variantKey: '16-2138714-C-T',
+            nephro_variant_score: 0.5,
+            transcript_consequences: [{ gene_symbol: 'PKD1' }],
+          },
+          {
+            input: '16-2138715-C-T',
+            variantKey: '16-2138715-C-T',
+            nephro_variant_score: 0.5,
+            transcript_consequences: [{ gene_symbol: 'PKD1' }],
+          },
+        ],
+      },
+    });
     fetchGeneDetails.mockResolvedValueOnce({ data: { ngs: 0.5 } });
     fetchGeneDetails.mockResolvedValueOnce({ data: { ngs: 0.9 } });
     const wrapper = mountBatch();
     wrapper.vm.variantsInput = 'chr16-2138714-C-T\nchr16-2138715-C-T';
     await wrapper.vm.processVariants();
+    expect(fetchGeneDetails).toHaveBeenCalledTimes(1);
     expect(wrapper.vm.batchResults.map((row) => row.ncs)).toEqual([
       '4.200',
       '4.200',
@@ -343,4 +380,201 @@ describe('batch scoring integrity', () => {
       wrapper.unmount();
     },
   );
+
+  it('correlates batch responses by variant key even when returned out of order', async () => {
+    queryVariant.mockResolvedValueOnce({
+      data: {
+        annotationData: [
+          {
+            input: '12-88101183-A-G',
+            variantKey: '12-88101183-A-G',
+            nephro_variant_score: 0.8,
+            transcript_consequences: [{ gene_symbol: 'CEP290' }],
+          },
+          {
+            input: '16-2090952-G-A',
+            variantKey: '16-2090952-G-A',
+            nephro_variant_score: 0.2,
+            transcript_consequences: [{ gene_symbol: 'PKD1' }],
+          },
+        ],
+      },
+    });
+    fetchGeneDetails.mockImplementation(async (gene) => {
+      if (gene === 'PKD1') return { data: { ngs: 0.5 } };
+      if (gene === 'CEP290') return { data: { ngs: 0.7 } };
+      return { data: {} };
+    });
+    const wrapper = mountBatch();
+    wrapper.vm.variantsInput = '16-2090952-G-A\n12-88101183-A-G';
+    await wrapper.vm.processVariants();
+    expect(wrapper.vm.batchResults[0].variant).toBe('16-2090952-G-A');
+    expect(wrapper.vm.batchResults[0].geneSymbol).toBe('PKD1');
+    expect(wrapper.vm.batchResults[0].variantScore).toBe(0.2);
+    expect(wrapper.vm.batchResults[1].variant).toBe('12-88101183-A-G');
+    expect(wrapper.vm.batchResults[1].geneSymbol).toBe('CEP290');
+    expect(wrapper.vm.batchResults[1].variantScore).toBe(0.8);
+    wrapper.unmount();
+  });
+
+  it('handles duplicate variants in batch input without corrupting row data', async () => {
+    queryVariant.mockResolvedValueOnce({
+      data: {
+        annotationData: [
+          {
+            input: '16-2090952-G-A',
+            variantKey: '16-2090952-G-A',
+            nephro_variant_score: 0.5,
+            transcript_consequences: [{ gene_symbol: 'PKD1' }],
+          },
+        ],
+      },
+    });
+    fetchGeneDetails.mockResolvedValue({ data: { ngs: 0.5 } });
+    const wrapper = mountBatch();
+    wrapper.vm.variantsInput =
+      '16-2090952-G-A\tInherited dominant\n16-2090952-G-A\tDenovo';
+    await wrapper.vm.processVariants();
+    expect(wrapper.vm.batchResults).toHaveLength(2);
+    expect(wrapper.vm.batchResults[0].variant).toBe('16-2090952-G-A');
+    expect(wrapper.vm.batchResults[0].inheritance).toBe('Inherited dominant');
+    expect(wrapper.vm.batchResults[0].ncs).toBe('4.640');
+    expect(wrapper.vm.batchResults[1].variant).toBe('16-2090952-G-A');
+    expect(wrapper.vm.batchResults[1].inheritance).toBe('Denovo');
+    expect(wrapper.vm.batchResults[1].ncs).toBe('5.900');
+    wrapper.unmount();
+  });
+
+  it('recovers valid variants when batch query rejects with an input-specific 400 error', async () => {
+    const error400 = Object.assign(
+      new Error('Reference allele mismatch for one submitted variant'),
+      {
+        response: {
+          status: 400,
+          data: {
+            error: 'Reference allele mismatch for one submitted variant',
+          },
+        },
+      },
+    );
+    queryVariant.mockRejectedValueOnce(error400);
+    queryVariant.mockRejectedValueOnce(error400); // for first variant
+    queryVariant.mockResolvedValueOnce(annotation()); // for second variant
+    const wrapper = mountBatch();
+    wrapper.vm.variantsInput = '16-2090952-G-A\n12-88101183-A-G';
+    await wrapper.vm.processVariants();
+    expect(wrapper.vm.batchResults[0].error).toContain(
+      'Reference allele mismatch',
+    );
+    expect(wrapper.vm.batchResults[1].ncs).toBe('4.200');
+    wrapper.unmount();
+  });
+
+  it('falls back to unversioned HGVS when variant recoder returns no VCF string for version', async () => {
+    queryVariant.mockResolvedValueOnce({
+      data: {
+        annotationData: [
+          {
+            input: 'NM_001009944.3:c.11935C>T',
+            variantKey: 'NM_001009944.3:c.11935C>T',
+            error:
+              'No valid VCF string found in Variant Recoder response for variant "NM_001009944.3:c.11935C>T"',
+          },
+          {
+            input: '12-88101183-A-G',
+            variantKey: '12-88101183-A-G',
+            nephro_variant_score: 0.5,
+            transcript_consequences: [{ gene_symbol: 'CEP290' }],
+          },
+        ],
+      },
+    });
+    queryVariant.mockResolvedValueOnce({
+      data: {
+        annotationData: [
+          {
+            nephro_variant_score: 0.6,
+            transcript_consequences: [{ gene_symbol: 'PKD1' }],
+          },
+        ],
+      },
+    });
+    fetchGeneDetails.mockResolvedValue({ data: { ngs: 0.5 } });
+    const wrapper = mountBatch();
+    wrapper.vm.variantsInput = 'NM_001009944.3:c.11935C>T\n12-88101183-A-G';
+    await wrapper.vm.processVariants();
+    expect(queryVariant).toHaveBeenCalledWith(
+      'NM_001009944:c.11935C>T',
+      expect.any(Object),
+    );
+    expect(wrapper.vm.batchResults[0].variantScore).toBe(0.6);
+    expect(wrapper.vm.batchResults[0].geneSymbol).toBe('PKD1');
+    expect(wrapper.vm.batchResults[0].error).toBe('');
+    wrapper.unmount();
+  });
+
+  it('displays a loading state and does not show premature N/A or unavailable counts during processing', async () => {
+    let resolveBatch;
+    queryVariant.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveBatch = resolve;
+        }),
+    );
+    const wrapper = mountBatch();
+    wrapper.vm.variantsInput = '16-2090952-G-A\n12-88101183-A-G';
+    const pending = wrapper.vm.processVariants();
+    await flushPromises();
+
+    // While loading:
+    expect(wrapper.vm.isLoading).toBe(true);
+    // completedCount must be 0, not 2
+    expect(wrapper.vm.completedCount).toBe(0);
+    // Summary must say "Processing variants", NOT "unavailable"
+    expect(wrapper.text()).toContain('Processing variants · 0 of 2 finished');
+    expect(wrapper.text()).not.toContain('unavailable');
+    // Progress label
+    expect(wrapper.text()).toContain('0 of 2 completed');
+    // In-flight rows must have pending status
+    expect(wrapper.vm.batchResults.every((r) => r.status === 'pending')).toBe(
+      true,
+    );
+
+    // Rendered table check
+    expect(wrapper.find('.results-table').exists()).toBe(true);
+    expect(wrapper.text()).toContain('Pending');
+
+    // Complete the batch request
+    resolveBatch({
+      data: {
+        annotationData: [
+          {
+            input: '16-2090952-G-A',
+            variantKey: '16-2090952-G-A',
+            nephro_variant_score: 0.5,
+            transcript_consequences: [{ gene_symbol: 'PKD1' }],
+          },
+          {
+            input: '12-88101183-A-G',
+            variantKey: '12-88101183-A-G',
+            nephro_variant_score: 0.5,
+            transcript_consequences: [{ gene_symbol: 'PKD1' }],
+          },
+        ],
+      },
+    });
+    await pending;
+    await flushPromises();
+
+    // After completion:
+    expect(wrapper.vm.isLoading).toBe(false);
+    expect(wrapper.vm.completedCount).toBe(2);
+    expect(wrapper.vm.successfulCount).toBe(2);
+    expect(wrapper.text()).toContain('2 scored · 0 unavailable');
+    expect(wrapper.text()).toContain('Processing complete. 2 of 2 completed.');
+    expect(wrapper.vm.batchResults.every((r) => r.status === 'scored')).toBe(
+      true,
+    );
+    wrapper.unmount();
+  });
 });

@@ -58,4 +58,23 @@ describe('annotation scoring input shape', () => {
     expect(missing.nephro_variant_score).toBe(explicit.nephro_variant_score);
     expect(missing.nephro_variant_score).toBeGreaterThan(0);
   });
+
+  it('evaluates cleanly through variant-linker expression parser without unsafe construct errors', () => {
+    const [scored] = scoring.applyScoring(
+      [
+        {
+          transcript_consequences: [
+            {
+              consequence_terms: ['stop_gained'],
+              cadd_phred: 35,
+              impact: 'HIGH',
+            },
+          ],
+        },
+      ],
+      config,
+    );
+    expect(scored.nephro_variant_score).toBeGreaterThan(0.5);
+    expect(Number.isFinite(scored.nephro_variant_score)).toBe(true);
+  });
 });

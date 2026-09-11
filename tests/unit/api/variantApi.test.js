@@ -261,4 +261,16 @@ describe('queryVariant', () => {
     await queryVariant('NM_TEST:c.1A>G');
     expect(coordinateCache.getVcf('NM_TEST:c.1A>G')).toBeNull();
   });
+
+  it('forwards AbortSignal in requestOptions to analyzeVariant', async () => {
+    const controller = new AbortController();
+    await queryVariant('1-100-A-G', { signal: controller.signal });
+    expect(variantLinker.analyzeVariant).toHaveBeenCalledWith(
+      expect.objectContaining({
+        requestOptions: expect.objectContaining({
+          signal: controller.signal,
+        }),
+      }),
+    );
+  });
 });
