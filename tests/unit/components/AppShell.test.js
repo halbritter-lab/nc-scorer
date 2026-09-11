@@ -44,6 +44,29 @@ afterEach(() => {
 });
 
 describe('application navigation and settings', () => {
+  it.each([false, true])(
+    'opens documentation in a separate tab from the navigation menu=%s',
+    async (menu) => {
+      const { wrapper } = await render(AppBar);
+      if (menu) {
+        await wrapper
+          .find('[aria-label="Open navigation and settings"]')
+          .trigger('click');
+        await flushPromises();
+      }
+      const navigation = document.querySelector(
+        menu ? '.v-overlay__content' : '.desktop-navigation',
+      );
+      const link = navigation.querySelector('a[href="/docs/"]');
+      expect(link).toBeTruthy();
+      expect(link.getAttribute('target')).toBe('_blank');
+      expect(link.getAttribute('rel')).toContain('noopener');
+      expect(link.getAttribute('aria-label')).toMatch(/opens in a new tab/i);
+      expect(
+        navigation.querySelector('a[href="/genes"]').getAttribute('target'),
+      ).toBeNull();
+    },
+  );
   it('exposes documentation and switches theme with an updated accessible label', async () => {
     const { wrapper, settings } = await render(AppBar);
     expect(wrapper.find('a[href="/docs/"]').exists()).toBe(true);

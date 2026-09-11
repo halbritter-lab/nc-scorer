@@ -230,6 +230,32 @@ try {
     });
   }
   await check('documentation', async () => {
+    for (const width of [1440, 390]) {
+      await page.setViewportSize({ width, height: 1000 });
+      await go('/');
+      if (width < 800) {
+        await page
+          .getByRole('button', { name: 'Open navigation and settings' })
+          .click();
+      }
+      const navigation = page.locator(
+        width < 800 ? '.v-overlay__content' : '.desktop-navigation',
+      );
+      const opened = page.waitForEvent('popup');
+      await navigation
+        .getByRole('link', { name: 'Docs (opens in a new tab)', exact: true })
+        .click();
+      const docsPage = await opened;
+      try {
+        await docsPage.waitForURL(`${baseURL}/docs/`);
+        await docsPage.getByRole('heading', { level: 1 }).first().waitFor();
+        if (page.url() !== `${baseURL}/`)
+          throw new Error('Opening documentation navigated away from scoring');
+      } finally {
+        await docsPage.close();
+      }
+    }
+    await page.setViewportSize({ width: 1440, height: 1000 });
     for (const path of [
       '/docs/',
       '/docs/guide/usage',

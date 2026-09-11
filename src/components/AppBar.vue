@@ -18,6 +18,13 @@
           :key="item.text"
           :to="item.to"
           :href="item.href"
+          :target="item.target"
+          :rel="item.target === '_blank' ? 'noopener noreferrer' : undefined"
+          :aria-label="
+            item.target === '_blank'
+              ? `${item.text} (opens in a new tab)`
+              : undefined
+          "
           variant="text"
           >{{ item.text }}</v-btn
         >
@@ -48,6 +55,15 @@
               :key="item.text"
               :to="item.to"
               :href="item.href"
+              :target="item.target"
+              :rel="
+                item.target === '_blank' ? 'noopener noreferrer' : undefined
+              "
+              :aria-label="
+                item.target === '_blank'
+                  ? `${item.text} (opens in a new tab)`
+                  : undefined
+              "
               :title="item.text"
               :prepend-icon="item.icon"
             />

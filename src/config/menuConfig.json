@@ -18,6 +18,7 @@
       "text": "Docs",
       "icon": "mdi-book-open-variant",
       "href": "/docs/",
+      "target": "_blank",
       "tooltip": "View documentation",
       "visibility": "all"
     }
