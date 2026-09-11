@@ -1,41 +1,17 @@
 // src/services/coordinateCache.js
+import { normalizeAssembly } from '@/utils/assemblyUtils.js';
 /**
  * Fast LRU and persistent coordinate cache for genomic coordinate transformation.
  * Enables lightning-fast HGVS cDNA to VCF coordinate resolution without stalling on
  * external Ensembl variant_recoder requests.
  */
 
-// Well-characterized benchmark variants frequently evaluated in clinical nephrogenetics
-const PRESEEDED_COORDINATES = {
-  // PKHD1 - Autosomal Recessive Polycystic Kidney Disease (ARPKD)
-  'NM_001009944.3:c.11935C>T': { vcf: '16-2090952-G-A', gene: 'PKHD1', assembly: 'GRCh38' },
-  'NM_001009944:c.11935C>T': { vcf: '16-2090952-G-A', gene: 'PKHD1', assembly: 'GRCh38' },
-  'NM_000296.4:c.11932C>T': { vcf: '16-2090952-G-A', gene: 'PKHD1', assembly: 'GRCh38' },
-  'NM_000296:c.11932C>T': { vcf: '16-2090952-G-A', gene: 'PKHD1', assembly: 'GRCh38' },
-  'ENST00000262304.9:c.11935C>T': { vcf: '16-2090952-G-A', gene: 'PKHD1', assembly: 'GRCh38' },
-  'ENST00000262304:c.11935C>T': { vcf: '16-2090952-G-A', gene: 'PKHD1', assembly: 'GRCh38' },
-
-  // PKD1 - Autosomal Dominant Polycystic Kidney Disease (ADPKD)
-  'NM_001009944.3:c.540dup': { vcf: '16-2089557-C-CG', gene: 'PKD1', assembly: 'GRCh38' },
-  'NM_000296.4:c.540dup': { vcf: '16-2089557-C-CG', gene: 'PKD1', assembly: 'GRCh38' },
-
-  // COL4A5 - Alport Syndrome (X-linked)
-  'NM_033380.3:c.1871G>A': { vcf: 'X-108568444-G-A', gene: 'COL4A5', assembly: 'GRCh38' },
-  'NM_033380:c.1871G>A': { vcf: 'X-108568444-G-A', gene: 'COL4A5', assembly: 'GRCh38' },
-
-  // CEP290 - Joubert / Senior-Løken Syndrome (compound heterozygous benchmarks)
-  'NM_025114.4:c.5656G>A': { vcf: '12-88052187-G-A', gene: 'CEP290', assembly: 'GRCh38' },
-  'NM_025114:c.5656G>A': { vcf: '12-88052187-G-A', gene: 'CEP290', assembly: 'GRCh38' },
-  'NM_025114.4:c.4990C>T': { vcf: '12-88057279-C-T', gene: 'CEP290', assembly: 'GRCh38' },
-  'NM_025114:c.4990C>T': { vcf: '12-88057279-C-T', gene: 'CEP290', assembly: 'GRCh38' },
-
-  // PCSK9 benchmark
-  'NM_004380.3:c.589G>T': { vcf: '1-55051215-G-GA', gene: 'PCSK9', assembly: 'GRCh38' },
-  'NM_004380:c.589G>T': { vcf: '1-55051215-G-GA', gene: 'PCSK9', assembly: 'GRCh38' },
-};
-
-const STORAGE_KEY = 'nc_scorer_coordinate_lru_cache';
+// Only cache coordinates returned by the API. The legacy cache contained
+// unverified shortcuts, so its persisted entries must not be reused.
+const STORAGE_KEY = 'nc_scorer_coordinate_lru_cache_v2';
 const MAX_ENTRIES = 500;
+const VCF_PATTERN =
+  /^(?:chr)?(?:[1-9]|1\d|2[0-2]|X|Y|M|MT)-[1-9]\d*-[ACGTN]+-[ACGTN]+$/i;
 
 class CoordinateCacheService {
   constructor() {
@@ -44,19 +20,25 @@ class CoordinateCacheService {
   }
 
   init() {
-    // Seed in-memory cache with known benchmarks
-    for (const [key, val] of Object.entries(PRESEEDED_COORDINATES)) {
-      this.memoryCache.set(this._makeKey(key, val.assembly), val);
-    }
-
     // Load persisted cache entries from localStorage
     if (typeof window !== 'undefined') {
       try {
         const stored = localStorage.getItem(STORAGE_KEY);
         if (stored) {
           const parsed = JSON.parse(stored);
-          for (const [key, val] of Object.entries(parsed)) {
-            this.memoryCache.set(key, val);
+          if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed))
+            return;
+          for (const [key, val] of Object.entries(parsed).slice(-MAX_ENTRIES)) {
+            if (
+              val &&
+              typeof val.vcf === 'string' &&
+              VCF_PATTERN.test(val.vcf) &&
+              ['GRCH37', 'GRCH38'].includes(val.assembly) &&
+              key.startsWith(`${val.assembly}:`) &&
+              (val.gene === null || typeof val.gene === 'string')
+            ) {
+              this.memoryCache.set(key, val);
+            }
           }
         }
       } catch {
@@ -70,7 +52,8 @@ class CoordinateCacheService {
   }
 
   get(variant, assembly = 'GRCh38') {
-    if (!variant || typeof variant !== 'string') return null;
+    assembly = normalizeAssembly(assembly);
+    if (!variant || typeof variant !== 'string' || !assembly) return null;
     const key = this._makeKey(variant, assembly);
     if (this.memoryCache.has(key)) {
       const item = this.memoryCache.get(key);
@@ -93,16 +76,28 @@ class CoordinateCacheService {
   }
 
   set(variant, vcf, gene = null, assembly = 'GRCh38') {
-    if (!variant || !vcf) return;
+    assembly = normalizeAssembly(assembly);
+    if (
+      typeof variant !== 'string' ||
+      !variant.trim() ||
+      typeof vcf !== 'string' ||
+      !VCF_PATTERN.test(vcf.trim()) ||
+      !assembly
+    )
+      return;
     const key = this._makeKey(variant, assembly);
-    
+
     // Normalize gene symbol to string safely
     let resolvedGene = null;
     if (typeof gene === 'string') {
       resolvedGene = gene.trim();
     } else if (Array.isArray(gene) && gene.length > 0) {
       resolvedGene = typeof gene[0] === 'string' ? gene[0].trim() : null;
-    } else if (gene && typeof gene === 'object' && typeof gene.symbol === 'string') {
+    } else if (
+      gene &&
+      typeof gene === 'object' &&
+      typeof gene.symbol === 'string'
+    ) {
       resolvedGene = gene.symbol.trim();
     }
 
@@ -110,10 +105,11 @@ class CoordinateCacheService {
     const entry = {
       vcf: resolvedVcf,
       gene: resolvedGene || null,
-      assembly: assembly ? assembly.toUpperCase() : 'GRCH38',
+      assembly: assembly.toUpperCase(),
     };
 
-    // LRU eviction if cache exceeds capacity
+    // Updating an entry promotes it without evicting an unrelated coordinate.
+    this.memoryCache.delete(key);
     if (this.memoryCache.size >= MAX_ENTRIES) {
       const oldestKey = this.memoryCache.keys().next().value;
       this.memoryCache.delete(oldestKey);
@@ -121,7 +117,7 @@ class CoordinateCacheService {
 
     this.memoryCache.set(key, entry);
 
-    // Persist to localStorage asynchronously
+    // Persist resolved entries to localStorage.
     if (typeof window !== 'undefined') {
       try {
         const serialized = {};

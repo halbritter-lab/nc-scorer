@@ -4,6 +4,18 @@ import { logService } from '@/services/logService';
 import geneApiConfig from '@/config/geneApiConfig.json';
 import { retryWithBackoff } from '@/utils/retry.js';
 
+const pendingGeneRequests = new Map();
+
+function requestGene(url) {
+  if (!pendingGeneRequests.has(url)) {
+    const pending = axios
+      .get(url)
+      .finally(() => pendingGeneRequests.delete(url));
+    pendingGeneRequests.set(url, pending);
+  }
+  return pendingGeneRequests.get(url);
+}
+
 /**
  * Fetch the index of gene symbols.
  * @returns {Promise<Array>} The symbols index.
@@ -36,29 +48,29 @@ export async function fetchHgncIndex() {
  */
 export async function fetchGeneSearchIndices(options = {}) {
   const { skipCache = false, apiCache = null } = options;
-  
+
   // Create cache variables
   let cacheKey = null;
   let cachedResult = null;
-  
+
   // Only attempt to use cache if not explicitly skipping and we have an apiCache instance
   if (!skipCache && apiCache) {
     // Create cache key
     cacheKey = apiCache.generateCacheKey('gene-search-indices');
-    
+
     cachedResult = apiCache.getCachedItem(cacheKey);
     if (cachedResult) {
       return cachedResult.data;
     }
   }
-  
+
   try {
     // Fetch both indices in parallel
     const [symbolsIndex, hgncIndex] = await Promise.all([
       fetchSymbolsIndex(),
-      fetchHgncIndex()
+      fetchHgncIndex(),
     ]);
-    
+
     // Create a mapping from HGNC ID to symbol
     const hgncToSymbolMap = {};
     hgncIndex.forEach((hgncItem, index) => {
@@ -68,29 +80,29 @@ export async function fetchGeneSearchIndices(options = {}) {
         hgncToSymbolMap[hgncItem] = symbol;
       }
     });
-    
+
     // Create the combined list for autocomplete
     const combinedItems = symbolsIndex.map((symbol, index) => {
       const hgncId = index < hgncIndex.length ? hgncIndex[index] : null;
       return {
         symbol,
         hgncId,
-        display: hgncId ? `${symbol} (HGNC:${hgncId})` : symbol
+        display: hgncId ? `${symbol} (HGNC:${hgncId})` : symbol,
       };
     });
-    
+
     const result = {
       symbolsIndex,
       hgncIndex,
       hgncToSymbolMap,
-      combinedItems
+      combinedItems,
     };
-    
+
     // Cache the result
     if (!skipCache && cacheKey && apiCache) {
       apiCache.setCachedItem(cacheKey, result, 24 * 60 * 60 * 1000); // 24 hours
     }
-    
+
     return result;
   } catch (error) {
     logService.error('Error fetching gene search indices:', error);
@@ -121,45 +133,45 @@ export async function fetchGeneSearchIndices(options = {}) {
  * @returns {Promise<Object>} The gene scores data with source information.
  */
 export async function fetchAllGeneScores(options = {}) {
-  const { 
-    retryState, 
-    onRetry, 
-    onSuccess, 
+  const {
+    retryState,
+    onRetry,
+    onSuccess,
     skipCache = false,
     cacheTTL = 12 * 60 * 60 * 1000, // 12 hours default
-    apiCache = null
+    apiCache = null,
   } = options;
-  
+
   // Cache variables at the top function scope
   let cacheKey = null;
-  
+
   // Only attempt to use cache if not skipping and we have an apiCache instance
   if (!skipCache && apiCache) {
     // Create cache key for all gene scores
     cacheKey = apiCache.generateCacheKey('gene-scores-all', 'summary');
-    
+
     // Check cache first
     const cachedResult = apiCache.getCachedItem(cacheKey);
     if (cachedResult) {
       return cachedResult; // Returns {data, source} object
     }
   }
-  
+
   return retryWithBackoff(
     async () => {
       // Fetch the gene info summary file
       const response = await axios.get(geneApiConfig.geneInfoSummaryUrl);
       const result = response.data;
-      
+
       // Store successful result in cache and get response with source info
       if (result && !skipCache && cacheKey && apiCache) {
         return apiCache.setCachedItem(cacheKey, result, cacheTTL); // Returns {data, source} object
       }
-      
+
       // If skipCache is true, still return with source info
-      return { 
-        data: result, 
-        source: { fromCache: false } 
+      return {
+        data: result,
+        source: { fromCache: false },
       };
     },
     {
@@ -167,17 +179,21 @@ export async function fetchAllGeneScores(options = {}) {
       initialDelay: 500,
       maxDelay: 5000,
       onRetry: (error, attempt) => {
-        logService.warn(`Retry attempt ${attempt} for gene scores summary after error: ${error.message}`);
+        logService.warn(
+          `Retry attempt ${attempt} for gene scores summary after error: ${error.message}`,
+        );
         if (onRetry) onRetry(error, attempt);
       },
       onSuccess: (attempts) => {
         if (attempts > 0) {
-          logService.info(`Successfully fetched gene scores summary after ${attempts} retries`);
+          logService.info(
+            `Successfully fetched gene scores summary after ${attempts} retries`,
+          );
         }
         if (onSuccess) onSuccess(attempts);
       },
       retryState, // Pass through retry state if provided
-    }
+    },
   );
 }
 
@@ -194,47 +210,47 @@ export async function fetchAllGeneScores(options = {}) {
  * @returns {Promise<Object>} The gene data with source information.
  */
 export async function fetchGeneDetails(symbol, options = {}) {
-  const { 
-    retryState, 
-    onRetry, 
-    onSuccess, 
+  const normalizedSymbol = symbol.trim().toUpperCase();
+  const {
+    retryState,
+    onRetry,
+    onSuccess,
     skipCache = false,
     cacheTTL = 30 * 60 * 1000, // 30 minutes default
-    apiCache = null
+    apiCache = null,
   } = options;
-  
+
   // Cache variables at the top function scope
   let cacheKey = null;
-  
+
   // Only attempt to use cache if not skipping and we have an apiCache instance
   if (!skipCache && apiCache) {
     // Normalize symbol and create cache key
-    const normalizedSymbol = symbol.trim().toUpperCase();
     cacheKey = apiCache.generateCacheKey('gene', normalizedSymbol);
-    
+
     // Check cache first
     const cachedResult = apiCache.getCachedItem(cacheKey);
     if (cachedResult) {
       return cachedResult; // Returns {data, source} object
     }
   }
-  
+
   return retryWithBackoff(
-    async () => {  
+    async () => {
       // Construct the URL using the base URL from config and the symbol.
-      const url = `${geneApiConfig.geneDetailsBaseUrl}${symbol}.json`;
-      const response = await axios.get(url);
+      const url = `${geneApiConfig.geneDetailsBaseUrl}${encodeURIComponent(normalizedSymbol)}.json`;
+      const response = await requestGene(url);
       const result = response.data;
-      
+
       // Store successful result in cache and get response with source info
       if (result && !skipCache && cacheKey && apiCache) {
         return apiCache.setCachedItem(cacheKey, result, cacheTTL); // Returns {data, source} object
       }
-      
+
       // If skipCache is true, still return with source info
-      return { 
-        data: result, 
-        source: { fromCache: false } 
+      return {
+        data: result,
+        source: { fromCache: false },
       };
     },
     {
@@ -253,16 +269,20 @@ export async function fetchGeneDetails(symbol, options = {}) {
         return undefined; // Use the default logic from retry.js
       },
       onRetry: (error, attempt) => {
-        logService.warn(`Retry attempt ${attempt} for gene ${symbol} after error: ${error.message}`);
+        logService.warn(
+          `Retry attempt ${attempt} for gene ${symbol} after error: ${error.message}`,
+        );
         if (onRetry) onRetry(error, attempt);
       },
       onSuccess: (attempts) => {
         if (attempts > 0) {
-          logService.info(`Successfully fetched gene ${symbol} after ${attempts} retries`);
+          logService.info(
+            `Successfully fetched gene ${symbol} after ${attempts} retries`,
+          );
         }
         if (onSuccess) onSuccess(attempts);
       },
       retryState, // Pass through retry state if provided
-    }
+    },
   );
 }

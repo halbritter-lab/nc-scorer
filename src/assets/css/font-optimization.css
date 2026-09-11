@@ -1,14 +1,3 @@
-/* Font display optimization - applied globally for Material Design Icons */
-
-@font-face {
-  font-family: 'Material Design Icons';
-  src: url('@mdi/font/fonts/materialdesignicons-webfont.woff2?v=7.4.47') format('woff2'),
-       url('@mdi/font/fonts/materialdesignicons-webfont.woff?v=7.4.47') format('woff');
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
-}
-
 /* Accessibility & Touch Target Hygiene (WCAG 2.1 AAA >= 44x44px) */
 .v-field {
   min-height: 44px;
@@ -31,5 +20,3 @@
 .v-data-table-footer .v-field {
   min-height: 44px !important;
 }
-
-

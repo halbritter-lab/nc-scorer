@@ -1,8 +1,15 @@
 <!-- src/components/VariantCard.vue -->
 <template>
   <v-card class="variant-card">
-    <v-card-title class="d-flex flex-wrap align-center">
-      <div class="variant-title text-truncate" :title="hasSecondVariant ? `Variants: ${variantInput}, ${variantInput2}` : variantInput">
+    <v-card-title tag="h2" class="d-flex flex-wrap align-center evidence-title">
+      <div
+        class="variant-title"
+        :title="
+          hasSecondVariant
+            ? `Variants: ${variantInput}, ${variantInput2}`
+            : variantInput
+        "
+      >
         <template v-if="hasSecondVariant">
           Compound Heterozygous Variants
         </template>
@@ -24,19 +31,36 @@
                 ></v-btn>
               </template>
               <v-list density="compact">
-                <v-list-item v-if="variantLinks.ensembl" :href="variantLinks.ensembl" target="_blank" rel="noopener noreferrer">
+                <v-list-item
+                  v-if="variantLinks.ensembl"
+                  :href="variantLinks.ensembl"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   <v-list-item-title class="d-flex align-center">
                     <v-icon start size="small">mdi-dna</v-icon>
                     View in Ensembl
                   </v-list-item-title>
                 </v-list-item>
-                <v-list-item v-if="variantLinks.ucsc" :href="variantLinks.ucsc" target="_blank" rel="noopener noreferrer">
+                <v-list-item
+                  v-if="variantLinks.ucsc"
+                  :href="variantLinks.ucsc"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   <v-list-item-title class="d-flex align-center">
-                    <v-icon start size="small">mdi-chart-timeline-variant</v-icon>
+                    <v-icon start size="small"
+                      >mdi-chart-timeline-variant</v-icon
+                    >
                     View in UCSC Browser
                   </v-list-item-title>
                 </v-list-item>
-                <v-list-item v-if="variantLinks.gnomad" :href="variantLinks.gnomad" target="_blank" rel="noopener noreferrer">
+                <v-list-item
+                  v-if="variantLinks.gnomad"
+                  :href="variantLinks.gnomad"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   <v-list-item-title class="d-flex align-center">
                     <v-icon start size="small">mdi-chart-bar</v-icon>
                     View in gnomAD
@@ -51,10 +75,20 @@
       <div class="d-flex flex-nowrap ml-auto">
         <!-- Retry count badge - shown when retries have occurred -->
         <v-badge
-          v-if="retryStates.variant.attempts > 0 || (hasSecondVariant && retryStates.variant2 && retryStates.variant2.attempts > 0)"
+          v-if="
+            retryStates.variant.attempts > 0 ||
+            (hasSecondVariant &&
+              retryStates.variant2 &&
+              retryStates.variant2.attempts > 0)
+          "
           color="warning"
-          :content="hasSecondVariant ? (retryStates.variant.attempts + (retryStates.variant2?.attempts || 0)) : retryStates.variant.attempts"
-          :title="`Retried ${hasSecondVariant ? (retryStates.variant.attempts + (retryStates.variant2?.attempts || 0)) : retryStates.variant.attempts} times due to network issues`"
+          :content="
+            hasSecondVariant
+              ? retryStates.variant.attempts +
+                (retryStates.variant2?.attempts || 0)
+              : retryStates.variant.attempts
+          "
+          :title="`Retried ${hasSecondVariant ? retryStates.variant.attempts + (retryStates.variant2?.attempts || 0) : retryStates.variant.attempts} times due to network issues`"
           offset-x="5"
           offset-y="5"
           class="mr-1"
@@ -64,12 +98,20 @@
 
         <!-- Spinning icon when retry is in progress -->
         <v-tooltip
-          v-if="retryStates.variant.inProgress || (hasSecondVariant && retryStates.variant2?.inProgress)"
+          v-if="
+            retryStates.variant.inProgress ||
+            (hasSecondVariant && retryStates.variant2?.inProgress)
+          "
           location="top"
           text="Retrying API request..."
         >
           <template v-slot:activator="{ props }">
-            <v-icon v-bind="props" size="small" color="warning" class="ml-1 retry-spinner">
+            <v-icon
+              v-bind="props"
+              size="small"
+              color="warning"
+              class="ml-1 retry-spinner"
+            >
               mdi-refresh
             </v-icon>
           </template>
@@ -78,7 +120,10 @@
         <!-- Cache indicator - shows briefly when data is from cache -->
         <v-fade-transition>
           <v-chip
-            v-if="(activeTab === 0 && showCacheIndicator) || (activeTab === 1 && showCacheIndicator2)"
+            v-if="
+              (activeTab === 0 && showCacheIndicator) ||
+              (activeTab === 1 && showCacheIndicator2)
+            "
             size="small"
             color="primary"
             class="ml-2 cache-indicator"
@@ -90,7 +135,11 @@
       </div>
     </v-card-title>
 
-    <v-card-text>
+    <v-divider />
+    <v-card-text class="evidence-body">
+      <v-alert v-if="scoreError" type="error" variant="tonal" class="mb-3">
+        {{ scoreError }}
+      </v-alert>
       <!-- Add tabs for compound heterozygous variants -->
       <v-tabs v-if="hasSecondVariant" v-model="activeTab" class="mb-4" grow>
         <v-tab :value="0">
@@ -104,7 +153,10 @@
       </v-tabs>
 
       <!-- Loading state for the active tab -->
-      <div v-if="(activeTab === 0 && loading) || (activeTab === 1 && loading2)" class="loading-container">
+      <div
+        v-if="(activeTab === 0 && loading) || (activeTab === 1 && loading2)"
+        class="loading-container"
+      >
         <v-skeleton-loader
           class="mx-auto"
           :type="scoreInterpretationConfig.skeletonLoaders.variant.type"
@@ -113,11 +165,19 @@
       </div>
 
       <!-- Error state for the active tab -->
-      <div v-else-if="(activeTab === 0 && error) || (activeTab === 1 && error2)">
+      <div
+        v-else-if="(activeTab === 0 && error) || (activeTab === 1 && error2)"
+      >
         <v-alert type="error" dismissible>
-          <template v-if="(activeTab === 0 && isMaxRetriesError) || (activeTab === 1 && isMaxRetriesError2)">
-            Failed to load variant data after multiple attempts. There might be a temporary issue
-            with external services (e.g., Ensembl/VEP). Please try again later.
+          <template
+            v-if="
+              (activeTab === 0 && isMaxRetriesError) ||
+              (activeTab === 1 && isMaxRetriesError2)
+            "
+          >
+            Failed to load variant data after multiple attempts. There might be
+            a temporary issue with external services (e.g., Ensembl/VEP). Please
+            try again later.
           </template>
           <template v-else>{{ activeTab === 0 ? error : error2 }}</template>
         </v-alert>
@@ -125,188 +185,264 @@
 
       <div v-else class="variant-content-container">
         <!-- Score Section -->
-        <v-card class="mb-2 score-section pa-2" variant="outlined" v-if="activeTab === 0 ? Object.keys(scoreSummary).length > 0 : Object.keys(scoreSummary2).length > 0">
-           <v-table class="summary-table">
-              <tbody>
-                <DataDisplayRow
-                  v-for="[scoreKey, config] in visibleScoreConfig"
-                  :key="scoreKey"
-                  :config="config"
-                  :value="activeTab === 0 ? scoreSummary[scoreKey] : scoreSummary2[scoreKey]"
-                  :defaultValue="'NA'"
-                />
-              </tbody>
-            </v-table>
-        </v-card>
+        <section
+          class="evidence-section"
+          aria-label="Variant scores"
+          v-if="
+            activeTab === 0
+              ? Object.keys(scoreSummary).length > 0
+              : Object.keys(scoreSummary2).length > 0
+          "
+        >
+          <v-table class="summary-table">
+            <tbody>
+              <DataDisplayRow
+                v-for="[scoreKey, config] in visibleScoreConfig"
+                :key="scoreKey"
+                :config="config"
+                :value="
+                  activeTab === 0
+                    ? scoreSummary[scoreKey]
+                    : scoreSummary2[scoreKey]
+                "
+                :defaultValue="'NA'"
+              />
+            </tbody>
+          </v-table>
+        </section>
 
         <!-- Overall Summary Section -->
-        <v-card class="mb-2 summary-section pa-2" variant="outlined">
-            <v-table class="summary-table">
-              <tbody>
-                <DataDisplayRow
-                  :config="{
-                    label: 'Most Severe Consequence',
-                    description: 'The top predicted impact for this variant.',
-                  }"
-                  :value="activeTab === 0 ? annotationSummary.most_severe_consequence : annotationSummary2.most_severe_consequence"
-                  :defaultValue="'NA'"
-                />
+        <section class="evidence-section" aria-label="Variant summary">
+          <h3 class="section-title">Variant summary</h3>
+          <v-table class="summary-table">
+            <tbody>
+              <DataDisplayRow
+                :config="{
+                  label: 'Most Severe Consequence',
+                  description: 'The top predicted impact for this variant.',
+                }"
+                :value="
+                  activeTab === 0
+                    ? annotationSummary.most_severe_consequence
+                    : annotationSummary2.most_severe_consequence
+                "
+                :defaultValue="'NA'"
+              />
 
-                <DataDisplayRow
-                  :config="{
-                    label: 'Genomic Position',
-                    description: 'Genomic position based on GRCh38 assembly.',
-                    style: 'text',
-                    linkPattern: externalDbUrls.ucscGenome
-                  }"
-                  :value="activeTab === 0 ? annotationSummary.genomicPosition : annotationSummary2.genomicPosition"
-                  :linkValue="activeTab === 0 ? annotationSummary.genomicRegion : annotationSummary2.genomicRegion"
-                  :defaultValue="'N/A'"
-                />
+              <DataDisplayRow
+                :config="{
+                  label: 'Genomic Position',
+                  description: `Genomic position based on ${assembly} assembly.`,
+                  style: 'text',
+                  linkPattern: externalDbUrls.ucscGenome.replace(
+                    'db=hg38',
+                    assembly === 'GRCh37' ? 'db=hg19' : 'db=hg38',
+                  ),
+                }"
+                :value="
+                  activeTab === 0
+                    ? annotationSummary.genomicPosition
+                    : annotationSummary2.genomicPosition
+                "
+                :linkValue="
+                  activeTab === 0
+                    ? annotationSummary.genomicRegion
+                    : annotationSummary2.genomicRegion
+                "
+                :defaultValue="'N/A'"
+              />
 
-                <DataDisplayRow
-                  v-if="activeTab === 0 ? prioritizedGeneSymbol : prioritizedGeneSymbol2"
-                  :config="{
-                    label: 'Gene Symbol',
-                    description: 'Prioritized gene symbol based on MANE Select status and impact severity.',
-                    style: 'chip',
-                    font: 'italic',
-                    linkPattern: externalDbUrls.ensemblGene
-                  }"
-                  :value="activeTab === 0 ? prioritizedGeneSymbol : prioritizedGeneSymbol2"
-                  :title="activeTab === 0 ? annotationSummary.gene_symbol : annotationSummary2.gene_symbol"
-                />
+              <DataDisplayRow
+                v-if="
+                  activeTab === 0
+                    ? prioritizedGeneSymbol
+                    : prioritizedGeneSymbol2
+                "
+                :config="{
+                  label: 'Gene Symbol',
+                  description:
+                    'Prioritized gene symbol based on MANE Select status and impact severity.',
+                  style: 'chip',
+                  font: 'italic',
+                  linkPattern: externalDbUrls.ensemblGene,
+                }"
+                :value="
+                  activeTab === 0
+                    ? prioritizedGeneSymbol
+                    : prioritizedGeneSymbol2
+                "
+                :title="
+                  activeTab === 0
+                    ? annotationSummary.gene_symbol
+                    : annotationSummary2.gene_symbol
+                "
+              />
 
-                <DataDisplayRow
-                  v-if="
-                    activeTab === 0 ?
-                      (annotationSummary.gene_symbol &&
+              <DataDisplayRow
+                v-if="
+                  activeTab === 0
+                    ? annotationSummary.gene_symbol &&
                       annotationSummary.gene_symbol !== prioritizedGeneSymbol &&
-                      annotationSummary.gene_symbol.includes(',')) :
-                      (annotationSummary2.gene_symbol &&
-                      annotationSummary2.gene_symbol !== prioritizedGeneSymbol2 &&
-                      annotationSummary2.gene_symbol.includes(','))
-                  "
-                  :config="{
-                    label: 'All Gene Symbols',
-                    description: 'All gene symbols associated with this variant.',
-                    style: 'text',
-                    font: 'italic'
-                  }"
-                  :value="activeTab === 0 ? annotationSummary.gene_symbol : annotationSummary2.gene_symbol"
-                />
-              </tbody>
-            </v-table>
-        </v-card>
+                      annotationSummary.gene_symbol.includes(',')
+                    : annotationSummary2.gene_symbol &&
+                      annotationSummary2.gene_symbol !==
+                        prioritizedGeneSymbol2 &&
+                      annotationSummary2.gene_symbol.includes(',')
+                "
+                :config="{
+                  label: 'All Gene Symbols',
+                  description: 'All gene symbols associated with this variant.',
+                  style: 'text',
+                  font: 'italic',
+                }"
+                :value="
+                  activeTab === 0
+                    ? annotationSummary.gene_symbol
+                    : annotationSummary2.gene_symbol
+                "
+              />
+            </tbody>
+          </v-table>
+        </section>
 
         <!-- Frequency Section -->
-        <v-card class="mb-4" variant="outlined" v-if="activeTab === 0 ? frequencyExtracted : frequencyExtracted2">
-            <v-table class="summary-table">
+        <section
+          class="evidence-section"
+          aria-label="Population frequencies"
+          v-if="activeTab === 0 ? frequencyExtracted : frequencyExtracted2"
+        >
+          <h3 class="section-title">Population frequencies</h3>
+          <v-table class="summary-table">
+            <tbody>
+              <DataDisplayRow
+                v-for="[freqKey, config] in visibleFrequencyConfig"
+                :key="freqKey"
+                :config="config"
+                :value="
+                  (activeTab === 0 ? frequencyExtracted : frequencyExtracted2)[
+                    freqKey
+                  ]
+                "
+                :defaultValue="'NA'"
+              />
+            </tbody>
+          </v-table>
+        </section>
+
+        <!-- Transcript Consequences Section -->
+        <section
+          class="evidence-section"
+          aria-label="Transcript evidence"
+          v-if="activeTab === 0 ? transcriptIds.length : transcriptIds2.length"
+        >
+          <h3 class="section-title">Transcript evidence</h3>
+          <v-select
+            :model-value="
+              activeTab === 0 ? selectedTranscriptId : selectedTranscriptId2
+            "
+            @update:model-value="
+              (value) =>
+                activeTab === 0
+                  ? (selectedTranscriptId = value)
+                  : (selectedTranscriptId2 = value)
+            "
+            :items="
+              activeTab === 0
+                ? formattedTranscriptOptions
+                : formattedTranscriptOptions2
+            "
+            item-title="title"
+            item-value="value"
+            label="Select Transcript"
+            variant="outlined"
+            density="compact"
+            return-object
+            hide-details
+            class="mb-3"
+          >
+            <!-- Corrected v-slot:item -->
+            <template v-slot:item="{ item, props }">
+              <v-list-item
+                v-bind="props"
+                :title="item.title"
+                :class="{ 'font-weight-bold': item.mane }"
+              >
+                <!-- Add visual indicator for MANE Select transcripts -->
+                <template v-slot:prepend>
+                  <v-icon
+                    v-if="item.mane"
+                    color="primary"
+                    size="small"
+                    class="mr-2"
+                    title="MANE Select Transcript"
+                  >
+                    mdi-check-decagram
+                  </v-icon>
+                  <v-icon v-else size="small" class="mr-2" color="transparent">
+                    mdi-checkbox-blank-outline
+                  </v-icon>
+                  <!-- Placeholder for alignment -->
+                </template>
+
+                <!-- Add external link to the title -->
+                <template v-slot:title>
+                  <div class="d-flex align-center">
+                    <a
+                      :href="
+                        generateExternalLink(
+                          item.value,
+                          externalDbUrls.ensemblTranscript,
+                        )
+                      "
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="external-link"
+                      @click.stop
+                    >
+                      {{ item.title }}
+                      <v-icon size="x-small" class="ml-1"
+                        >mdi-open-in-new</v-icon
+                      >
+                    </a>
+                  </div>
+                </template>
+
+                <!-- Add impact badges -->
+                <template v-slot:append>
+                  <v-chip
+                    v-if="item.impact"
+                    size="small"
+                    :color="getImpactColor(item.impact)"
+                    class="ml-2"
+                    density="compact"
+                  >
+                    {{ item.impact }}
+                  </v-chip>
+                </template>
+              </v-list-item>
+            </template>
+          </v-select>
+          <!-- Transcript Details Table -->
+          <div
+            v-if="activeTab === 0 ? selectedTranscript : selectedTranscript2"
+          >
+            <v-table class="annotation-table">
               <tbody>
                 <DataDisplayRow
-                  v-for="[freqKey, config] in visibleFrequencyConfig"
-                  :key="freqKey"
-                  :config="config"
-                  :value="(activeTab === 0 ? frequencyExtracted : frequencyExtracted2)[freqKey]"
+                  v-for="entry in visibleAnnotationConfig"
+                  :key="entry[0]"
+                  :config="entry[1]"
+                  :value="
+                    (activeTab === 0
+                      ? selectedTranscript
+                      : selectedTranscript2)[entry[0]]
+                  "
                   :defaultValue="'NA'"
                 />
               </tbody>
             </v-table>
-        </v-card>
-
-        <!-- Transcript Consequences Section -->
-        <v-card class="mb-4" variant="outlined" v-if="activeTab === 0 ? transcriptIds.length : transcriptIds2.length">
-          <v-card-text>
-            <v-select
-              :model-value="activeTab === 0 ? selectedTranscriptId : selectedTranscriptId2"
-              @update:model-value="value => activeTab === 0 ? selectedTranscriptId = value : selectedTranscriptId2 = value"
-              :items="activeTab === 0 ? formattedTranscriptOptions : formattedTranscriptOptions2"
-              item-title="title"
-              item-value="value"
-              label="Select Transcript"
-              variant="outlined"
-              density="compact"
-              return-object
-              hide-details
-              class="mb-3"
-            >
-              <!-- Corrected v-slot:item -->
-              <template v-slot:item="{ item, props }">
-                 <v-list-item
-                  v-bind="props"
-                  :title="item.title"
-                  :class="{'font-weight-bold': item.mane}"
-                >
-                  <!-- Add visual indicator for MANE Select transcripts -->
-                  <template v-slot:prepend>
-                    <v-icon
-                      v-if="item.mane"
-                      color="primary"
-                      size="small"
-                      class="mr-2"
-                      title="MANE Select Transcript"
-                    >
-                      mdi-check-decagram
-                    </v-icon>
-                     <v-icon
-                      v-else
-                      size="small"
-                      class="mr-2"
-                      color="transparent"
-                    >
-                      mdi-checkbox-blank-outline
-                    </v-icon>
-                    <!-- Placeholder for alignment -->
-                  </template>
-
-                  <!-- Add external link to the title -->
-                  <template v-slot:title>
-                    <div class="d-flex align-center">
-                      <a
-                        :href="generateExternalLink(item.value, externalDbUrls.ensemblTranscript)"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        class="external-link"
-                        @click.stop
-                      >
-                        {{ item.title }}
-                        <v-icon size="x-small" class="ml-1">mdi-open-in-new</v-icon>
-                      </a>
-                    </div>
-                  </template>
-
-                  <!-- Add impact badges -->
-                  <template v-slot:append>
-                    <v-chip
-                      v-if="item.impact"
-                      size="small"
-                      :color="getImpactColor(item.impact)"
-                      class="ml-2"
-                      density="compact"
-                    >
-                      {{ item.impact }}
-                    </v-chip>
-                  </template>
-                </v-list-item>
-              </template>
-            </v-select>
-            <!-- Transcript Details Table -->
-            <div v-if="activeTab === 0 ? selectedTranscript : selectedTranscript2">
-              <v-table class="annotation-table">
-                <tbody>
-                  <DataDisplayRow
-                    v-for="entry in visibleAnnotationConfig"
-                    :key="entry[0]"
-                    :config="entry[1]"
-                    :value="(activeTab === 0 ? selectedTranscript : selectedTranscript2)[entry[0]]"
-                    :defaultValue="'NA'"
-                  />
-                </tbody>
-              </v-table>
-            </div>
-          </v-card-text>
-        </v-card>
-
+          </div>
+        </section>
       </div>
     </v-card-text>
   </v-card>
@@ -317,16 +453,27 @@ import { ref, onMounted, computed, inject, watchEffect } from 'vue';
 import { logService } from '@/services/logService';
 import DataDisplayRow from '@/components/DataDisplayRow.vue';
 import { queryVariant } from '@/api/variantApi.js';
-import { generateVariantLinks, generateExternalLink, parseVariantString } from '@/utils/linkUtils.js';
-import { variantAnnotationConfig, externalDbUrls } from '@/config/variantAnnotationConfig.js';
+import {
+  generateVariantLinks,
+  generateExternalLink,
+  parseVariantString,
+} from '@/utils/linkUtils.js';
+import {
+  variantAnnotationConfig,
+  externalDbUrls,
+} from '@/config/variantAnnotationConfig.js';
 import { variantFrequencyConfig } from '@/config/variantFrequencyConfig.js';
 import { variantScoreConfig } from '@/config/variantScoreConfig.js';
 import { getColor, formatValue } from '@/utils/format.js';
 import useRetryState from '@/composables/useRetryState.js';
 import { getPrioritizedGeneSymbol } from '@/utils/geneSymbolUtils.js';
-import { prioritizeTranscript, formatTranscriptOptions } from '@/utils/transcriptUtils.js';
+import {
+  prioritizeTranscript,
+  formatTranscriptOptions,
+} from '@/utils/transcriptUtils.js';
 import { scoreInterpretationConfig } from '@/config/scoreInterpretationConfig.js';
 import { API_CACHE_KEY } from '@/composables/useApiCache';
+import { parseUnitScore } from '@/utils/scoringUtils.js';
 
 export default {
   name: 'VariantCard',
@@ -376,23 +523,35 @@ export default {
     const variantLinks = computed(() => {
       if (!props.variantInput) return null;
       // Use the currently active variant for links if tabs are shown
-      const inputForLinks = (hasSecondVariant.value && activeTab.value === 1) ? props.variantInput2 : props.variantInput;
-      return generateVariantLinks(inputForLinks, externalDbUrls);
+      const inputForLinks =
+        hasSecondVariant.value && activeTab.value === 1
+          ? props.variantInput2
+          : props.variantInput;
+      return generateVariantLinks(
+        inputForLinks,
+        externalDbUrls,
+        props.assembly,
+      );
     });
 
     // Get shared retry state from parent or create a new one
     const injectedRetryState = inject('retryState', null);
     const { retryStates } = injectedRetryState || useRetryState();
-    
+
     // Inject API cache instance
     const apiCache = inject(API_CACHE_KEY, null);
 
     // Ensure retry state for variant2 exists if needed
     if (props.variantInput2 && !retryStates.variant2) {
-       retryStates.variant2 = {
-          attempts: 0, inProgress: false, component: '',
-          reset: function() { this.attempts = 0; this.inProgress = false; }
-       };
+      retryStates.variant2 = {
+        attempts: 0,
+        inProgress: false,
+        component: '',
+        reset: function () {
+          this.attempts = 0;
+          this.inProgress = false;
+        },
+      };
     }
 
     // Helper function to extract annotation summary including genomic position
@@ -409,55 +568,68 @@ export default {
       };
 
       // Check if apiResult and annotationData exist
-      if (apiResult && apiResult.annotationData && apiResult.annotationData.length > 0) {
-         const anno = apiResult.annotationData[0]; // Use first annotation entry
-         const topLevel = apiResult; // Also check top-level response data
+      if (
+        apiResult &&
+        apiResult.annotationData &&
+        apiResult.annotationData.length > 0
+      ) {
+        const anno = apiResult.annotationData[0]; // Use first annotation entry
+        const topLevel = apiResult; // Also check top-level response data
 
-         logService.debug('Processing annotation:', {
-           anno_data: anno,
-           top_level: topLevel,
-           has_variant_key: !!topLevel.variantKey,
-           has_region: !!(topLevel.seq_region_name && topLevel.start)
-         });
+        logService.debug('Processing annotation:', {
+          anno_data: anno,
+          top_level: topLevel,
+          has_variant_key: !!topLevel.variantKey,
+          has_region: !!(topLevel.seq_region_name && topLevel.start),
+        });
 
-         summary.most_severe_consequence = anno.most_severe_consequence || 'N/A';
-         summary.gene_symbol = Array.isArray(anno.gene_symbol) ? anno.gene_symbol.join(', ') : anno.gene_symbol || 'N/A';
-         summary.hgnc_id = Array.isArray(anno.hgnc_id) ? anno.hgnc_id.join(', ') : anno.hgnc_id || 'N/A';
-         summary.fullAnnotation = anno; // Keep full annotation
+        summary.most_severe_consequence = anno.most_severe_consequence || 'N/A';
+        summary.gene_symbol = Array.isArray(anno.gene_symbol)
+          ? anno.gene_symbol.join(', ')
+          : anno.gene_symbol || 'N/A';
+        summary.hgnc_id = Array.isArray(anno.hgnc_id)
+          ? anno.hgnc_id.join(', ')
+          : anno.hgnc_id || 'N/A';
+        summary.fullAnnotation = anno; // Keep full annotation
 
-         // Extract Genomic Position
-         const assembly = topLevel.assembly_name || 'GRCh38'; // Default to GRCh38 if missing
-         
-         // Look for position data in both top level and annotation
-         const positionData = {
-           variantKey: topLevel.variantKey || anno.variantKey,
-           seq_region_name: topLevel.seq_region_name || anno.seq_region_name,
-           start: topLevel.start || anno.start,
-           end: topLevel.end || anno.end || topLevel.start || anno.start,
-           assembly: assembly
-         };
+        // Extract Genomic Position
+        const assembly =
+          anno.assembly_name || topLevel.assembly_name || props.assembly;
 
-         logService.debug('Position data extracted:', positionData);
+        // Look for position data in both top level and annotation
+        const positionData = {
+          variantKey: topLevel.variantKey || anno.variantKey,
+          seq_region_name: topLevel.seq_region_name || anno.seq_region_name,
+          start: topLevel.start || anno.start,
+          end: topLevel.end || anno.end || topLevel.start || anno.start,
+          assembly: assembly,
+        };
 
-         if (positionData.variantKey) { // Prioritize variantKey
-            const variantKeyWithoutAssembly = positionData.variantKey;
-            summary.genomicPosition = `${variantKeyWithoutAssembly} (${assembly})`;
-            // Use parseVariantString for proper UCSC region formatting
-            const parsed = parseVariantString(variantKeyWithoutAssembly);
-            if (parsed) {
-                summary.genomicRegion = parsed.ucscRegion;
-            }
-         } else if (positionData.seq_region_name && positionData.start) { // Fallback
-            const chr = positionData.seq_region_name.startsWith('chr') ? positionData.seq_region_name : `chr${positionData.seq_region_name}`;
-            const pos = positionData.start;
-            summary.genomicPosition = `${chr}-${pos} (${assembly})`;
-            summary.genomicRegion = `${chr}:${pos}`;
-         }
+        logService.debug('Position data extracted:', positionData);
 
-         logService.debug('Final genomic data:', {
-           position: summary.genomicPosition,
-           region: summary.genomicRegion
-         });
+        if (positionData.variantKey) {
+          // Prioritize variantKey
+          const variantKeyWithoutAssembly = positionData.variantKey;
+          summary.genomicPosition = `${variantKeyWithoutAssembly} (${assembly})`;
+          // Use parseVariantString for proper UCSC region formatting
+          const parsed = parseVariantString(variantKeyWithoutAssembly);
+          if (parsed) {
+            summary.genomicRegion = parsed.ucscRegion;
+          }
+        } else if (positionData.seq_region_name && positionData.start) {
+          // Fallback
+          const chr = positionData.seq_region_name.startsWith('chr')
+            ? positionData.seq_region_name
+            : `chr${positionData.seq_region_name}`;
+          const pos = positionData.start;
+          summary.genomicPosition = `${chr}-${pos} (${assembly})`;
+          summary.genomicRegion = `${chr}:${pos}`;
+        }
+
+        logService.debug('Final genomic data:', {
+          position: summary.genomicPosition,
+          region: summary.genomicRegion,
+        });
       }
       return summary;
     };
@@ -486,7 +658,9 @@ export default {
     });
 
     // Maintain a list of transcript IDs for backward compatibility
-    const transcriptIds = computed(() => transcriptOptions.value.map((tc) => tc.transcript_id));
+    const transcriptIds = computed(() =>
+      transcriptOptions.value.map((tc) => tc.transcript_id),
+    );
 
     // Track selected transcript ID object
     const selectedTranscriptId = ref(null);
@@ -494,9 +668,13 @@ export default {
     // Find the currently selected transcript detail
     const selectedTranscript = computed(() => {
       if (!selectedTranscriptId.value) return null;
-      const transcriptId = typeof selectedTranscriptId.value === 'object' ?
-        selectedTranscriptId.value.value : selectedTranscriptId.value;
-      return transcriptOptions.value.find((tc) => tc.transcript_id === transcriptId);
+      const transcriptId =
+        typeof selectedTranscriptId.value === 'object'
+          ? selectedTranscriptId.value.value
+          : selectedTranscriptId.value;
+      return transcriptOptions.value.find(
+        (tc) => tc.transcript_id === transcriptId,
+      );
     });
 
     // VARIANT 2 - Similar computed properties for the second variant
@@ -520,24 +698,30 @@ export default {
       return formatTranscriptOptions(transcriptOptions2.value);
     });
 
-    const transcriptIds2 = computed(() => transcriptOptions2.value.map((tc) => tc.transcript_id));
+    const transcriptIds2 = computed(() =>
+      transcriptOptions2.value.map((tc) => tc.transcript_id),
+    );
 
     const selectedTranscriptId2 = ref(null);
 
     const selectedTranscript2 = computed(() => {
       if (!selectedTranscriptId2.value) return null;
-      const transcriptId = typeof selectedTranscriptId2.value === 'object' ?
-        selectedTranscriptId2.value.value : selectedTranscriptId2.value;
-      return transcriptOptions2.value.find((tc) => tc.transcript_id === transcriptId);
+      const transcriptId =
+        typeof selectedTranscriptId2.value === 'object'
+          ? selectedTranscriptId2.value.value
+          : selectedTranscriptId2.value;
+      return transcriptOptions2.value.find(
+        (tc) => tc.transcript_id === transcriptId,
+      );
     });
 
     // Function to get color for impact badges
     const getImpactColor = (impact) => {
       const impactColors = {
-        'HIGH': 'error',
-        'MODERATE': 'warning',
-        'LOW': 'info',
-        'MODIFIER': 'grey'
+        HIGH: 'error',
+        MODERATE: 'warning',
+        LOW: 'info',
+        MODIFIER: 'grey',
       };
       return impactColors[impact] || 'grey';
     };
@@ -548,16 +732,25 @@ export default {
         // Skip gene_symbol in transcript details as it's redundant with main display
         if (key === 'gene_symbol') return false;
         // Skip low-importance fields to reduce clutter
-        if (key === 'gene_symbol_source' || key === 'used_ref' || key === 'given_ref' || key === 'source') return false;
+        if (
+          key === 'gene_symbol_source' ||
+          key === 'used_ref' ||
+          key === 'given_ref' ||
+          key === 'source'
+        )
+          return false;
         // Only show cadd_phred, not both cadd scores
-        if (key === 'cadd_raw' && variantAnnotationConfig.cadd_phred.visibility) return false;
+        if (key === 'cadd_raw' && variantAnnotationConfig.cadd_phred.visibility)
+          return false;
 
         return config.visibility;
       });
     });
 
     // VARIANT 1 - Compute summary data from the first annotation object.
-    const annotationSummary = computed(() => getAnnotationSummary(result.value));
+    const annotationSummary = computed(() =>
+      getAnnotationSummary(result.value),
+    );
     // Prioritized single gene symbol based on MANE Select and impact severity
     const prioritizedGeneSymbol = computed(() => {
       if (!annotationSummary.value.fullAnnotation) {
@@ -571,6 +764,7 @@ export default {
       if (
         result.value &&
         result.value.annotationData &&
+        result.value.annotationData.length > 0 &&
         result.value.annotationData[0].colocated_variants &&
         result.value.annotationData[0].colocated_variants.length > 0 &&
         result.value.annotationData[0].colocated_variants[0].frequencies
@@ -593,7 +787,9 @@ export default {
 
     // Compute visible frequency config entries.
     const visibleFrequencyConfig = computed(() => {
-      return Object.entries(variantFrequencyConfig).filter(([, config]) => config.visibility);
+      return Object.entries(variantFrequencyConfig).filter(
+        ([, config]) => config.visibility,
+      );
     });
 
     // Compute score summary from the first annotation object.
@@ -605,14 +801,17 @@ export default {
         result.value.annotationData[0].nephro_variant_score !== undefined
       ) {
         return {
-          nephro_variant_score: result.value.annotationData[0].nephro_variant_score,
+          nephro_variant_score:
+            result.value.annotationData[0].nephro_variant_score,
         };
       }
       return {};
     });
 
     // VARIANT 2 - Compute summary data from the second annotation object
-    const annotationSummary2 = computed(() => getAnnotationSummary(result2.value));
+    const annotationSummary2 = computed(() =>
+      getAnnotationSummary(result2.value),
+    );
 
     const prioritizedGeneSymbol2 = computed(() => {
       if (!annotationSummary2.value.fullAnnotation) {
@@ -625,11 +824,13 @@ export default {
       if (
         result2.value &&
         result2.value.annotationData &&
+        result2.value.annotationData.length > 0 &&
         result2.value.annotationData[0].colocated_variants &&
         result2.value.annotationData[0].colocated_variants.length > 0 &&
         result2.value.annotationData[0].colocated_variants[0].frequencies
       ) {
-        return result2.value.annotationData[0].colocated_variants[0].frequencies;
+        return result2.value.annotationData[0].colocated_variants[0]
+          .frequencies;
       }
       return null;
     });
@@ -652,7 +853,8 @@ export default {
         result2.value.annotationData[0].nephro_variant_score !== undefined
       ) {
         return {
-          nephro_variant_score: result2.value.annotationData[0].nephro_variant_score,
+          nephro_variant_score:
+            result2.value.annotationData[0].nephro_variant_score,
         };
       }
       return {};
@@ -660,7 +862,9 @@ export default {
 
     // Compute visible score config entries.
     const visibleScoreConfig = computed(() => {
-      return Object.entries(variantScoreConfig).filter(([, config]) => config.visibility);
+      return Object.entries(variantScoreConfig).filter(
+        ([, config]) => config.visibility,
+      );
     });
 
     // Determine if a score exists.
@@ -669,7 +873,9 @@ export default {
     // Helper: Format value or return a default ("NA") if value is null/undefined or empty.
     const formatOrDefault = (value, config) => {
       const formatted = formatValue(value, config);
-      return formatted === null || formatted === undefined || formatted === '' ? 'NA' : formatted;
+      return formatted === null || formatted === undefined || formatted === ''
+        ? 'NA'
+        : formatted;
     };
 
     // Helper function to load variant data
@@ -685,7 +891,7 @@ export default {
       formattedOptionsRef,
       prioritizedRef,
       selectedIdRef,
-      assembly
+      assembly,
     ) => {
       if (!variantInputToLoad) return false;
 
@@ -707,22 +913,26 @@ export default {
           apiCache,
           onRetry: (err, attempt) => {
             retryState.inProgress = true;
-            logService.warn(`Retry attempt ${attempt} for ${retryStateKey}: ${err.message}`);
+            logService.warn(
+              `Retry attempt ${attempt} for ${retryStateKey}: ${err.message}`,
+            );
           },
           onSuccess: (attempts) => {
             retryState.inProgress = false;
-             if (attempts > 0) {
-                logService.info(`Successfully fetched ${retryStateKey} after ${attempts} retries.`);
-             }
+            if (attempts > 0) {
+              logService.info(
+                `Successfully fetched ${retryStateKey} after ${attempts} retries.`,
+              );
+            }
           },
         });
 
         // Handle the response
         logService.debug('API Response:', response);
-        
+
         // Ensure we have a properly structured response
         let responseData = response.data;
-        
+
         // Handle case where response.data might be an array
         if (Array.isArray(responseData)) {
           // Avoid reactive logging that might cause infinite loops
@@ -735,7 +945,10 @@ export default {
           // Avoid reactive logging that might cause infinite loops
           console.log('No annotationData found in response, restructuring...');
           // If the response itself looks like annotation data, wrap it
-          if (responseData.most_severe_consequence || responseData.gene_symbol) {
+          if (
+            responseData.most_severe_consequence ||
+            responseData.gene_symbol
+          ) {
             responseData = { annotationData: [responseData] };
           } else {
             responseData = { annotationData: [] };
@@ -760,9 +973,10 @@ export default {
         if (formattedOptionsRef.value.length > 0) {
           if (prioritizedRef.value) {
             const prioritizedOption = formattedOptionsRef.value.find(
-              option => option.value === prioritizedRef.value.transcript_id
+              (option) => option.value === prioritizedRef.value.transcript_id,
             );
-            selectedIdRef.value = prioritizedOption || formattedOptionsRef.value[0];
+            selectedIdRef.value =
+              prioritizedOption || formattedOptionsRef.value[0];
           } else {
             selectedIdRef.value = formattedOptionsRef.value[0];
           }
@@ -778,7 +992,9 @@ export default {
           errorRef.value = `Maximum retry attempts reached for ${variantInputToLoad}.`;
         } else {
           isMaxRetriesErrorRef.value = false;
-          errorRef.value = err.message || `Error fetching variant data for ${variantInputToLoad}.`;
+          errorRef.value =
+            err.message ||
+            `Error fetching variant data for ${variantInputToLoad}.`;
         }
         return false;
       } finally {
@@ -803,7 +1019,7 @@ export default {
           formattedTranscriptOptions,
           prioritizedTranscript,
           selectedTranscriptId,
-          props.assembly
+          props.assembly,
         ),
         props.variantInput2
           ? loadVariantData(
@@ -818,29 +1034,39 @@ export default {
               formattedTranscriptOptions2,
               prioritizedTranscript2,
               selectedTranscriptId2,
-              props.assembly
+              props.assembly,
             )
           : Promise.resolve(),
       ]);
     });
 
-    // Calculate combined score for compound heterozygous cases
+    const primaryScore = computed(() =>
+      parseUnitScore(scoreSummary.value.nephro_variant_score),
+    );
+    const secondaryScore = computed(() =>
+      parseUnitScore(scoreSummary2.value.nephro_variant_score),
+    );
+    const scoreError = computed(() => {
+      const invalidPrimary =
+        !loading.value && result.value && primaryScore.value === null;
+      const invalidSecondary =
+        hasSecondVariant.value &&
+        !loading2.value &&
+        result2.value &&
+        secondaryScore.value === null;
+      return invalidPrimary || invalidSecondary
+        ? 'Variant score is missing or invalid. Try the assessment again; a measured score between 0 and 1 is required for each variant.'
+        : '';
+    });
+
+    // Validate each operand before averaging; invalid values can otherwise cancel out.
     const combinedVariantScore = computed(() => {
-      // If we have two variant scores (compound heterozygous)
-      if (hasSecondVariant.value &&
-          Object.keys(scoreSummary.value).length > 0 &&
-          Object.keys(scoreSummary2.value).length > 0) {
-        // Average of both scores
-        const score1 = scoreSummary.value.nephro_variant_score || 0;
-        const score2 = scoreSummary2.value.nephro_variant_score || 0;
-        return (Number(score1) + Number(score2)) / 2;
+      if (hasSecondVariant.value) {
+        if (primaryScore.value === null || secondaryScore.value === null)
+          return null;
+        return (primaryScore.value + secondaryScore.value) / 2;
       }
-      // If only first variant has a score
-      else if (Object.keys(scoreSummary.value).length > 0) {
-        return scoreSummary.value.nephro_variant_score || 0;
-      }
-      // Fallback
-      return 0;
+      return primaryScore.value;
     });
 
     // Emit variant data changes to parent component
@@ -848,6 +1074,16 @@ export default {
       // This watcher needs to be careful not to emit before data is loaded
       if (loading.value || (hasSecondVariant.value && loading2.value)) {
         return; // Don't emit during initial load
+      }
+      const requestError =
+        error.value || (hasSecondVariant.value && error2.value);
+      if (requestError) {
+        emit('variant-score-updated', {
+          score: null,
+          error: requestError,
+          prioritizedGeneSymbol: '',
+        });
+        return;
       }
 
       // Determine which data to emit based on whether we have a second variant
@@ -858,8 +1094,8 @@ export default {
             score: combinedVariantScore.value,
             variant1: props.variantInput,
             variant2: props.variantInput2,
-            score1: scoreSummary.value.nephro_variant_score || 0,
-            score2: scoreSummary2.value.nephro_variant_score || 0,
+            score1: primaryScore.value,
+            score2: secondaryScore.value,
             isCompoundHet: true,
             geneSummary: annotationSummary.value, // Provide primary variant's gene summary
             prioritizedGeneSymbol: prioritizedGeneSymbol.value, // Use primary prioritized symbol
@@ -867,29 +1103,30 @@ export default {
             selectedTranscript: selectedTranscript.value,
             // Optionally include second variant's data if needed by parent
             secondVariantData: {
-               geneSummary: annotationSummary2.value,
-               prioritizedGeneSymbol: prioritizedGeneSymbol2.value,
-               frequencyExtracted: frequencyExtracted2.value,
-               selectedTranscript: selectedTranscript2.value
-            }
+              geneSummary: annotationSummary2.value,
+              prioritizedGeneSymbol: prioritizedGeneSymbol2.value,
+              frequencyExtracted: frequencyExtracted2.value,
+              selectedTranscript: selectedTranscript2.value,
+            },
           });
         }
       } else {
         // For single variant, ensure data is loaded and no error
-         if (!error.value && result.value) {
-            emit('variant-score-updated', {
-              score: scoreSummary.value.nephro_variant_score || 0,
-              variant: props.variantInput,
-              geneSummary: annotationSummary.value,
-              prioritizedGeneSymbol: prioritizedGeneSymbol.value,
-              frequencyExtracted: frequencyExtracted.value, // Include frequency data
-              selectedTranscript: selectedTranscript.value // Include selected transcript data
-            });
-         }
+        if (!error.value && result.value) {
+          emit('variant-score-updated', {
+            score: primaryScore.value,
+            variant: props.variantInput,
+            geneSummary: annotationSummary.value,
+            prioritizedGeneSymbol: prioritizedGeneSymbol.value,
+            frequencyExtracted: frequencyExtracted.value, // Include frequency data
+            selectedTranscript: selectedTranscript.value, // Include selected transcript data
+          });
+        }
       }
     });
 
     return {
+      scoreError,
       // UI Control
       activeTab,
       hasSecondVariant,
@@ -943,17 +1180,30 @@ export default {
       combinedVariantScore,
       // *** Make sure imported utils/configs used in template are returned ***
       generateExternalLink,
-      externalDbUrls // Needed for the link pattern in the template
+      externalDbUrls, // Needed for the link pattern in the template
     };
   },
 };
 </script>
 
 <style scoped>
-.variant-card {
-  /* max-width: 600px; <-- Can be removed if parent container controls width */
-  margin: auto;
-  /* padding: 16px; <-- Padding handled by v-card-text */
+.evidence-title {
+  padding: 16px 20px;
+  font-size: 1.125rem;
+  line-height: 1.5;
+}
+.evidence-body {
+  padding: 12px 20px 20px;
+}
+.evidence-section + .evidence-section {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+}
+.section-title {
+  margin-bottom: 12px;
+  font-size: 0.875rem;
+  font-weight: 600;
 }
 .summary-table {
   width: 100%;
@@ -981,12 +1231,6 @@ export default {
 .mt-4 {
   margin-top: 16px;
 }
-.summary-section {
-  margin-bottom: 12px;
-  border-radius: 4px;
-  background-color: var(--v-theme-surface);
-  padding: 12px;
-}
 .summary-item {
   margin-bottom: 4px;
   padding: 4px 0;
@@ -994,7 +1238,6 @@ export default {
 
 .summary-item.key-score {
   background-color: var(--v-theme-surface-variant);
-  border-left: 4px solid var(--v-theme-primary);
   padding-left: 8px;
 }
 
@@ -1029,10 +1272,10 @@ export default {
 }
 
 .variant-title {
-  max-width: calc(100% - 100px); /* Reserve space for indicators */
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .external-link {

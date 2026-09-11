@@ -6,7 +6,7 @@ name: Deploy to GitHub Pages
 on:
   # Trigger deployment when the "Semantic Release" workflow completes successfully on main
   workflow_run:
-    workflows: ["Semantic Release"]
+    workflows: ['Semantic Release']
     types:
       - completed
     branches:
@@ -21,7 +21,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: "pages"
+  group: 'pages'
   cancel-in-progress: true
 
 permissions:
@@ -43,7 +43,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20.x'
+          node-version: '22.x'
           cache: 'npm'
 
       - name: Install Dependencies

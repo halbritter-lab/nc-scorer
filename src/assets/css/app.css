@@ -1,0 +1,230 @@
+@font-face {
+  font-family: 'Source Sans 3';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('/fonts/source-sans-3-latin.woff2') format('woff2');
+}
+/* Shared application surfaces and form rhythm. */
+.v-application,
+.v-overlay-container {
+  font-family: 'Source Sans 3', 'Segoe UI', sans-serif;
+}
+.v-application [class*='text-h'],
+.v-application [class*='text-body'],
+.v-application [class*='text-subtitle'],
+.v-application .text-caption,
+.v-overlay-container [class*='text-h'],
+.v-overlay-container [class*='text-body'],
+.v-overlay-container [class*='text-subtitle'],
+.v-overlay-container .text-caption {
+  font-family: inherit !important;
+}
+.v-application .v-btn {
+  text-transform: none;
+  letter-spacing: normal;
+}
+.v-application .v-tab {
+  text-transform: none;
+  letter-spacing: normal;
+}
+.v-application a {
+  color: rgb(var(--v-theme-primary));
+  text-underline-offset: 3px;
+}
+.v-application :focus-visible {
+  outline: 2px solid rgb(var(--v-theme-primary));
+  outline-offset: 4px;
+}
+.v-application input {
+  caret-color: rgb(var(--v-theme-primary));
+}
+.v-application ::selection {
+  background: rgba(var(--v-theme-primary), 0.25);
+}
+.v-application .v-main {
+  padding-bottom: 40px;
+  transition-property: transform, opacity;
+}
+.v-application .v-responsive__sizer {
+  transition: none;
+}
+.app-header,
+.app-header .v-toolbar__content,
+.app-footer {
+  transition-property: transform, opacity, box-shadow;
+}
+/* Progress updates and table density changes must not animate layout. */
+.v-application .v-progress-linear,
+.v-application .v-progress-linear > .v-progress-linear__determinate,
+.v-application .v-progress-linear > .v-progress-linear__background,
+.v-application .v-progress-linear > .v-progress-linear__buffer,
+.v-application .v-progress-linear > .v-progress-linear__stream {
+  transition-property: transform, opacity;
+}
+.v-application .v-table,
+.v-application .v-table .v-table__wrapper :is(th, td) {
+  transition-property: box-shadow, opacity, background-color;
+}
+html {
+  scroll-padding-top: 88px;
+}
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px 24px;
+  min-height: 112px;
+  margin: 0 0 24px;
+}
+.page-header > div {
+  min-width: 0;
+}
+.v-application .page-title {
+  margin: 0;
+  font-size: clamp(1.75rem, 2.8vw, 2.25rem);
+  font-weight: 650;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+.page-header p {
+  max-width: 72ch;
+  margin: 12px 0 0;
+  color: rgb(var(--v-theme-on-surface-variant));
+  font-size: 1rem;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.page-header-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  flex-shrink: 0;
+  font-size: 0.95rem;
+}
+.form-heading {
+  margin-bottom: 24px;
+}
+.form-heading h2 {
+  font-size: 1.25rem;
+  line-height: 1.4;
+  font-weight: 650;
+}
+.form-heading p {
+  margin-top: 6px;
+  color: rgb(var(--v-theme-on-surface-variant));
+  line-height: 1.6;
+}
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+.form-grid + .v-btn {
+  margin-top: 20px;
+}
+.v-application .v-messages {
+  opacity: 1;
+  color: rgb(var(--v-theme-on-surface-variant));
+  line-height: 1.4;
+}
+.v-application .v-messages__message {
+  line-height: 1.4;
+}
+.scoring-search-card,
+.variant-search-card,
+.gene-search-form {
+  max-width: 900px;
+  margin: 0 auto;
+}
+.scoring-search-card > .v-input,
+.variant-search-card > .v-input {
+  margin-bottom: 20px;
+}
+.form-examples {
+  margin-top: 32px;
+  border-top: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+  padding-top: 20px;
+}
+.form-examples h3 {
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.example-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 28px;
+}
+.example-list a {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 56px;
+  padding: 8px 0;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+  font-size: 0.95rem;
+}
+.example-list a:hover > span:first-child {
+  text-decoration: underline;
+}
+.example-detail {
+  color: rgb(var(--v-theme-on-surface-variant));
+  font-size: 0.875rem;
+  margin-top: 2px;
+}
+.v-card-title {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.v-application .v-card-text p {
+  max-width: 72ch;
+}
+.v-application .v-card-text :is(ul, ol) {
+  padding-inline-start: 1.5rem;
+}
+.v-data-table {
+  font-variant-numeric: tabular-nums;
+}
+.skip-link {
+  position: fixed;
+  top: -100px;
+  left: 16px;
+  padding: 12px 20px;
+  background: rgb(var(--v-theme-surface));
+  z-index: 3000;
+}
+.skip-link:focus {
+  top: 8px;
+}
+@media (max-width: 600px) {
+  .page-header {
+    flex-direction: column;
+    gap: 12px;
+    min-height: 200px;
+  }
+  .form-grid,
+  .example-list {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+  .form-grid > .v-input {
+    margin-bottom: 20px;
+  }
+  .v-card-text {
+    overflow-wrap: anywhere;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .v-window__container,
+  .v-window-item,
+  .v-tab__slider {
+    transition: none !important;
+  }
+}

@@ -4,17 +4,15 @@ import App from './App.vue';
 import router from './router';
 import { createPinia } from 'pinia';
 import { createHead } from '@unhead/vue/client';
+import { useUiStore } from '@/stores/uiStore';
 
 // Vuetify - Manual style imports to avoid sass-embedded dependency issues
 import 'vuetify/styles';
-import '@mdi/font/css/materialdesignicons.css';
 
-// Custom CSS for font optimization without requiring Sass processing
+// Shared touch target sizing
 import '@/assets/css/font-optimization.css';
 import { createVuetify } from 'vuetify';
-
-// Performance optimization: Add font-display: swap to prevent FOIT (Flash of Invisible Text)
-// This is done via CSS instead of Sass to avoid sass-embedded issues
+import { iconConfig } from '@/config/iconConfig';
 
 // Import the theme configuration
 import themeConfig from '@/config/themeConfig.json';
@@ -26,20 +24,29 @@ const ENABLE_PERFORMANCE_HINTS = true;
 
 // Create Vuetify instance with tree-shaking enabled via vite-plugin-vuetify
 const vuetify = createVuetify({
+  icons: iconConfig,
   theme: {
     defaultTheme: themeConfig.defaultTheme,
     themes: {
       dark: {
         colors: {
-          primary: '#1976D2',
-          'primary-darken-1': '#1565C0',
+          background: '#101b1a',
+          surface: '#192725',
+          primary: '#a0ddd0',
+          'primary-darken-1': '#6daf9f',
+          'on-surface': '#e2efeb',
+          'on-surface-variant': '#afc5bf',
           secondary: '#00695C',
         },
       },
       light: {
         colors: {
-          primary: '#1565C0',
-          'primary-darken-1': '#0D47A1',
+          background: '#f5f8f7',
+          surface: '#ffffff',
+          primary: '#006b5e',
+          'primary-darken-1': '#005247',
+          'on-surface': '#193b36',
+          'on-surface-variant': '#526963',
           secondary: '#00695C',
         },
       },
@@ -62,18 +69,28 @@ app.use(router);
 app.use(pinia);
 app.use(head);
 
-// Mount the app
-app.mount('#app');
+// Resolve the initial route before showing the shell so the footer does not
+// jump out of the viewport when the first lazy page arrives.
+router
+  .isReady()
+  .catch(() => {
+    useUiStore(pinia).notifyError(
+      'This page could not load. Refresh the page or choose another page from the navigation.',
+    );
+  })
+  .then(() => app.mount('#app'));
 
 // Performance monitoring (only in development)
 if (import.meta.env.DEV && ENABLE_PERFORMANCE_HINTS) {
   // Import logService directly to avoid circular import issues
   const { logService } = await import('./services/logService');
-  
+
   // Monitor for Largest Contentful Paint
   new PerformanceObserver((entryList) => {
     for (const entry of entryList.getEntries()) {
-      logService.debug(`LCP: ${entry.startTime}ms - ${entry.element?.tagName || 'unknown element'}`);
+      logService.debug(
+        `LCP: ${entry.startTime}ms - ${entry.element?.tagName || 'unknown element'}`,
+      );
     }
   }).observe({ type: 'largest-contentful-paint', buffered: true });
 

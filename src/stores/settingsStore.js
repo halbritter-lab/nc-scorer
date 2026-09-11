@@ -4,12 +4,23 @@ import { ref, computed, watch } from 'vue';
 
 const STORAGE_KEY = 'nc-scorer-settings';
 
+function readStorage(key) {
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
 // Helper function to load and parse state from localStorage
 function loadStateFromStorage() {
-  const savedState = localStorage.getItem(STORAGE_KEY);
+  const savedState = readStorage(STORAGE_KEY);
   if (savedState) {
     try {
-      return JSON.parse(savedState);
+      const parsed = JSON.parse(savedState);
+      return parsed && typeof parsed === 'object' && !Array.isArray(parsed)
+        ? parsed
+        : {};
     } catch (e) {
       console.error('Failed to parse settings from localStorage', e);
     }
@@ -20,78 +31,98 @@ function loadStateFromStorage() {
 // Helper function to migrate old localStorage keys to new centralized format
 function migrateOldSettings() {
   const migrations = [];
-  
+  const keys = [];
+
   // Migrate cache settings
-  const oldCacheEnabled = localStorage.getItem('nc-scorer-cache-enabled');
+  const oldCacheEnabled = readStorage('nc-scorer-cache-enabled');
   if (oldCacheEnabled !== null) {
     try {
       migrations.push({ isCacheEnabled: JSON.parse(oldCacheEnabled) });
-      localStorage.removeItem('nc-scorer-cache-enabled');
+      keys.push('nc-scorer-cache-enabled');
     } catch (e) {
       console.warn('Failed to migrate cache settings', e);
     }
   }
-  
+
   // Migrate disclaimer settings
-  const oldDisclaimerAck = localStorage.getItem('disclaimerAcknowledged');
-  const oldDisclaimerTime = localStorage.getItem('disclaimerTimestamp');
+  const oldDisclaimerAck = readStorage('disclaimerAcknowledged');
+  const oldDisclaimerTime = readStorage('disclaimerTimestamp');
   if (oldDisclaimerAck || oldDisclaimerTime) {
     migrations.push({
-      disclaimerAcknowledgedAt: oldDisclaimerTime || (oldDisclaimerAck === 'true' ? new Date().toISOString() : null)
+      disclaimerAcknowledgedAt:
+        oldDisclaimerTime ||
+        (oldDisclaimerAck === 'true' ? new Date().toISOString() : null),
     });
-    localStorage.removeItem('disclaimerAcknowledged');
-    localStorage.removeItem('disclaimerTimestamp');
+    keys.push('disclaimerAcknowledged', 'disclaimerTimestamp');
   }
-  
+
   // Migrate theme settings
-  const oldDarkTheme = localStorage.getItem('darkTheme');
+  const oldDarkTheme = readStorage('darkTheme');
   if (oldDarkTheme !== null) {
     migrations.push({ isDarkMode: oldDarkTheme === 'true' });
-    localStorage.removeItem('darkTheme');
+    keys.push('darkTheme');
   }
-  
+
   // Migrate tour settings
-  const oldTourStatus = localStorage.getItem('nc-scorer-tour-status');
-  const oldTourShown = localStorage.getItem('nc-scorer-tour-shown');
+  const oldTourStatus = readStorage('nc-scorer-tour-status');
+  const oldTourShown = readStorage('nc-scorer-tour-shown');
   if (oldTourStatus || oldTourShown) {
     let status = 'new';
     if (oldTourStatus === 'completed') status = 'completed';
-    else if (oldTourStatus === 'skipped' || oldTourShown === 'true') status = 'skipped';
-    
+    else if (oldTourStatus === 'skipped' || oldTourShown === 'true')
+      status = 'skipped';
+
     migrations.push({ tourStatus: status });
-    localStorage.removeItem('nc-scorer-tour-status');
-    localStorage.removeItem('nc-scorer-tour-shown');
+    keys.push('nc-scorer-tour-status', 'nc-scorer-tour-shown');
   }
-  
+
   // Migrate log level settings
-  const oldLogLevel = localStorage.getItem('nc_scorer_logLevel');
+  const oldLogLevel = readStorage('nc_scorer_logLevel');
   if (oldLogLevel) {
     migrations.push({ logLevel: oldLogLevel });
-    localStorage.removeItem('nc_scorer_logLevel');
+    keys.push('nc_scorer_logLevel');
   }
-  
+
   // Merge all migrations into single object
-  return migrations.reduce((acc, migration) => ({ ...acc, ...migration }), {});
+  return { settings: Object.assign({}, ...migrations), keys };
 }
 
 export const useSettingsStore = defineStore('settings', () => {
   // --- MIGRATION ---
   // First, check for old settings and migrate them
   const migratedSettings = migrateOldSettings();
-  
+
   // --- STATE ---
   // Load initial state (merged from storage and migrations)
-  const initialState = { ...loadStateFromStorage(), ...migratedSettings };
-  
+  const initialState = {
+    ...migratedSettings.settings,
+    ...loadStateFromStorage(),
+  };
+  if (migratedSettings.keys.length) {
+    try {
+      // Keep legacy preferences intact until their replacement is persisted.
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(initialState));
+      migratedSettings.keys.forEach((key) => localStorage.removeItem(key));
+    } catch {
+      // Settings remain available in memory; retry migration on the next load.
+    }
+  }
+
   const isDarkMode = ref(initialState.isDarkMode ?? true); // Default to dark theme
   const isCacheEnabled = ref(initialState.isCacheEnabled ?? true);
-  const disclaimerAcknowledgedAt = ref(initialState.disclaimerAcknowledgedAt || null);
+  const disclaimerAcknowledgedAt = ref(
+    initialState.disclaimerAcknowledgedAt || null,
+  );
   const tourStatus = ref(initialState.tourStatus || 'new'); // 'new', 'skipped', 'completed'
   const logLevel = ref(initialState.logLevel || 'DEBUG'); // 'DEBUG', 'INFO', 'WARN', 'ERROR'
-  const isPreprintBannerDismissed = ref(initialState.isPreprintBannerDismissed ?? false);
+  const isPreprintBannerDismissed = ref(
+    initialState.isPreprintBannerDismissed ?? false,
+  );
 
   // --- GETTERS ---
-  const isDisclaimerAcknowledged = computed(() => !!disclaimerAcknowledgedAt.value);
+  const isDisclaimerAcknowledged = computed(
+    () => !!disclaimerAcknowledgedAt.value,
+  );
   const formattedDisclaimerDate = computed(() => {
     if (!disclaimerAcknowledgedAt.value) return null;
     return new Date(disclaimerAcknowledgedAt.value).toLocaleDateString();
@@ -117,7 +148,7 @@ export const useSettingsStore = defineStore('settings', () => {
   function acknowledgeDisclaimer() {
     disclaimerAcknowledgedAt.value = new Date().toISOString();
   }
-  
+
   function setTourStatus(status) {
     if (['new', 'skipped', 'completed'].includes(status)) {
       tourStatus.value = status;
@@ -151,7 +182,7 @@ export const useSettingsStore = defineStore('settings', () => {
       disclaimerAcknowledgedAt: disclaimerAcknowledgedAt.value,
       tourStatus: tourStatus.value,
       logLevel: logLevel.value,
-      isPreprintBannerDismissed: isPreprintBannerDismissed.value
+      isPreprintBannerDismissed: isPreprintBannerDismissed.value,
     }),
     (stateToPersist) => {
       try {
@@ -160,7 +191,7 @@ export const useSettingsStore = defineStore('settings', () => {
         console.error('Failed to persist settings to localStorage', e);
       }
     },
-    { deep: true } // Necessary for watching object properties
+    { deep: true }, // Necessary for watching object properties
   );
 
   return {
@@ -184,6 +215,6 @@ export const useSettingsStore = defineStore('settings', () => {
     resetTour,
     setLogLevel,
     dismissPreprintBanner,
-    resetPreprintBanner
+    resetPreprintBanner,
   };
 });

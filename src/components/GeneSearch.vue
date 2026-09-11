@@ -1,66 +1,50 @@
 <!-- src/components/GeneSearch.vue -->
 <template>
-  <v-card class="search-card">
-    <v-card-text>
-      <div class="search-container mx-auto mb-4">
-        <!-- Main search area with Google-like styling -->  
-        <div class="google-search-wrapper">
-          <div class="search-inputs-row d-flex align-center" @keyup.enter="search">
-            <!-- Input area with magnifying glass icon -->
-            <div class="search-input-area d-flex align-center" style="width: calc(100% - 56px);">
-              <v-icon class="search-icon ml-3 mr-2">mdi-magnify</v-icon>
-              <v-autocomplete
-                v-model="searchQuery"
-                :items="filteredItems"
-                label="Search genes"
-                :loading="isLoading"
-                variant="plain"
-                hide-details
-                @keyup.enter="search"
-                @update:search="onTextInput"
-                id="gene-search-input"
-                aria-label="Search for a gene by symbol or HGNC ID"
-                density="comfortable"
-                class="google-search-input"
-                style="width: 100%;"
-                clearable
-                item-title="title"
-                item-value="value"
-                auto-select-first
-                no-filter
-                autocomplete="off"
-                :menu-props="{ maxHeight: '300px' }"
-              ></v-autocomplete>
-            </div>
-            
-            <!-- Simple search button -->
-            <div class="search-button-area d-flex align-center px-2" style="width: 56px;">
-              <v-btn
-                color="primary"
-                variant="text"
-                icon
-                @click="search"
-                aria-label="Search"
-                size="large"
-              >
-                <v-icon>mdi-arrow-right</v-icon>
-              </v-btn>
-            </div>
-          </div>
-        </div>
-        
-        <!-- Hint text below search box -->
-        <div class="mt-1 text-caption hint-text">
-          Search by gene symbol or HGNC ID (e.g. PKD1, HGNC:9008, or just 9008)
-        </div>
+  <form class="gene-search-form" @submit.prevent="search">
+    <div class="form-heading">
+      <h2>Find a gene</h2>
+      <p>Search the gene index by symbol or HGNC identifier.</p>
+    </div>
+    <v-autocomplete
+      v-model="searchQuery"
+      :items="filteredItems"
+      label="Gene symbol or HGNC ID"
+      :loading="isLoading"
+      variant="outlined"
+      @update:search="onTextInput"
+      id="gene-search-input"
+      clearable
+      item-title="title"
+      item-value="value"
+      auto-select-first
+      no-filter
+      autocomplete="off"
+      :menu-props="{ maxHeight: '300px' }"
+      hint="For example: PKD1, HGNC:9008, or 9008."
+      persistent-hint
+    />
+    <v-alert v-if="error" type="error" variant="tonal" class="my-4">{{
+      error.message
+    }}</v-alert>
+    <v-btn
+      type="submit"
+      color="primary"
+      min-height="48"
+      class="mt-5"
+      append-icon="mdi-arrow-right"
+      >Look up gene</v-btn
+    >
+    <div class="form-examples">
+      <h3>Explore kidney disease genes</h3>
+      <div class="example-list">
+        <router-link :to="{ name: 'GeneView', params: { symbol: 'PKD1' } }"
+          >PKD1</router-link
+        ><router-link :to="{ name: 'GeneView', params: { symbol: 'COL4A5' } }"
+          >COL4A5</router-link
+        >
       </div>
-
-      <!-- Display an error alert if symbols fail to load -->
-      <v-alert v-if="error" type="error" dismissible>
-        {{ error.message }}
-      </v-alert>
-    </v-card-text>
-  </v-card>
+    </div>
+  </form>
 </template>
 
 <script>
@@ -81,33 +65,37 @@ export default {
 
     // Store the current filter text for manual filtering
     const filterText = ref('');
-    
+
     // Handle manual text input for filtering
     const onTextInput = (text) => {
       filterText.value = text;
     };
-    
+
     // Filtered items based on current search query - limited to 10 suggestions
     const filteredItems = computed(() => {
       if (!filterText.value) return [];
-      
+
       const query = filterText.value.toLowerCase();
-      return autocompleteItems.value.filter(item => {
-        // Match against symbol
-        if (item.symbol && item.symbol.toLowerCase().includes(query)) return true;
-        
-        // Match against HGNC ID
-        if (item.hgncId) {
-          const hgncIdStr = String(item.hgncId);
-          if (query.includes(hgncIdStr)) return true;
-          if (hgncIdStr.includes(query)) return true;
-        }
-        
-        // Match against display string
-        if (item.display && item.display.toLowerCase().includes(query)) return true;
-        
-        return false;
-      }).slice(0, 10); // Limited to 10 suggestions for better UX
+      return autocompleteItems.value
+        .filter((item) => {
+          // Match against symbol
+          if (item.symbol && item.symbol.toLowerCase().includes(query))
+            return true;
+
+          // Match against HGNC ID
+          if (item.hgncId) {
+            const hgncIdStr = String(item.hgncId);
+            if (query.includes(hgncIdStr)) return true;
+            if (hgncIdStr.includes(query)) return true;
+          }
+
+          // Match against display string
+          if (item.display && item.display.toLowerCase().includes(query))
+            return true;
+
+          return false;
+        })
+        .slice(0, 10); // Limited to 10 suggestions for better UX
     });
 
     // Load both symbol and HGNC indices
@@ -115,19 +103,21 @@ export default {
       isLoading.value = true;
       try {
         const result = await fetchGeneSearchIndices();
-        
+
         hgncToSymbolMap.value = result.hgncToSymbolMap || {};
-        
+
         // Create properly validated items
-        autocompleteItems.value = result.combinedItems.map(item => ({
+        autocompleteItems.value = result.combinedItems.map((item) => ({
           symbol: item.symbol || '',
           hgncId: item.hgncId || '',
           display: item.display || item.symbol || '',
           value: item.symbol || '',
-          title: item.display || item.symbol || ''
+          title: item.display || item.symbol || '',
         }));
-        
-        logService.info(`Loaded ${result.symbolsIndex.length} gene symbols and ${result.hgncIndex.length} HGNC IDs for search`);
+
+        logService.info(
+          `Loaded ${result.symbolsIndex.length} gene symbols and ${result.hgncIndex.length} HGNC IDs for search`,
+        );
       } catch (err) {
         logService.error('Error loading gene search indices:', err);
         error.value = err;
@@ -139,7 +129,7 @@ export default {
     // Extract gene symbol from user input
     const getGeneSymbolFromInput = (input) => {
       if (!input) return null;
-      
+
       // Handle case when v-autocomplete returns an object
       if (typeof input === 'object' && input !== null) {
         // If it's an autocomplete item object, extract the symbol directly
@@ -149,39 +139,40 @@ export default {
         // If for some reason we have an object without a symbol, try to stringify it
         input = String(input);
       }
-      
-      const query = String(input).trim();
-      
+
+      const query = String(input).trim().toUpperCase();
+
       // Check if it's a display format like "PKD1 (HGNC:9008)"
       const displayMatch = query.match(/^([A-Za-z0-9]+)\s+\(HGNC:[0-9]+\)$/);
       if (displayMatch) {
         return displayMatch[1]; // Return the symbol part
       }
-      
+
       // Check if it's an HGNC ID with prefix
       if (query.startsWith('HGNC:')) {
         const hgncId = query.substring(5);
         return hgncToSymbolMap.value[hgncId] || query;
       }
-      
+
       // Check if it's a numeric HGNC ID
       if (/^\d+$/.test(query)) {
         return hgncToSymbolMap.value[query] || query;
       }
-      
+
       // Otherwise, use as-is (likely a gene symbol)
       return query;
     };
 
     // Perform search
     const search = () => {
-      if (!searchQuery.value) return;
-      
+      const input = searchQuery.value || filterText.value;
+      if (!input) return;
+
       try {
-        const symbol = getGeneSymbolFromInput(searchQuery.value);
+        const symbol = getGeneSymbolFromInput(input);
         if (symbol) {
           logService.info(`Navigating to gene: ${symbol}`);
-          router.push({ path: `/symbols/${symbol}` });
+          router.push({ name: 'GeneView', params: { symbol } });
         }
       } catch (err) {
         logService.error('Error performing search:', err);
@@ -199,81 +190,8 @@ export default {
       filteredItems,
       isLoading,
       error,
-      onTextInput
+      onTextInput,
     };
-  }
+  },
 };
 </script>
-
-<style scoped>
-.search-card {
-  max-width: 900px;
-  margin: auto;
-  padding: 16px;
-}
-
-.search-container {
-  max-width: 700px;
-  margin: 0 auto;
-}
-
-.google-search-wrapper {
-  border: 1px solid #dfe1e5;
-  border-radius: 24px;
-  padding: 8px 0;
-  overflow: hidden;
-  background: white;
-}
-
-/* Dark mode adjustments */
-.v-theme--dark .google-search-wrapper {
-  background: #1e1e1e;
-  border-color: #666;
-  border-width: 1.5px;
-}
-
-.google-search-wrapper:hover {
-  box-shadow: 0 1px 6px rgba(32, 33, 36, 0.28);
-  border-color: rgba(223, 225, 229, 0);
-}
-
-.v-theme--dark .google-search-wrapper:hover {
-  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.4);
-  border-color: rgba(50, 50, 50, 0.8);
-}
-
-.google-search-input {
-  border: none !important;
-  font-size: 16px;
-}
-
-/* Dark mode input text */
-.v-theme--dark .google-search-input {
-  color: rgba(255, 255, 255, 0.87) !important;
-}
-
-.v-theme--dark .google-search-input .v-field__input {
-  color: rgba(255, 255, 255, 0.87) !important;
-}
-
-.search-inputs-row {
-  min-height: 44px;
-}
-
-.search-icon {
-  color: #9aa0a6;
-}
-
-.v-theme--dark .search-icon {
-  color: rgba(255, 255, 255, 0.7);
-}
-
-/* Hint text styling with theme support */
-.hint-text {
-  color: #666;
-}
-
-.v-theme--dark .hint-text {
-  color: rgba(255, 255, 255, 0.6);
-}
-</style>

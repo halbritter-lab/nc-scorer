@@ -1,9 +1,9 @@
 <!-- src/components/GeneCard.vue -->
 <template>
   <v-card class="gene-card">
-    <v-card-title class="d-flex flex-wrap align-center">
+    <v-card-title tag="h2" class="d-flex flex-wrap align-center evidence-title">
       <!-- Gene Title -->
-      <div class="gene-title text-truncate" :title="symbol">
+      <div class="gene-title" :title="symbol">
         Gene Details for "{{ symbol }}"
       </div>
 
@@ -22,9 +22,18 @@
           <v-icon size="small" color="warning">mdi-refresh</v-icon>
         </v-badge>
         <!-- Spinning icon when retry is in progress -->
-        <v-tooltip v-if="retryStates.gene.inProgress" location="top" text="Retrying API request...">
+        <v-tooltip
+          v-if="retryStates.gene.inProgress"
+          location="top"
+          text="Retrying API request..."
+        >
           <template v-slot:activator="{ props }">
-            <v-icon v-bind="props" size="small" color="warning" class="ml-1 retry-spinner">
+            <v-icon
+              v-bind="props"
+              size="small"
+              color="warning"
+              class="ml-1 retry-spinner"
+            >
               mdi-refresh
             </v-icon>
           </template>
@@ -44,7 +53,11 @@
       </div>
     </v-card-title>
 
-    <v-card-text>
+    <v-divider />
+    <v-card-text class="evidence-body">
+      <v-alert v-if="scoreError" type="error" variant="tonal" class="mb-3">
+        {{ scoreError }}
+      </v-alert>
       <!-- Loading State -->
       <div v-if="loading" class="loading-container">
         <v-skeleton-loader
@@ -57,39 +70,34 @@
       <div v-else-if="error">
         <v-alert type="error" dismissible>
           <template v-if="isMaxRetriesError">
-            Failed to load gene data after multiple attempts. There might be a temporary issue with
-            external services. Please try again later.
+            Failed to load gene data after multiple attempts. There might be a
+            temporary issue with external services. Please try again later.
           </template>
           <template v-else>{{ error }}</template>
         </v-alert>
       </div>
 
-      <!-- Content Section (Wrapped in outlined card) -->
-      <div v-else>
-        <v-card variant="outlined" class="mb-2"> <!-- Use outlined variant -->
-          <v-card-text class="pa-0"> <!-- Remove padding if table has its own -->
-            <v-table class="gene-info-table">
-              <tbody>
-                <DataDisplayRow
-                  v-for="(item, key) in filteredGeneData"
-                  :key="key"
-                  :config="{
-                    label: item.label,
-                    description: item.description,
-                    style: item.style,
-                    font: item.font,
-                    colorThresholds: item.colorThresholds,
-                    isKeyScore: item.isKeyScore,
-                    scoreType: item.scoreType
-                  }"
-                  :value="item.value"
-                  :defaultValue="'NA'"
-                />
-              </tbody>
-            </v-table>
-          </v-card-text>
-        </v-card>
-      </div>
+      <section v-else aria-label="Gene evidence">
+        <v-table class="gene-info-table">
+          <tbody>
+            <DataDisplayRow
+              v-for="(item, key) in filteredGeneData"
+              :key="key"
+              :config="{
+                label: item.label,
+                description: item.description,
+                style: item.style,
+                font: item.font,
+                colorThresholds: item.colorThresholds,
+                isKeyScore: item.isKeyScore,
+                scoreType: item.scoreType,
+              }"
+              :value="item.value"
+              :defaultValue="'NA'"
+            />
+          </tbody>
+        </v-table>
+      </section>
     </v-card-text>
   </v-card>
 </template>
@@ -105,6 +113,7 @@ import useRetryState from '@/composables/useRetryState.js';
 import DataDisplayRow from '@/components/DataDisplayRow.vue';
 import { scoreInterpretationConfig } from '@/config/scoreInterpretationConfig.js';
 import { API_CACHE_KEY } from '@/composables/useApiCache';
+import { parseUnitScore } from '@/utils/scoringUtils.js';
 
 export default {
   name: 'GeneCard',
@@ -124,11 +133,17 @@ export default {
     const isMaxRetriesError = ref(false);
     const fromCache = ref(false);
     const showCacheIndicator = ref(false);
+    const measuredScore = computed(() => parseUnitScore(geneData.value?.ngs));
+    const scoreError = computed(() =>
+      !loading.value && !error.value && measuredScore.value === null
+        ? 'Gene score is missing or invalid. Try the assessment again; a measured score between 0 and 1 is required.'
+        : '',
+    );
 
     // Get shared retry state from parent or create a new one
     const injectedRetryState = inject('retryState', null);
     const { retryStates } = injectedRetryState || useRetryState();
-    
+
     // Inject API cache instance
     const apiCache = inject(API_CACHE_KEY, null);
 
@@ -169,14 +184,20 @@ export default {
         const result = await fetchGeneDetails(props.symbol, {
           retryState,
           apiCache,
-          onRetry: (err, attempt) => { // Add params to onRetry
-             retryState.inProgress = true;
-             logService.warn(`Retry attempt ${attempt} for gene ${props.symbol}: ${err.message}`);
+          onRetry: (err, attempt) => {
+            // Add params to onRetry
+            retryState.inProgress = true;
+            logService.warn(
+              `Retry attempt ${attempt} for gene ${props.symbol}: ${err.message}`,
+            );
           },
-          onSuccess: (attempts) => { // Add params to onSuccess
+          onSuccess: (attempts) => {
+            // Add params to onSuccess
             retryState.inProgress = false;
             if (attempts > 0) {
-               logService.info(`Successfully fetched gene ${props.symbol} after ${attempts} retries.`);
+              logService.info(
+                `Successfully fetched gene ${props.symbol} after ${attempts} retries.`,
+              );
             }
           },
         });
@@ -198,12 +219,14 @@ export default {
         retryStates.gene.inProgress = false;
         logService.error(`Error fetching gene ${props.symbol}:`, err); // Log error
         // Check if we've exhausted retry attempts
-        if (retryStates.gene.attempts >= 4) { // Using default maxRetries value from retryWithBackoff
+        if (retryStates.gene.attempts >= 4) {
+          // Using default maxRetries value from retryWithBackoff
           isMaxRetriesError.value = true;
           error.value = `Maximum retry attempts reached for gene ${props.symbol}.`;
         } else {
           isMaxRetriesError.value = false;
-          error.value = err.message || `Error fetching gene data for ${props.symbol}.`;
+          error.value =
+            err.message || `Error fetching gene data for ${props.symbol}.`;
         }
       } finally {
         loading.value = false;
@@ -212,9 +235,10 @@ export default {
 
     // Watch for changes in the gene data and emit them to parent component
     watchEffect(() => {
-      if (!loading.value && !error.value && geneData.value && geneData.value.ngs !== undefined) { // Check ngs specifically
+      if (!loading.value) {
         emit('gene-score-updated', {
-          score: geneData.value.ngs,
+          score: error.value ? null : measuredScore.value,
+          error: error.value || scoreError.value || null,
           symbol: props.symbol,
           formattedData: filteredGeneData.value,
         });
@@ -222,6 +246,7 @@ export default {
     });
 
     return {
+      scoreError,
       loading,
       error,
       filteredGeneData,
@@ -229,7 +254,7 @@ export default {
       scoreInterpretationConfig,
       isMaxRetriesError,
       showCacheIndicator,
-      fromCache
+      fromCache,
     };
   },
 };
@@ -237,10 +262,13 @@ export default {
 
 <style scoped>
 /* Styles remain unchanged */
-.gene-card {
-  /* max-width: 600px; <-- Can be removed if parent container controls width */
-  margin: auto;
-  /* padding: 16px; <-- Padding handled by v-card-text */
+.evidence-title {
+  padding: 16px 20px;
+  font-size: 1.125rem;
+  line-height: 1.5;
+}
+.evidence-body {
+  padding: 12px 20px 20px;
 }
 .gene-info-table {
   width: 100%;
@@ -281,19 +309,19 @@ export default {
 }
 
 .gene-title {
-  max-width: calc(100% - 100px); /* Reserve space for indicators */
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 /* Ensure tables within cards don't add extra padding/background */
 .v-card .v-table {
   background-color: transparent;
 }
 .v-card > .v-table > .v-table__wrapper > table > tbody > tr > td {
-    font-size: 0.875rem;
+  font-size: 0.875rem;
 }
 .v-card > .v-table > .v-table__wrapper > table > tbody > tr:hover {
-   background: transparent !important;
+  background: transparent !important;
 }
 </style>

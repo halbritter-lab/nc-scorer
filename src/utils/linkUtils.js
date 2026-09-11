@@ -1,4 +1,5 @@
 // src/utils/linkUtils.js
+import { normalizeAssembly } from '@/utils/assemblyUtils.js';
 
 /**
  * Utilities for generating external links to databases and resources
@@ -11,15 +12,16 @@
  * @returns {string} - The generated URL
  */
 export function generateExternalLink(value, pattern) {
-  if (!value || !pattern) return '';
-  
+  if (value === null || value === undefined || value === '' || !pattern)
+    return '';
+
   // For HGNC IDs, ensure proper formatting (HGNC:nnnnn)
   if (pattern.includes('genenames.org') && !String(value).startsWith('HGNC:')) {
     // Handle both numeric IDs and IDs that might already have the prefix
     value = String(value).replace(/^HGNC:?/, '');
     value = `HGNC:${value}`;
   }
-  
+
   // Replace the placeholder with the actual value
   return pattern.replace('%s', encodeURIComponent(value));
 }
@@ -30,11 +32,15 @@ export function generateExternalLink(value, pattern) {
  * @returns {Object} - Object with chromosome, position, reference, and alternate alleles
  */
 export function parseVariantString(variantString) {
-  if (!variantString) return null;
-  
+  if (
+    typeof variantString !== 'string' ||
+    !/^(?:\d+|[XYM])-\d+-[ACGT]+-[ACGT]+$/i.test(variantString)
+  )
+    return null;
+
   const parts = variantString.split('-');
   if (parts.length < 4) return null;
-  
+
   return {
     chromosome: parts[0],
     position: parts[1],
@@ -43,7 +49,7 @@ export function parseVariantString(variantString) {
     // Add useful combinations for different resources
     ensemblRegion: `${parts[0]}:${parts[1]}-${parts[1]}`,
     ucscRegion: `chr${parts[0]}:${parts[1]}-${parts[1]}`,
-    gnomadFormat: `${parts[0]}-${parts[1]}-${parts[2]}-${parts[3]}`
+    gnomadFormat: `${parts[0]}-${parts[1]}-${parts[2]}-${parts[3]}`,
   };
 }
 
@@ -52,13 +58,29 @@ export function parseVariantString(variantString) {
  * @param {string} variantString - Variant in format like "1-123456-A-G"
  * @returns {Object} - Object with links to different resources
  */
-export function generateVariantLinks(variantString, linkPatterns) {
+export function generateVariantLinks(
+  variantString,
+  linkPatterns,
+  assembly = 'GRCh38',
+) {
+  assembly = normalizeAssembly(assembly);
+  if (!assembly) return {};
   const parsed = parseVariantString(variantString);
   if (!parsed) return {};
-  
-  return {
-    ensembl: linkPatterns.ensemblVariant.replace('%s', parsed.ensemblRegion),
-    ucsc: linkPatterns.ucscGenome.replace('%s', parsed.ucscRegion),
-    gnomad: linkPatterns.gnomad.replace('%s', parsed.gnomadFormat)
-  };
+
+  const ensembl = new URL(
+    linkPatterns.ensemblVariant.replace('%s', parsed.ensemblRegion),
+  );
+  const ucsc = new URL(
+    linkPatterns.ucscGenome.replace('%s', parsed.ucscRegion),
+  );
+  const gnomad = new URL(
+    linkPatterns.gnomad.replace('%s', parsed.gnomadFormat),
+  );
+  if (assembly === 'GRCh37') {
+    ensembl.hostname = 'grch37.ensembl.org';
+    ucsc.searchParams.set('db', 'hg19');
+    gnomad.searchParams.set('dataset', 'gnomad_r2_1');
+  }
+  return { ensembl: ensembl.href, ucsc: ucsc.href, gnomad: gnomad.href };
 }
