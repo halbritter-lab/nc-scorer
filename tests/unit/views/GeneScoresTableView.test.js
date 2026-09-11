@@ -77,6 +77,60 @@ afterEach(() => {
 });
 
 describe('gene score table workflow', () => {
+  it('shares the page heading and groups the search and download controls', async () => {
+    await mountTable();
+    expect(wrapper.get('.page-header .page-title').text()).toBe(
+      'Gene Scores Overview',
+    );
+    expect(wrapper.find('.page-header .v-card').exists()).toBe(false);
+    const toolbar = wrapper.get(
+      '[role="group"][aria-label="Gene table controls"]',
+    );
+    expect(toolbar.find('input').exists()).toBe(true);
+    expect(toolbar.text()).toContain('Download Data');
+    expect(wrapper.get('.gene-table-scroll-hint').text()).toBe(
+      'Scroll horizontally to see all columns.',
+    );
+  });
+
+  it('filters prefixed HGNC identifiers once and exports the same visible rows', async () => {
+    fetchAllGeneScores.mockResolvedValueOnce({
+      data: [...genes, { ...genes[0], symbol: 'OTHER', hgncIdInt: 12207 }],
+    });
+    await mountTable();
+    await wrapper.get('input').setValue(' HGNC:2207 ');
+    expect(wrapper.findAll('tbody tr').map((row) => row.text())).toEqual([
+      expect.stringContaining('COL4A5'),
+    ]);
+    await wrapper.vm.downloadGeneScores();
+    expect(await URL.createObjectURL.mock.calls[0][0].text()).toContain(
+      'COL4A5,HGNC:2207',
+    );
+    expect(await URL.createObjectURL.mock.calls[0][0].text()).not.toContain(
+      'PKD1',
+    );
+    expect(
+      wrapper.findComponent({ name: 'VDataTable' }).props('search'),
+    ).toBeUndefined();
+  });
+
+  it('returns to the first page when filtering from a later page', async () => {
+    fetchAllGeneScores.mockResolvedValueOnce({
+      data: Array.from({ length: 25 }, (_, index) => ({
+        ...genes[0],
+        symbol: `GENE${index}`,
+        hgncIdInt: index + 100,
+      })),
+    });
+    await mountTable();
+    await wrapper.get('button[aria-label="Next page"]').trigger('click');
+    expect(wrapper.find('tbody').text()).not.toContain('GENE0');
+    await wrapper.get('input').setValue('GENE0');
+    expect(wrapper.findAll('tbody tr')).toHaveLength(1);
+    expect(wrapper.find('tbody').text()).toContain('GENE0');
+    expect(wrapper.findComponent({ name: 'VDataTable' }).props('page')).toBe(1);
+  });
+
   it('loads rows and formats score, identifier, and gene-set evidence', async () => {
     await mountTable();
     expect(wrapper.text()).toContain('PKD1');

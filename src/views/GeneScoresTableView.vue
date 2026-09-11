@@ -1,152 +1,154 @@
 <template>
-  <ContentContainer>
-    <v-row>
-      <v-col cols="12">
-        <h1 class="text-h4 mb-4">Gene Scores Overview</h1>
-
-        <v-card elevation="2" class="mb-6">
-          <v-card-text>
-            <p class="mb-2">
-              Browse, search, and download the complete set of Nephro Candidate
-              Gene Scores.
-            </p>
-            <p class="text-caption source-note">
-              Data source:
-              <a
-                href="https://github.com/halbritter-lab/nephro_candidate_score"
-                target="_blank"
-                rel="noopener noreferrer"
-                >Nephro Candidate Score</a
-              >
-            </p>
-          </v-card-text>
-        </v-card>
-
-        <!-- Search and Download Controls -->
-        <v-row class="mb-3">
-          <v-col cols="12" md="6">
-            <v-text-field
-              v-model="searchQuery"
-              clearable
-              hide-details
-              density="comfortable"
-              label="Search by Gene Symbol or HGNC ID"
-              prepend-inner-icon="mdi-magnify"
-              variant="outlined"
-              min-height="44"
-            ></v-text-field>
-          </v-col>
-          <v-col cols="12" md="6" class="d-flex justify-end align-center">
-            <!-- Download menu with format options -->
-            <v-menu>
-              <template v-slot:activator="{ props }">
-                <v-btn
-                  color="primary"
-                  prepend-icon="mdi-download"
-                  v-bind="props"
-                  variant="flat"
-                  min-height="44"
-                  min-width="160"
-                  class="font-weight-medium"
-                  :disabled="
-                    loadingState.loading ||
-                    loadingState.error ||
-                    filteredGenes.length === 0
-                  "
-                >
-                  Download Data
-                </v-btn>
-              </template>
-              <v-list density="compact">
-                <v-list-item
-                  @click="downloadGeneScores('csv')"
-                  prepend-icon="mdi-file-delimited"
-                  title="Download as CSV"
-                  min-height="44"
-                />
-                <v-list-item
-                  @click="downloadGeneScores('excel')"
-                  prepend-icon="mdi-file-excel"
-                  title="Download as Excel"
-                  min-height="44"
-                />
-              </v-list>
-            </v-menu>
-          </v-col>
-        </v-row>
-
-        <!-- Error and Empty States -->
-        <v-alert v-if="loadingState.error" type="error" class="mb-3">
-          Failed to load gene scores: {{ loadingState.errorMessage }}
-          <template v-slot:append>
-            <v-btn variant="text" @click="fetchGeneScores">Retry</v-btn>
-          </template>
-        </v-alert>
-
-        <v-alert
-          v-else-if="
-            !loadingState.loading && filteredGenes.length === 0 && searchQuery
-          "
-          type="info"
-          class="mb-3"
-        >
-          No genes found matching "{{ searchQuery }}". Try a different search
-          term.
-        </v-alert>
-
-        <!-- Gene Scores Table Container with stable min-height -->
-        <div class="gene-table-wrapper">
-          <v-data-table
-            v-model:items-per-page="itemsPerPage"
-            :headers="headers"
-            :items="filteredGenes"
-            :loading="loadingState.loading"
-            loading-text="Loading gene scores..."
-            :search="searchQuery"
-            class="elevation-1 gene-data-table"
+  <ContentContainer class="gene-scores-page">
+    <header class="page-header">
+      <div>
+        <h1 class="page-title">Gene Scores Overview</h1>
+        <p>
+          Browse, search, and download the complete set of Nephro Candidate Gene
+          Scores.
+        </p>
+        <p class="source-note">
+          Data source:
+          <a
+            href="https://github.com/halbritter-lab/nephro_candidate_score"
+            target="_blank"
+            rel="noopener noreferrer"
+            >Nephro Candidate Score</a
           >
-            <!-- Custom column for gene symbol with router-link -->
-            <template #[`item.symbol`]="{ item }">
-              <router-link
-                :to="{ name: 'GeneView', params: { symbol: item.symbol } }"
-                class="gene-table-link font-weight-bold"
-              >
-                {{ item.symbol }}
-              </router-link>
-            </template>
+        </p>
+      </div>
+    </header>
 
-            <!-- Format the score with 2 decimal places -->
-            <template #[`item.ngs`]="{ item }">
-              <span class="gene-score" :class="getScoreClass(item.ngs)">{{
-                formatScore(item.ngs)
-              }}</span>
-            </template>
+    <!-- Search and Download Controls -->
+    <div
+      class="gene-table-toolbar"
+      role="group"
+      aria-label="Gene table controls"
+    >
+      <div class="gene-table-search">
+        <v-text-field
+          v-model="searchQuery"
+          clearable
+          hide-details
+          density="comfortable"
+          label="Search by Gene Symbol or HGNC ID"
+          prepend-inner-icon="mdi-magnify"
+          variant="outlined"
+          min-height="44"
+        ></v-text-field>
+      </div>
+      <div class="gene-table-download">
+        <!-- Download menu with format options -->
+        <v-menu>
+          <template v-slot:activator="{ props }">
+            <v-btn
+              color="primary"
+              prepend-icon="mdi-download"
+              v-bind="props"
+              variant="flat"
+              min-height="44"
+              min-width="160"
+              class="font-weight-medium"
+              :disabled="
+                loadingState.loading ||
+                loadingState.error ||
+                filteredGenes.length === 0
+              "
+            >
+              Download Data
+            </v-btn>
+          </template>
+          <v-list density="compact">
+            <v-list-item
+              @click="downloadGeneScores('csv')"
+              prepend-icon="mdi-file-delimited"
+              title="Download as CSV"
+              min-height="44"
+            />
+            <v-list-item
+              @click="downloadGeneScores('excel')"
+              prepend-icon="mdi-file-excel"
+              title="Download as Excel"
+              min-height="44"
+            />
+          </v-list>
+        </v-menu>
+      </div>
+    </div>
 
-            <!-- Format the HGNC ID with HGNC: prefix -->
-            <template #[`item.hgncIdInt`]="{ item }">
-              {{ formatHgncId(item.hgncIdInt) }}
-            </template>
+    <!-- Error and Empty States -->
+    <v-alert v-if="loadingState.error" type="error" class="mb-3">
+      Failed to load gene scores: {{ loadingState.errorMessage }}
+      <template v-slot:append>
+        <v-btn variant="text" @click="fetchGeneScores">Retry</v-btn>
+      </template>
+    </v-alert>
 
-            <!-- Format the gene set with capitalization -->
-            <template #[`item.geneSet`]="{ item }">
-              <v-chip
-                class="gene-set-label"
-                size="small"
-                :color="getGeneSetColor(item.geneSet)"
-                variant="outlined"
-              >
-                {{ formatGeneSet(item.geneSet) }}
-              </v-chip>
-            </template>
-          </v-data-table>
-        </div>
-      </v-col>
-    </v-row>
+    <v-alert
+      v-else-if="
+        !loadingState.loading && filteredGenes.length === 0 && searchQuery
+      "
+      type="info"
+      class="mb-3"
+    >
+      No genes found matching "{{ searchQuery }}". Try a different search term.
+    </v-alert>
+
+    <!-- Gene Scores Table Container with stable min-height -->
+    <p class="gene-table-scroll-hint">
+      Scroll horizontally to see all columns.
+    </p>
+    <div class="gene-table-wrapper">
+      <v-data-table
+        v-model:page="page"
+        v-model:items-per-page="itemsPerPage"
+        :headers="headers"
+        :items="filteredGenes"
+        :loading="loadingState.loading"
+        loading-text="Loading gene scores..."
+        :mobile="false"
+        class="gene-data-table"
+      >
+        <!-- Custom column for gene symbol with router-link -->
+        <template #[`item.symbol`]="{ item }">
+          <router-link
+            :to="{ name: 'GeneView', params: { symbol: item.symbol } }"
+            class="gene-table-link font-weight-bold"
+          >
+            {{ item.symbol }}
+          </router-link>
+        </template>
+
+        <!-- Format the score with 2 decimal places -->
+        <template #[`item.ngs`]="{ item }">
+          <span class="gene-score" :class="getScoreClass(item.ngs)">{{
+            formatScore(item.ngs)
+          }}</span>
+        </template>
+
+        <!-- Format the HGNC ID with HGNC: prefix -->
+        <template #[`item.hgncIdInt`]="{ item }">
+          {{ formatHgncId(item.hgncIdInt) }}
+        </template>
+
+        <!-- Format the gene set with capitalization -->
+        <template #[`item.geneSet`]="{ item }">
+          <v-chip
+            class="gene-set-label"
+            size="small"
+            :color="getGeneSetColor(item.geneSet)"
+            variant="outlined"
+          >
+            {{ formatGeneSet(item.geneSet) }}
+          </v-chip>
+        </template>
+      </v-data-table>
+    </div>
   </ContentContainer>
 </template>
 
 <script>
-import { ref, onMounted, computed, reactive } from 'vue';
+import { ref, onMounted, computed, reactive, watch } from 'vue';
 import { logService } from '@/services/logService';
 import { fetchAllGeneScores } from '@/api/geneApi';
 import { generateExcel, generateCSV } from '@/utils/exportUtils';
@@ -161,7 +163,11 @@ export default {
   setup() {
     // Table configuration
     const itemsPerPage = ref(10);
+    const page = ref(1);
     const searchQuery = ref('');
+    watch(searchQuery, () => {
+      page.value = 1;
+    });
 
     // Data loading state
     const loadingState = reactive({
@@ -214,11 +220,15 @@ export default {
         return allGenes.value;
       }
 
-      const query = searchQuery.value.toLowerCase();
+      const query = searchQuery.value.trim().toLowerCase();
+      const hgncQuery = query.replace(/^hgnc:\s*/, '');
       return allGenes.value.filter((gene) => {
         return (
           gene.symbol.toLowerCase().includes(query) ||
-          (gene.hgncIdInt && gene.hgncIdInt.toString().includes(query))
+          (gene.hgncIdInt &&
+            (query.startsWith('hgnc:')
+              ? gene.hgncIdInt.toString() === hgncQuery
+              : gene.hgncIdInt.toString().includes(query)))
         );
       });
     });
@@ -359,6 +369,7 @@ export default {
       allGenes,
       headers,
       itemsPerPage,
+      page,
       loadingState,
       searchQuery,
 
@@ -379,9 +390,34 @@ export default {
 </script>
 
 <style scoped>
+.gene-table-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.gene-table-search {
+  flex: 1;
+  max-width: 620px;
+  min-width: 0;
+}
+.gene-table-download :deep(.v-btn) {
+  text-transform: none;
+  letter-spacing: normal;
+}
 .gene-table-wrapper {
   min-height: 580px;
   width: 100%;
+  border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+  border-radius: 12px;
+  overflow: hidden;
+}
+.gene-table-scroll-hint {
+  display: none;
+  color: rgb(var(--v-theme-on-surface-variant));
+  font-size: 14px;
+  margin-bottom: 12px;
 }
 
 .gene-data-table :deep(.v-table__wrapper) {
@@ -405,6 +441,8 @@ export default {
 }
 .source-note {
   color: rgb(var(--v-theme-on-surface-variant));
+  font-size: 0.85rem;
+  margin-top: 6px;
 }
 .gene-score,
 .gene-set-label {
@@ -419,5 +457,27 @@ export default {
   padding: 4px 8px;
   text-decoration: underline;
   text-underline-offset: 3px;
+}
+@media (max-width: 600px) {
+  .gene-table-scroll-hint {
+    display: block;
+  }
+  .gene-table-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .gene-table-search {
+    max-width: none;
+  }
+  .gene-table-download :deep(.v-btn) {
+    width: 100%;
+  }
+  .gene-data-table :deep(.v-data-table-footer) {
+    justify-content: center;
+    gap: 12px;
+    padding: 16px;
+  }
 }
 </style>
